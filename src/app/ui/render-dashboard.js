@@ -1,6 +1,6 @@
 import { escapeText } from "./render-tracker.js";
 
-const TRACKER_ICONS = {
+export const TRACKER_ICONS = {
     achievements: "trophy",
     bestiary: "pets",
     bosstiary: "skull",

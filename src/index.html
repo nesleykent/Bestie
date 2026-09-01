@@ -12,6 +12,58 @@
 </head>
 <body>
     <div class="app-shell">
+        <nav class="app-sidebar" id="appSidebar" aria-label="Main navigation">
+            <div class="sidebar-character" id="sidebarCharacter">
+                <button class="sidebar-character-switch" id="sidebarCharacterButton" type="button" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="sidebar-character-name" id="sidebarCharacterName">Character 1</span>
+                    <span class="material-symbols-outlined sidebar-character-chevron" aria-hidden="true">expand_more</span>
+                </button>
+                <input class="sidebar-character-input" id="sidebarCharacterInput" type="text" maxlength="32" placeholder="Character name" hidden>
+                <div class="sidebar-character-actions">
+                    <button class="icon-button sidebar-icon-btn" id="sidebarRenameButton" type="button" aria-label="Rename character"><span class="material-symbols-outlined" aria-hidden="true">edit</span></button>
+                    <button class="icon-button sidebar-icon-btn" id="sidebarDeleteCharacterButton" type="button" aria-label="Delete character"><span class="material-symbols-outlined" aria-hidden="true">delete</span></button>
+                    <button class="icon-button sidebar-icon-btn" id="sidebarAddCharacterButton" type="button" aria-label="Add character"><span class="material-symbols-outlined" aria-hidden="true">add</span></button>
+                </div>
+                <div class="sidebar-character-menu" id="sidebarCharacterMenu" role="listbox" aria-label="Switch character" hidden></div>
+            </div>
+
+            <ul class="sidebar-nav" role="list">
+                <li><button class="sidebar-link" type="button" id="sidebarDashboardLink"><span class="material-symbols-outlined" aria-hidden="true">grid_view</span><span class="sidebar-link-label">Dashboard</span></button></li>
+                <li><button class="sidebar-link" type="button" id="sidebarSearchLink"><span class="material-symbols-outlined" aria-hidden="true">search</span><span class="sidebar-link-label">Search</span></button></li>
+            </ul>
+
+            <div class="sidebar-section">
+                <p class="sidebar-section-title">Trackers</p>
+                <ul class="sidebar-nav" role="list" id="sidebarTrackerList"></ul>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="sidebar-section-title">Planning &amp; Sessions</p>
+                <ul class="sidebar-nav" role="list" id="sidebarPlanningList">
+                    <li><button class="sidebar-link" type="button" data-nav-planning="charmPlan"><span class="material-symbols-outlined" aria-hidden="true">map</span><span class="sidebar-link-label">Charm Plan</span></button></li>
+                    <li><button class="sidebar-link" type="button" data-nav-planning="opportunities"><span class="material-symbols-outlined" aria-hidden="true">explore</span><span class="sidebar-link-label">Opportunities</span></button></li>
+                    <li><button class="sidebar-link" type="button" data-nav-planning="library"><span class="material-symbols-outlined" aria-hidden="true">history</span><span class="sidebar-link-label">Session History</span></button></li>
+                    <li><button class="sidebar-link" type="button" data-nav-planning="taskSessions"><span class="material-symbols-outlined" aria-hidden="true">checklist</span><span class="sidebar-link-label">Task Sessions</span></button></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section sidebar-section-data">
+                <p class="sidebar-section-title">Data &amp; Backup</p>
+                <ul class="sidebar-nav" role="list">
+                    <li><button class="sidebar-link" type="button" id="sidebarExportButton"><span class="material-symbols-outlined" aria-hidden="true">download</span><span class="sidebar-link-label">Export</span></button></li>
+                    <li><button class="sidebar-link" type="button" id="sidebarImportButton"><span class="material-symbols-outlined" aria-hidden="true">upload</span><span class="sidebar-link-label">Import</span></button></li>
+                    <li><button class="sidebar-link" type="button" id="sidebarRecentChangesButton"><span class="material-symbols-outlined" aria-hidden="true">history_toggle_off</span><span class="sidebar-link-label">Recent changes</span></button></li>
+                    <li><button class="sidebar-link sidebar-link-danger" type="button" id="sidebarClearDataButton"><span class="material-symbols-outlined" aria-hidden="true">delete_forever</span><span class="sidebar-link-label">Clear all data</span></button></li>
+                </ul>
+            </div>
+            <input class="sr-only" id="sidebarImportInput" type="file" accept=".json,application/json" tabindex="-1" aria-hidden="true">
+
+            <button class="icon-button sidebar-collapse" id="sidebarCollapseButton" type="button" aria-label="Collapse sidebar" aria-expanded="true"><span class="material-symbols-outlined" id="sidebarCollapseIcon" aria-hidden="true">left_panel_close</span></button>
+        </nav>
+
+        <button class="sidebar-menu-toggle" id="sidebarMenuToggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="appSidebar"><span class="material-symbols-outlined" aria-hidden="true">menu</span></button>
+        <div class="sidebar-scrim" id="sidebarScrim" hidden></div>
+
         <main class="workspace-main" id="workspaceMain">
             <div class="workspace-content">
                 <div class="page-heading-row">

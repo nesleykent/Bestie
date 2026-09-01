@@ -20,12 +20,26 @@ import {
     restoreWorkspace
 } from "./state/hunt-workspace.js";
 import {
+    addCharacter,
     createDefaultCharacter,
     getCharacterLabel,
+    removeCharacter,
     restoreAppWorkspace,
     wrapLegacyWorkspaceAsCharacter
 } from "./state/character-workspace.js";
-import { loadAppState, loadWorkspaceState, saveAppState } from "./state/local-store.js";
+import {
+    buildAppExportFileName,
+    parseAppWorkspaceFile,
+    serializeAppState
+} from "./state/app-workspace-transfer.js";
+import {
+    clearAllStoredState,
+    loadAppState,
+    loadSidebarCollapsed,
+    loadWorkspaceState,
+    saveAppState,
+    saveSidebarCollapsed
+} from "./state/local-store.js";
 import {
     createTrackerProgress,
     getEntry,
@@ -61,6 +75,7 @@ import {
 } from "./trackers/registry.js";
 import { renderAllTabs } from "./ui/render-all-tabs.js";
 import { renderDashboard } from "./ui/render-dashboard.js";
+import { renderSidebarCharacterMenu, renderSidebarTrackers } from "./ui/render-sidebar.js";
 import { escapeText, patchTrackerCard, renderTracker } from "./ui/render-tracker.js";
 import { escapeAttribute } from "./ui/render-blocks.js";
 import { bookmarkControl, plainText, stageControl, tickControl } from "./ui/render-controls.js";
@@ -79,6 +94,27 @@ import { formatCharmsPerHour, formatNumber, formatTaskRate, formatTimeDetailed }
 
 const elements = {
     appShell: document.querySelector(".app-shell"),
+    appSidebar: document.getElementById("appSidebar"),
+    sidebarCharacterButton: document.getElementById("sidebarCharacterButton"),
+    sidebarCharacterName: document.getElementById("sidebarCharacterName"),
+    sidebarCharacterInput: document.getElementById("sidebarCharacterInput"),
+    sidebarCharacterMenu: document.getElementById("sidebarCharacterMenu"),
+    sidebarRenameButton: document.getElementById("sidebarRenameButton"),
+    sidebarDeleteCharacterButton: document.getElementById("sidebarDeleteCharacterButton"),
+    sidebarAddCharacterButton: document.getElementById("sidebarAddCharacterButton"),
+    sidebarDashboardLink: document.getElementById("sidebarDashboardLink"),
+    sidebarSearchLink: document.getElementById("sidebarSearchLink"),
+    sidebarTrackerList: document.getElementById("sidebarTrackerList"),
+    sidebarPlanningList: document.getElementById("sidebarPlanningList"),
+    sidebarExportButton: document.getElementById("sidebarExportButton"),
+    sidebarImportButton: document.getElementById("sidebarImportButton"),
+    sidebarImportInput: document.getElementById("sidebarImportInput"),
+    sidebarRecentChangesButton: document.getElementById("sidebarRecentChangesButton"),
+    sidebarClearDataButton: document.getElementById("sidebarClearDataButton"),
+    sidebarCollapseButton: document.getElementById("sidebarCollapseButton"),
+    sidebarCollapseIcon: document.getElementById("sidebarCollapseIcon"),
+    sidebarMenuToggle: document.getElementById("sidebarMenuToggle"),
+    sidebarScrim: document.getElementById("sidebarScrim"),
     analysisSection: document.getElementById("analysisSection"),
     clearLogButton: document.getElementById("clearLogButton"),
     compareHuntsButton: document.getElementById("compareHuntsButton"),
@@ -164,6 +200,8 @@ const state = {
     characters: [],
     activeCharacterId: "",
     editingCharacterId: "",
+    isCharacterMenuOpen: false,
+    isSidebarCollapsed: false,
     bestiaryData: [],
     bestiaryView: "session",
     isSessionInputOpen: false,
@@ -317,6 +355,233 @@ function persistState() {
 
     snapshotActiveCharacterWorkspace();
     saveAppState(getAppSnapshot());
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar: character switcher
+   -------------------------------------------------------------------------- */
+
+function getActiveCharacter() {
+    const index = getActiveCharacterIndex();
+
+    return index === -1 ? null : state.characters[index];
+}
+
+/** Every character switch leaves the record flow and any open detail panel behind. */
+function leaveCharacterForWorkspace(workspace) {
+    applyWorkspace(workspace);
+    leaveRecordFlow();
+    closeDetailPanel();
+}
+
+function switchCharacter(characterId) {
+    state.isCharacterMenuOpen = false;
+
+    if (characterId === state.activeCharacterId) {
+        renderApp();
+        return;
+    }
+
+    const nextCharacter = state.characters.find((character) => character.id === characterId);
+
+    if (!nextCharacter) {
+        renderApp();
+        return;
+    }
+
+    captureVisibleInputs();
+    snapshotActiveCharacterWorkspace();
+    state.activeCharacterId = characterId;
+    state.editingCharacterId = "";
+    leaveCharacterForWorkspace(nextCharacter.workspace);
+    renderApp();
+    persistState();
+}
+
+function addCharacterFlow() {
+    captureVisibleInputs();
+    snapshotActiveCharacterWorkspace();
+
+    const { character, characters } = addCharacter(state.characters, "");
+
+    state.characters = characters;
+    state.activeCharacterId = character.id;
+    state.isCharacterMenuOpen = false;
+    state.editingCharacterId = character.id;
+    leaveCharacterForWorkspace(character.workspace);
+    renderApp();
+    persistState();
+    elements.sidebarCharacterInput.focus();
+}
+
+function deleteCharacterFlow() {
+    if (state.characters.length < 2) {
+        return;
+    }
+
+    const index = getActiveCharacterIndex();
+    const label = getCharacterLabel(index, state.characters[index]);
+
+    if (!window.confirm(`Delete ${label}? Every tracker, session and Bestiary total for this character is discarded.`)) {
+        return;
+    }
+
+    const result = removeCharacter(state.characters, state.activeCharacterId, state.activeCharacterId);
+    const nextCharacter = result.characters.find((character) => character.id === result.activeCharacterId);
+
+    state.characters = result.characters;
+    state.activeCharacterId = result.activeCharacterId;
+    state.isCharacterMenuOpen = false;
+    state.editingCharacterId = "";
+    leaveCharacterForWorkspace(nextCharacter.workspace);
+    renderApp();
+    persistState();
+}
+
+function startRenameCharacter() {
+    const character = getActiveCharacter();
+
+    if (!character) {
+        return;
+    }
+
+    state.editingCharacterId = character.id;
+    state.isCharacterMenuOpen = false;
+    renderApp();
+    elements.sidebarCharacterInput.focus();
+    elements.sidebarCharacterInput.select();
+}
+
+function commitRenameCharacter() {
+    const character = state.characters.find((candidate) => candidate.id === state.editingCharacterId);
+
+    if (!character) {
+        return;
+    }
+
+    character.name = elements.sidebarCharacterInput.value.trim();
+    state.editingCharacterId = "";
+    renderApp();
+    persistState();
+}
+
+function cancelRenameCharacter() {
+    if (!state.editingCharacterId) {
+        return;
+    }
+
+    state.editingCharacterId = "";
+    renderApp();
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar: data & backup
+   -------------------------------------------------------------------------- */
+
+function openRecentChanges() {
+    captureVisibleInputs();
+    state.mode = "trackers";
+    state.recordView = "changes";
+    state.selectedTrackerKey = "";
+    state.isSessionInputOpen = false;
+    closeDetailPanel();
+    renderApp();
+    persistState();
+}
+
+function exportAppData() {
+    captureVisibleInputs();
+    snapshotActiveCharacterWorkspace();
+
+    const exportedAt = new Date().toISOString();
+    const json = serializeAppState(getAppSnapshot(), exportedAt);
+
+    downloadFile(json, buildAppExportFileName(exportedAt), "application/json");
+    announce("Exported every character to a JSON file.");
+}
+
+function applyImportedAppState(resolved) {
+    state.characters = resolved.characters;
+    state.activeCharacterId = resolved.activeCharacterId;
+    state.editingCharacterId = "";
+    state.isCharacterMenuOpen = false;
+
+    const active = state.characters.find((character) => character.id === state.activeCharacterId)
+        || state.characters[0];
+
+    leaveCharacterForWorkspace(active.workspace);
+    renderApp();
+    persistState();
+    announce("Import complete.");
+}
+
+function importAppData(file) {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+        let parsed;
+
+        try {
+            parsed = parseAppWorkspaceFile(String(reader.result ?? ""));
+        } catch (error) {
+            showAlert(error.message || "Could not read that file.");
+            return;
+        }
+
+        if (!window.confirm("Importing replaces every character currently saved in this browser. Continue?")) {
+            return;
+        }
+
+        const resolved = restoreAppWorkspace(parsed);
+
+        if (!resolved) {
+            showAlert("That file has no characters to import.");
+            return;
+        }
+
+        applyImportedAppState(resolved);
+    };
+
+    reader.onerror = () => showAlert("Could not read that file.");
+    reader.readAsText(file);
+}
+
+function clearAllDataFlow() {
+    if (!window.confirm("Clear all data? Every character, tracker record and session stored in this browser is permanently deleted. This cannot be undone.")) {
+        return;
+    }
+
+    clearAllStoredState();
+
+    const character = createDefaultCharacter();
+
+    state.characters = [character];
+    state.activeCharacterId = character.id;
+    state.editingCharacterId = "";
+    state.isCharacterMenuOpen = false;
+    leaveCharacterForWorkspace(character.workspace);
+    renderApp();
+    persistState();
+    announce("All data cleared.");
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar: collapse (desktop) and drawer (mobile)
+   -------------------------------------------------------------------------- */
+
+function setSidebarCollapsed(isCollapsed) {
+    state.isSidebarCollapsed = isCollapsed;
+    elements.appShell.classList.toggle("sidebar-collapsed", isCollapsed);
+    elements.sidebarCollapseButton.setAttribute("aria-expanded", String(!isCollapsed));
+    elements.sidebarCollapseButton.setAttribute("aria-label", isCollapsed ? "Expand sidebar" : "Collapse sidebar");
+    elements.sidebarCollapseIcon.textContent = isCollapsed ? "left_panel_open" : "left_panel_close";
+    saveSidebarCollapsed(isCollapsed);
+}
+
+function setSidebarOpen(isOpen) {
+    elements.appSidebar.classList.toggle("is-open", isOpen);
+    elements.sidebarScrim.hidden = !isOpen;
+    elements.sidebarMenuToggle.setAttribute("aria-expanded", String(isOpen));
 }
 
 /**
@@ -1876,9 +2141,55 @@ function renderTaskSessionsView() {
 }
 
 /**
- * No-op kept as the single place mode chrome would go, should it ever need to.
+ * The single place mode chrome goes: which sidebar entry is lit, and what the
+ * character switcher currently shows. Every navigation reaches here through
+ * renderApp(), so the sidebar can never disagree with the page it points at.
  */
 function applyPrimaryMode() {
+    const view = getModeView();
+    const isDashboard = state.mode === "dashboard";
+    const isTrackers = state.mode === "trackers";
+    const isRecentChanges = isTrackers && state.recordView === "changes";
+
+    elements.sidebarDashboardLink.classList.toggle("is-active", isDashboard);
+
+    renderSidebarTrackers(elements.sidebarTrackerList, TRACKERS, state.activeTrackerId, isTrackers && !isRecentChanges);
+
+    elements.sidebarPlanningList.querySelectorAll("[data-nav-planning]").forEach((link) => {
+        const key = link.dataset.navPlanning;
+        const isActive = key === "taskSessions"
+            ? state.mode === "tasks" && view === "allSessions"
+            : state.mode === "bestiary" && view === key;
+
+        link.classList.toggle("is-active", isActive);
+    });
+
+    elements.sidebarRecentChangesButton.classList.toggle("is-active", isRecentChanges);
+
+    renderSidebarCharacter();
+}
+
+function renderSidebarCharacter() {
+    const index = getActiveCharacterIndex();
+    const character = state.characters[index];
+    const isEditing = Boolean(character) && state.editingCharacterId === character.id;
+
+    elements.sidebarCharacterButton.hidden = isEditing;
+    elements.sidebarCharacterInput.hidden = !isEditing;
+
+    if (isEditing) {
+        elements.sidebarCharacterInput.value = character.name || "";
+    } else if (character) {
+        elements.sidebarCharacterName.textContent = getCharacterLabel(index, character);
+    }
+
+    elements.sidebarDeleteCharacterButton.disabled = state.characters.length < 2;
+    elements.sidebarCharacterButton.setAttribute("aria-expanded", String(state.isCharacterMenuOpen));
+    elements.sidebarCharacterMenu.hidden = !state.isCharacterMenuOpen;
+
+    if (state.isCharacterMenuOpen) {
+        renderSidebarCharacterMenu(elements.sidebarCharacterMenu, state.characters, state.activeCharacterId, getCharacterLabel);
+    }
 }
 
 function getPageContent() {
@@ -3841,5 +4152,117 @@ elements.output.addEventListener("click", (event) => {
         openCurrentSession();
     }
 });
+
+/* --------------------------------------------------------------------------
+   Sidebar wiring
+   -------------------------------------------------------------------------- */
+
+elements.sidebarDashboardLink.addEventListener("click", () => {
+    navigateWorkspace("dashboard");
+    setSidebarOpen(false);
+});
+elements.sidebarSearchLink.addEventListener("click", () => {
+    focusWorkspaceSearch();
+    setSidebarOpen(false);
+});
+elements.sidebarTrackerList.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const button = target?.closest("[data-sidebar-tracker]");
+
+    if (!button) {
+        return;
+    }
+
+    navigateWorkspace("trackers", button.dataset.sidebarTracker);
+    setSidebarOpen(false);
+});
+elements.sidebarPlanningList.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    const button = target?.closest("[data-nav-planning]");
+
+    if (!button) {
+        return;
+    }
+
+    if (button.dataset.navPlanning === "taskSessions") {
+        navigateWorkspace("tasks", "allSessions");
+    } else {
+        navigateWorkspace("bestiary", button.dataset.navPlanning);
+    }
+
+    setSidebarOpen(false);
+});
+elements.sidebarExportButton.addEventListener("click", exportAppData);
+elements.sidebarImportButton.addEventListener("click", () => elements.sidebarImportInput.click());
+elements.sidebarImportInput.addEventListener("change", () => {
+    const file = elements.sidebarImportInput.files?.[0];
+
+    if (file) {
+        importAppData(file);
+    }
+
+    elements.sidebarImportInput.value = "";
+});
+elements.sidebarRecentChangesButton.addEventListener("click", () => {
+    openRecentChanges();
+    setSidebarOpen(false);
+});
+elements.sidebarClearDataButton.addEventListener("click", clearAllDataFlow);
+
+elements.sidebarCharacterButton.addEventListener("click", () => {
+    state.isCharacterMenuOpen = !state.isCharacterMenuOpen;
+    renderApp();
+});
+elements.sidebarRenameButton.addEventListener("click", startRenameCharacter);
+elements.sidebarDeleteCharacterButton.addEventListener("click", deleteCharacterFlow);
+elements.sidebarAddCharacterButton.addEventListener("click", addCharacterFlow);
+elements.sidebarCharacterInput.addEventListener("blur", commitRenameCharacter);
+elements.sidebarCharacterInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        elements.sidebarCharacterInput.blur();
+    }
+
+    if (event.key === "Escape") {
+        event.preventDefault();
+        cancelRenameCharacter();
+    }
+});
+elements.sidebarCharacterMenu.addEventListener("click", (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+
+    if (target?.closest("[data-sidebar-add-character]")) {
+        addCharacterFlow();
+        return;
+    }
+
+    const option = target?.closest("[data-sidebar-character]");
+
+    if (option) {
+        switchCharacter(option.dataset.sidebarCharacter);
+    }
+});
+document.addEventListener("click", (event) => {
+    if (!state.isCharacterMenuOpen) {
+        return;
+    }
+
+    const target = event.target instanceof Element ? event.target : null;
+
+    if (target?.closest("#sidebarCharacter")) {
+        return;
+    }
+
+    state.isCharacterMenuOpen = false;
+    renderApp();
+});
+
+elements.sidebarCollapseButton.addEventListener("click", () => setSidebarCollapsed(!state.isSidebarCollapsed));
+elements.sidebarMenuToggle.addEventListener("click", () => {
+    setSidebarOpen(!elements.appSidebar.classList.contains("is-open"));
+});
+elements.sidebarScrim.addEventListener("click", () => setSidebarOpen(false));
+
+setSidebarCollapsed(loadSidebarCollapsed());
 
 initializeApp();

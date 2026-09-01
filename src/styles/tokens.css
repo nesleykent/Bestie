@@ -58,6 +58,9 @@
     --caution-tint: #fbf1e3;
     --caution-line: #e6cba6;
 
+    --sidebar-width: 264px;
+    --sidebar-width-collapsed: 76px;
+
     /* 5 and 10 — six consecutive sizes on a 1.25 modular scale. */
     --t-100: 0.8rem;
     --t-200: 1rem;

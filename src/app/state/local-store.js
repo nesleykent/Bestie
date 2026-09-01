@@ -109,6 +109,21 @@ export function loadAppState() {
  * migrate from. A page reload after this boots as if the app were never
  * used, which is the whole point of the action.
  */
+const SIDEBAR_COLLAPSED_KEY = "bestie-sidebar-collapsed";
+
+/** A pure UI preference, so it lives outside the app/workspace save data. */
+export function loadSidebarCollapsed() {
+    return readRaw(localStorage, SIDEBAR_COLLAPSED_KEY) === "1";
+}
+
+export function saveSidebarCollapsed(isCollapsed) {
+    try {
+        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, isCollapsed ? "1" : "0");
+    } catch (error) {
+        // Best effort; the sidebar simply reopens expanded next load.
+    }
+}
+
 export function clearAllStoredState() {
     try {
         localStorage.removeItem(APP_STORAGE_KEY);
