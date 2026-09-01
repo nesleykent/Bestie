@@ -3930,6 +3930,11 @@ async function initializeApp() {
         state.trackerItems = await loadTrackerItems(state.bestiaryData);
 
         const hasRestoredContent = restoreAppState();
+
+        // The site always opens on the Dashboard, regardless of whichever
+        // page a prior session left off on. Restored progress is untouched —
+        // only the landing page is forced.
+        state.mode = "dashboard";
         renderApp();
 
         if (hasRestoredContent) {
