@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  validate-static-app:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate repository structure
+        run: |
+          test -f src/index.html
+          test -f src/app/main.js
+          test -f src/app/features/session-analysis.js
+          test -f src/app/services/bestiary-repository.js
+          test -f src/app/state/local-store.js
+          test -f src/app/ui/render-results.js
+          test -f src/app/utils/formatters.js
+          test -f src/styles/app.css
+          test -f src/data/bestiary.json
+
+      - name: Validate datasets
+        run: |
+          for f in src/data/*.json; do
+            python3 -m json.tool "$f" > /dev/null
+          done

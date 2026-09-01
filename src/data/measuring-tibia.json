@@ -1,0 +1,301 @@
+{
+ "source": "https://tibiopedia.pl/quests/Measuring_Tibia_Quest",
+ "sourceName": "Tibiopedia.pl",
+ "capturedAt": "2026-08-11",
+ "note": "Cyclopedia Map discovery areas. Fully discovering an area awards the named achievement. Achievement names are canonicalised to the achievements dataset spelling; where the source spelling differed it is kept in achievementSourceName.",
+ "areas": [
+  {
+   "area": "Ab'Dendriel",
+   "achievement": "Elven Woods",
+   "subareas": [
+    "Ab'Dendriel City",
+    "Ab'Dendriel Surroundings",
+    "Draconia",
+    "Elvenbane"
+   ]
+  },
+  {
+   "area": "Carlin",
+   "achievement": "Long Live the Queen",
+   "subareas": [
+    "Carlin City",
+    "Carlin Surroundings",
+    "Fields of Glory",
+    "Folda",
+    "Ghostlands",
+    "Ice Islands",
+    "Isle of the Kings",
+    "Senja",
+    "Vega"
+   ]
+  },
+  {
+   "area": "Edron",
+   "achievement": "Stronghold of Edron",
+   "subareas": [
+    "Azzilon Castle",
+    "Cormaya",
+    "Cyclopolis",
+    "Edron Castle",
+    "Edron Dragon Lair",
+    "Edron Goblin Den",
+    "Edron Hero Fortress",
+    "Edron Orc Lands",
+    "Edron Surroundings",
+    "Edron Troll Den",
+    "Grimvale",
+    "Stonehome"
+   ]
+  },
+  {
+   "area": "Feyrist",
+   "achievement": "Realms of Dreams",
+   "subareas": [
+    "Candia",
+    "Feyrist Meadows",
+    "Fae Village"
+   ]
+  },
+  {
+   "area": "Hrodmir",
+   "achievement": "Race to the Pole",
+   "subareas": [
+    "Bittermor",
+    "Formorgar Glacier",
+    "Grimlund",
+    "Hellheim",
+    "Inukaya",
+    "Krimhorn",
+    "Nibelor",
+    "Okolnir",
+    "Ragnir",
+    "Svargrond City",
+    "Svargrond Surroundings",
+    "Tyrsung"
+   ]
+  },
+  {
+   "area": "Kazordoon",
+   "achievement": "Dwarven Mines",
+   "subareas": [
+    "Femor Hills",
+    "Horned Fox Lair",
+    "Kazordoon City",
+    "Kazordoon Surroundings",
+    "Kazordoon Troll Den",
+    "Orc Lands",
+    "Rorc Plains",
+    "Ulderek's Rock"
+   ]
+  },
+  {
+   "area": "Kilmaresh",
+   "achievement": "The Empire's Glory",
+   "subareas": [
+    "Central Steppe",
+    "Green Belt",
+    "Issavi",
+    "Kilmaresh Mountains",
+    "Nykri Delta",
+    "Rascacoon",
+    "Southern Steppe",
+    "The Wreckoning"
+   ]
+  },
+  {
+   "area": "Krailos",
+   "achievement": "The Ogre Steppe",
+   "subareas": [
+    "Krailos Mines",
+    "Krailos Ruins",
+    "Krailos Steppe",
+    "Ogre Village"
+   ]
+  },
+  {
+   "area": "Marapur",
+   "achievement": "Snake Pit",
+   "subareas": [
+    "Dead Riverbed",
+    "Emerald Gardens",
+    "Fading Isles",
+    "Hounds Head",
+    "Moonfall",
+    "Moonstone Crater",
+    "Murmuring Wilderness",
+    "Salgadara",
+    "Silent Waters",
+    "Silvertides",
+    "Sparking Lagoon",
+    "Stardance Mountains",
+    "Thalassara Surroundings"
+   ]
+  },
+  {
+   "area": "Northern Darama",
+   "achievement": "Daraman's Footsteps",
+   "subareas": [
+    "Daramian Minotaur Pyramid",
+    "Darashia City",
+    "Drefia",
+    "Lion's Rock",
+    "Northern Darama Desert"
+   ]
+  },
+  {
+   "area": "Oramond",
+   "achievement": "Glooth Punk",
+   "subareas": [
+    "Oramond Marshes",
+    "Oramond Minotaur Camp",
+    "Oramond Mountain Hideout",
+    "Rathleton City",
+    "Rathleton Slum",
+    "Rathleton Workshops"
+   ]
+  },
+  {
+   "area": "Quirefang",
+   "achievement": "Trip to the Beach",
+   "subareas": [
+    "Gray Beach",
+    "Hive Pools",
+    "Hive Pyramids"
+   ]
+  },
+  {
+   "area": "Roshamuul",
+   "achievement": "Twisted Dreams",
+   "subareas": [
+    "Isle of Ada - Adaean Mines",
+    "Isle of Ada - Bastion",
+    "Isle of Ada - Outskirts",
+    "Lower Roshamuul",
+    "Roshamuul Mountains",
+    "Upper Roshamuul",
+    "Ingol"
+   ]
+  },
+  {
+   "area": "Southern Darama",
+   "achievement": "Mummy's Dearest",
+   "subareas": [
+    "Ankrahmun City",
+    "Ankrahmun Pharaoh Tombs",
+    "Cobra Bastion",
+    "Kha'zeel Dragon Lairs",
+    "Southern Darama Desert",
+    "Southern Terramite Tunnels"
+   ],
+   "achievementSourceName": "Mummys Dearest"
+  },
+  {
+   "area": "Thais",
+   "achievement": "All Hail the King",
+   "subareas": [
+    "Aragonia",
+    "Fibula",
+    "Greenshore",
+    "Mount Sternum",
+    "Targuna",
+    "Thais City",
+    "Thais Surroundings",
+    "Thais Troll's Cave"
+   ]
+  },
+  {
+   "area": "Tiquanda",
+   "achievement": "King Of The Jungle",
+   "subareas": [
+    "Asura Palace",
+    "Banuta",
+    "Chor",
+    "Forbidden Lands of Tiquanda",
+    "Kha'zeel Mountains",
+    "Medusa Tower",
+    "Oskayat",
+    "Port Hope City",
+    "Port Hope Surroundings"
+   ],
+   "achievementSourceName": "King of the Jungle"
+  },
+  {
+   "area": "Vandura",
+   "achievement": "Liberty Bay Watch",
+   "subareas": [
+    "Bounac",
+    "Calassa",
+    "Goroma",
+    "Goroma Hellgorge",
+    "Kharos",
+    "Laguna Islands",
+    "Liberty Bay City",
+    "Liberty Bay Surroundings",
+    "Malada",
+    "Meriana",
+    "Nargor",
+    "Ramoa",
+    "Talahu",
+    "Treasure Island",
+    "Vandura Cultist Hideout",
+    "Vandura Quara Caves"
+   ]
+  },
+  {
+   "area": "Venore",
+   "achievement": "Jewel in the Swamp",
+   "subareas": [
+    "Amazon Camp",
+    "Black Knight Villa",
+    "Dark Cathedral",
+    "Gloom Caverns",
+    "Green Claw Swamp",
+    "Jakundaf Desert",
+    "Outlaw Camp",
+    "Plains of Havoc",
+    "Shadowthorn",
+    "Venore City",
+    "Venore Dragon lair",
+    "Venore Southern Swamp",
+    "Venore Surroundings"
+   ]
+  },
+  {
+   "area": "Yalahar",
+   "achievement": "Ancient Splendor",
+   "subareas": [
+    "Fenrock",
+    "Isle of Evil",
+    "Mistrock",
+    "Yalahar Alchemist Quarter",
+    "Yalahar Arena Quarter",
+    "Yalahar Centre",
+    "Yalahar Factory Quarter",
+    "Yalahar Foreigner Quarter",
+    "Yalahar Graveyard",
+    "Yalahar Mage Quarter",
+    "Yalahar Sunken Quarter",
+    "Yalahar Trade Quarter"
+   ]
+  },
+  {
+   "area": "Zao",
+   "achievement": "Lizard Kingdom",
+   "subareas": [
+    "Chazorai",
+    "Corrupted Gardens",
+    "Dragonblaze Peaks",
+    "Emperor's Castle",
+    "Falcon Bastion",
+    "Muggy Plains",
+    "Norcferatu Fortress",
+    "Razzachai",
+    "Spirittrails",
+    "Vengoth",
+    "Zao Orc Fortress",
+    "Zao Steppe",
+    "Zzaion"
+   ]
+  }
+ ]
+}

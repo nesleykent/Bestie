@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Use the application
+    url: https://nesleykent.github.io/Bestie/
+    about: Open the currently deployed Bestie application.
+  - name: Support and usage guidance
+    url: https://github.com/nesleykent/Bestie/blob/main/SUPPORT.md
+    about: Read setup, troubleshooting, privacy, and support guidance before opening an issue.

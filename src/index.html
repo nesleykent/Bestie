@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestie</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="./styles/tokens.css">
+    <link rel="stylesheet" href="./styles/app.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..24,300,0,0" rel="stylesheet">
+</head>
+<body>
+    <div class="app-shell">
+        <main class="workspace-main" id="workspaceMain">
+            <div class="workspace-content">
+                <div class="page-heading-row">
+                    <div>
+                        <p class="page-eyebrow" id="pageEyebrow">Tracker</p>
+                        <h1 id="pageTitle">Bestiary</h1>
+                        <p class="description" id="pageDescription">Character-wide progress for every creature.</p>
+                    </div>
+                    <button class="btn btn-primary-context" id="newSessionButton" type="button">
+                        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+                        New session
+                    </button>
+                </div>
+
+                <p class="alert" id="appAlert" role="alert"></p>
+                <p class="sr-only" id="srStatus" aria-live="polite"></p>
+                <div class="undo-bar" id="undoBar" role="status" hidden></div>
+
+                <nav class="hunt-workspace" id="huntWorkspace" aria-label="Current view">
+                    <div class="hunt-tab-strip" id="huntTabStrip"></div>
+                    <div class="hunt-workspace-actions" id="huntWorkspaceActions">
+                        <button class="btn btn-secondary" id="compareHuntsButton" type="button" aria-pressed="false" disabled>Compare sessions</button>
+                    </div>
+                </nav>
+
+                <section class="content-section session-input-section" id="inputSection" aria-label="Hunt Analyzer">
+                    <button class="session-summary" id="sessionToggle" type="button" aria-expanded="true" aria-controls="sessionEditor" hidden></button>
+                    <div id="sessionEditor">
+                        <label class="input-label" for="sessionLog">Paste Hunt Analyzer text</label>
+                        <textarea id="sessionLog" placeholder="Example:
+Session: 1:30h
+Killed Monsters:
+    250x Rotworm
+Looted Items:" spellcheck="false"></textarea>
+
+                        <div class="respawn-mode-block" id="respawnModeBlock">
+                            <span class="input-label" id="respawnModeLabel">Recorded Respawn Mode</span>
+                            <div class="segmented" role="group" aria-labelledby="respawnModeLabel">
+                                <button class="segmented-button is-selected" id="sessionRegularButton" type="button" aria-pressed="true">Regular</button>
+                                <button class="segmented-button" id="sessionRapidButton" type="button" aria-pressed="false">Rapid Respawn</button>
+                            </div>
+                            <p class="helper-text" id="respawnModeHint">The spawn conditions this Hunt Analyzer was recorded under.</p>
+                        </div>
+
+                        <div class="toolbar" role="group" aria-label="Session actions">
+                            <button class="btn btn-secondary" id="pasteLogButton" type="button">Paste log</button>
+                            <button class="btn" id="processLogButton" type="button">Process log</button>
+                            <button class="btn btn-tertiary" id="clearLogButton" type="button">Clear</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="content-section" id="analysisSection" aria-labelledby="resultsTitle">
+                    <div class="section-heading">
+                        <h2 id="resultsTitle">Analysis</h2>
+                        <p class="section-copy" id="resultsCopy">Process the session log, then refine the estimate with creature selection and target values.</p>
+                    </div>
+                    <div id="output" class="empty-state"><strong>No analysis yet.</strong></div>
+                </section>
+
+                <section class="content-section" id="comparisonSection" aria-labelledby="comparisonTitle" hidden>
+                    <h2 id="comparisonTitle">Session Comparison</h2>
+                    <p class="section-copy">Charm Rate ranks which session turns hunting time into charm points most efficiently for your current Bestiary progress.</p>
+                    <div id="comparisonOutput" class="empty-state"><strong>Not enough analyzed sessions.</strong></div>
+                </section>
+
+                <footer class="site-disclaimer">
+                    <details>
+                        <summary>About this unofficial Tibia tool</summary>
+                        <div class="disclaimer-copy">
+                            <p>This site reads pasted hunting session logs and estimates Bestiary or task progress. It is not an official profile mirror and its projections can differ from in-game results.</p>
+                            <p>Creature and achievement metadata comes from <a href="https://tibiadraptor.com/" target="_blank" rel="noreferrer">TibiaDraptor</a>; map areas from <a href="https://tibiopedia.pl/" target="_blank" rel="noreferrer">Tibiopedia.pl</a>. Tibia is property of <a href="https://www.cipsoft.com/" target="_blank" rel="noreferrer">CipSoft GmbH</a>.</p>
+                            <p><a href="https://github.com/nesleykent/Bestie" target="_blank" rel="noreferrer">Source code and issue tracker</a></p>
+                        </div>
+                    </details>
+                </footer>
+            </div>
+        </main>
+
+        <aside class="detail-panel" id="detailPanel" aria-label="Item details" hidden>
+            <button class="icon-button detail-close" id="detailCloseButton" type="button" aria-label="Close details"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+            <div id="detailPanelContent"></div>
+        </aside>
+    </div>
+
+    <script>
+        const showRuntimeError = (message) => {
+            const alert = document.getElementById("appAlert");
+            if (alert) alert.textContent = `Runtime error: ${message}`;
+        };
+        const originalConsoleError = console.error.bind(console);
+        console.error = (...args) => {
+            originalConsoleError(...args);
+            showRuntimeError(args.map(String).join(" "));
+        };
+        window.addEventListener("error", (event) => showRuntimeError(event.message));
+        window.addEventListener("unhandledrejection", (event) => showRuntimeError(event.reason?.message || event.reason));
+    </script>
+    <script type="module" src="./app/main.js"></script>
+</body>
+</html>

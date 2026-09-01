@@ -1,0 +1,134 @@
+/* ==========================================================================
+   Design tokens and the grid
+
+   Ten rules, each checkable rather than a matter of taste. This file defines the
+   shared vocabulary; app.css applies it.
+
+   1  Grid        12 columns, a 24px gutter, a 32px margin. Every surface is a span
+                  of that grid, so a card edge and a table edge land on the same line.
+   2  Alignment   One left edge per column. Figures are tabular and right-aligned so
+                  a column of numbers reads as a block rather than a list.
+   3  Spacing     One unit: 4px. Every gap in the app is 1, 2, 3, 4, 6, 8, 12, 16 or
+                  24 of them. No arbitrary pixel value is allowed downstream.
+   4  Colour      Five inks, two papers, one blue for state, one clay for caution.
+                  Nothing else in the interface carries colour.
+   5  Type        One sans on a 1.25 ratio, three weights. Tracking tightens as size
+                  grows; labels are the only capitals in the product.
+   6  Geometry    Two radii — 8px for surfaces, 4px for controls — plus a pill, used
+                  only where a thing is a tag.
+   7  Depth       Two elevations from one shadow colour. A surface is lifted or
+                  outlined, never both.
+   8  Motion      Two durations, one easing curve, and motion only ever confirms a
+                  state change.
+   9  Whitespace  Major regions separate by 48px or 64px. Related controls stay on
+                  the 8px or 16px rhythm; empty space does the grouping before boxes.
+  10  Hierarchy   Display, answer, section, body and label each have one type role.
+                  Every view has one dominant heading and one dominant figure.
+   ========================================================================== */
+
+:root {
+    /* 3 — spacing */
+    --u1: 4px;
+    --u2: 8px;
+    --u3: 12px;
+    --u4: 16px;
+    --u6: 24px;
+    --u8: 32px;
+    --u12: 48px;
+    --u16: 64px;
+    --u24: 96px;
+
+    /* 1 — grid */
+    --grid-columns: 12;
+    --grid-gutter: var(--u4);
+    --grid-margin: var(--u8);
+    --page-max: 1920px;
+
+    /* 4 — colour */
+    --ink-900: #14130e;
+    --ink-700: #3b3a33;
+    --ink-500: #5f5e54;
+    --ink-300: #8d8b7f;
+    --ink-100: #d8d5c9;
+    --paper: #faf9f6;
+    --surface: #ffffff;
+    --accent: #1d55c9;
+    --accent-tint: #eef2fc;
+    --caution: #8a4a12;
+    --caution-tint: #fbf1e3;
+    --caution-line: #e6cba6;
+
+    /* 5 and 10 — six consecutive sizes on a 1.25 modular scale. */
+    --t-100: 0.8rem;
+    --t-200: 1rem;
+    --t-300: 1.25rem;
+    --t-400: 1.5625rem;
+    --t-500: 1.953125rem;
+    --t-600: 2.44140625rem;
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-bold: 600;
+    --leading-tight: 1.15;
+    --leading-snug: 1.35;
+    --leading-body: 1.55;
+    --tracking-display: -0.03em;
+    --tracking-heading: -0.02em;
+    --tracking-title: -0.01em;
+    --tracking-label: 0.08em;
+
+    /* 6 — geometry */
+    --radius-surface: 8px;
+    --radius-control: 4px;
+    --radius-pill: 999px;
+    --hairline: 1px solid var(--ink-100);
+
+    /* 7 — depth */
+    --shadow-rgb: 20 19 14;
+    --elevation-1: 0 1px 2px rgb(var(--shadow-rgb) / 0.05);
+    --elevation-2: 0 var(--u1) var(--u3) rgb(var(--shadow-rgb) / 0.1);
+
+    /* 8 — motion */
+    --duration-fast: 120ms;
+    --duration: 200ms;
+    --ease: cubic-bezier(0.2, 0, 0, 1);
+
+    --control-height: 40px;
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* 1 — the page grid. Content spans all twelve columns unless it says otherwise. */
+
+.workspace-content {
+    display: grid;
+    grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
+    column-gap: var(--grid-gutter);
+    row-gap: var(--u4);
+    width: min(100%, var(--page-max));
+    margin: 0 auto;
+    padding: var(--u8) var(--grid-margin) var(--u16);
+    align-content: start;
+}
+
+.workspace-content > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(clamp(calc(var(--u24) * 3 - var(--u4)), 18vw, calc(var(--u24) * 3 + var(--u8))), 1fr));
+    column-gap: var(--grid-gutter);
+    row-gap: var(--grid-gutter);
+    margin: var(--u4) 0 var(--u6);
+}
+
+.progress-card {
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    :root {
+        --grid-margin: var(--u4);
+    }
+}
