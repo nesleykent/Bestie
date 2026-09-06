@@ -7,7 +7,10 @@ export const LIBRARY_COLUMNS = [
     { key: "duration", label: "Duration", isNumeric: true },
     { key: "respawnMode", label: "Respawn", isNumeric: false },
     { key: "charmPoints", label: "Charm Points", isNumeric: true },
-    { key: "charmRate", label: "Charm Rate", isNumeric: true }
+    { key: "charmRate", label: "Charm Rate", isNumeric: true },
+    { key: "proficiencyRate", label: "Proficiency XP/h", isNumeric: true },
+    { key: "proficiencyTotal", label: "Proficiency XP", isNumeric: true },
+    { key: "kills", label: "Kills", isNumeric: true }
 ];
 
 function buildHead(sort) {
@@ -61,6 +64,9 @@ function buildRow(session) {
                 ? `${formatNumber(session.charmPoints)}<span class="row-aside">${formatNumber(session.creatureCount)} creatures</span>`
                 : "&mdash;"}</td>
             <td class="is-num">${session.hasProcessedLog ? formatCharmsPerHour(session.charmRate) : "&mdash;"}</td>
+            <td class="is-num">${session.hasProcessedLog && session.proficiencyRate !== null ? formatNumber(session.proficiencyRate) : "—"}${session.hasProcessedLog && session.proficiency.isPartial ? buildPill("Partial") : ""}</td>
+            <td class="is-num">${session.hasProcessedLog && session.proficiencyTotal !== null ? formatNumber(session.proficiencyTotal) : "—"}</td>
+            <td class="is-num">${session.hasProcessedLog && session.kills !== null ? formatNumber(session.kills) : "—"}</td>
             <td>
                 <input
                     class="library-notes"
@@ -72,6 +78,7 @@ function buildRow(session) {
                 >
             </td>
             <td class="library-actions">
+                <button class="row-action" type="button" data-proficiency-open="${escapeAttribute(session.id)}">Proficiency</button>
                 <button class="row-action" type="button" data-library-open="${escapeAttribute(session.id)}">Open</button>
                 <button
                     class="row-action is-danger"

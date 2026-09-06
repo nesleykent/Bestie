@@ -3138,3 +3138,39 @@ th.is-sorted .column-sort {
     font-size: var(--t-100);
     color: var(--ink-500);
 }
+
+/* Weapon Proficiency reuses the shared answer, table, form and spacing system. */
+.proficiency-page { min-width: 0; }
+.proficiency-metrics { margin-bottom: var(--u4); }
+.workspace-main.is-proficiency .content-section { margin-top: var(--u6); }
+.proficiency-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--u4);
+}
+.proficiency-metrics .answer { min-width: 0; margin: 0; padding: var(--u3); border: var(--hairline); border-radius: var(--radius-surface); }
+.proficiency-metrics .answer-value { font-size: var(--t-300); overflow-wrap: anywhere; }
+.proficiency-metrics .answer:first-child .answer-value { font-size: var(--t-500); }
+.proficiency-controls > div { flex: 1 1 160px; min-width: 0; }
+.proficiency-controls input, .proficiency-controls select { width: 100%; min-width: 0; }
+.weapon-progress { width: 100%; height: var(--u2); accent-color: var(--accent); }
+.proficiency-warning { padding: var(--u3); color: var(--caution); background: var(--caution-tint); border-radius: var(--radius-control); }
+.proficiency-warning ul { padding-left: var(--u6); overflow-wrap: anywhere; }
+.proficiency-table tbody th {
+    position: static;
+    white-space: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: var(--t-200);
+    color: var(--ink-700);
+}
+.proficiency-table { max-width: 100%; }
+.proficiency-table table { min-width: 780px; }
+@media (max-width: 900px) {
+    .proficiency-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+    .proficiency-metrics .answer:first-child .answer-value { font-size: var(--t-400); }
+    .workspace-main.is-proficiency .page-eyebrow { padding-left: var(--u8); }
+}

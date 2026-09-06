@@ -1,3 +1,8 @@
+import { parseHuntSession } from "./features/session-parser.js";
+import { getHuntProficiency } from "./features/weapon-proficiency.js";
+import { buildPageRoute, readPageRoute } from "./state/page-route.js";
+import { createWeaponPlan } from "./state/weapon-plans.js";
+import { buildProficiencyComparison, buildWeaponProjection, renderProficiency } from "./ui/render-proficiency.js";
 import { parsePlayTimeMinutes, planCharmTime } from "./features/charm-plan.js";
 import {
     aggregateAllTabsSummary,
@@ -178,6 +183,7 @@ const VIEW_CONTENT = {
 };
 
 const FIXED_VIEWS = {
+    proficiency: ["library"],
     bestiary: ["allSessions", "charmPlan", "opportunities", "library"],
     // In Trackers mode the fixed tabs ARE the trackers.
     trackers: getTrackerIds(),
@@ -195,6 +201,10 @@ const RESPAWN_MODE_SHORT_LABELS = {
 };
 
 const state = {
+    weaponPlans: [createWeaponPlan()],
+    activeWeaponPlanId: "weapon-1",
+    proficiencySort: { key: "total", direction: "desc" },
+    projectionCreature: "",
     mode: "dashboard",
     activeHuntId: "",
     characters: [],
@@ -240,6 +250,7 @@ const state = {
 };
 
 function getModeView() {
+    if (state.mode === "proficiency") return "session";
     if (state.mode === "trackers") {
         return state.activeTrackerId;
     }
@@ -252,6 +263,10 @@ function getModeView() {
 }
 
 function setModeView(view) {
+    if (state.mode === "proficiency") {
+        if (view === "library") { state.mode = "bestiary"; state.bestiaryView = "library"; }
+        return;
+    }
     if (state.mode === "trackers") {
         state.activeTrackerId = view;
         // Paging is per-view, so opening another tracker starts at its first page.
@@ -297,11 +312,13 @@ function getHuntLabelById(huntId) {
 }
 
 function getComparableHunts() {
-    return state.hunts.filter(hasBestiaryAnalysis);
+    return state.hunts.filter((hunt) => hunt.hasProcessedLog);
 }
 
 function getWorkspaceSnapshot() {
     return {
+        weaponPlans: state.weaponPlans,
+        activeWeaponPlanId: state.activeWeaponPlanId,
         mode: state.mode,
         activeHuntId: state.activeHuntId,
         trackerProgress: state.trackerProgress,
@@ -911,6 +928,7 @@ function buildLibraryTab(view) {
 }
 
 function buildFixedTabs(view) {
+    if (state.mode === "proficiency") return [buildLibraryTab(view)];
     if (state.mode === "trackers") {
         return TRACKERS.map((tracker) => ({
             key: tracker.id,
@@ -997,7 +1015,7 @@ function renderHuntTabStrip() {
         id: hunt.id,
         label: getHuntLabel(index, hunt),
         meta: [
-            isBestiary ? getBestiaryTabMeta(hunt) : getTaskTabMeta(hunt),
+            state.mode === "proficiency" ? (hunt.hasProcessedLog ? `${formatNumber(getHuntProficiency(hunt, state.bestiaryData).perHour ?? 0)} Proficiency XP/h` : "No analysis") : isBestiary ? getBestiaryTabMeta(hunt) : getTaskTabMeta(hunt),
             hunt.hasProcessedLog ? RESPAWN_MODE_SHORT_LABELS[hunt.respawnMode] : ""
         ].filter(Boolean).join(" · "),
         isActive: view === "session" && hunt.id === state.activeHuntId
@@ -1007,7 +1025,7 @@ function renderHuntTabStrip() {
     renderHuntTabs(elements.huntTabStrip, buildFixedTabs(view), huntTabs, { canAdd: !isTrackers });
     attachHuntTabActions();
 
-    elements.huntWorkspaceActions.hidden = !isBestiary;
+    elements.huntWorkspaceActions.hidden = !isBestiary && state.mode !== "proficiency";
     elements.compareHuntsButton.disabled = getComparableHunts().length < 2;
     elements.compareHuntsButton.classList.toggle("is-selected", isComparing);
     elements.compareHuntsButton.setAttribute("aria-pressed", String(isComparing));
@@ -1066,6 +1084,11 @@ function renderComparisonView() {
     elements.comparisonSection.hidden = false;
 
     renderComparison(elements.comparisonOutput, comparison);
+    elements.comparisonOutput.className = "results-shell";
+    elements.comparisonOutput.insertAdjacentHTML("beforeend", buildProficiencyComparison(state.hunts.map((hunt, index) => ({
+        id: hunt.id, label: getHuntLabel(index, hunt),
+        proficiency: hunt.hasProcessedLog ? getHuntProficiency(hunt, state.bestiaryData) : null
+    }))));
 }
 
 function renderTaskSessionView() {
@@ -2043,6 +2066,7 @@ function attachOpportunityActions() {
 
 function buildLibraryRows() {
     return state.hunts.map((hunt, index) => {
+        const proficiency = getHuntProficiency(hunt, state.bestiaryData);
         const summary = hasBestiaryAnalysis(hunt) ? calculateBestiaryResult(hunt).summary : null;
 
         return {
@@ -2054,6 +2078,10 @@ function buildLibraryRows() {
             respawnMode: hunt.respawnMode,
             respawnModeLabel: RESPAWN_MODE_LABELS[hunt.respawnMode],
             duration: hunt.sessionDuration,
+            proficiency,
+            proficiencyTotal: proficiency.total,
+            proficiencyRate: proficiency.perHour,
+            kills: proficiency.kills,
             creatureCount: hunt.matchedMonsters.length,
             charmPoints: summary ? summary.totalCharms : 0,
             charmRate: summary ? summary.totalCharmsPerHour : 0,
@@ -2157,11 +2185,13 @@ function applyPrimaryMode() {
 
     elements.sidebarPlanningList.querySelectorAll("[data-nav-planning]").forEach((link) => {
         const key = link.dataset.navPlanning;
-        const isActive = key === "taskSessions"
+        const isActive = key === "proficiency" ? state.mode === "proficiency" : key === "taskSessions"
             ? state.mode === "tasks" && view === "allSessions"
             : state.mode === "bestiary" && view === key;
 
         link.classList.toggle("is-active", isActive);
+        if (isActive) link.setAttribute("aria-current", "page");
+        else link.removeAttribute("aria-current");
     });
 
     elements.sidebarRecentChangesButton.classList.toggle("is-active", isRecentChanges);
@@ -2194,6 +2224,10 @@ function renderSidebarCharacter() {
 
 function getPageContent() {
     const view = getModeView();
+    if (state.mode === "proficiency") return {
+        eyebrow: "Planning & Sessions", title: "Weapon Proficiency",
+        description: "Measure proficiency from your Hunt Analyzer and plan progress for a specific weapon."
+    };
 
     if (state.mode === "dashboard") {
         const activeIndex = getActiveCharacterIndex();
@@ -2261,10 +2295,12 @@ function applyWorkspaceChrome() {
 
     elements.pageEyebrow.textContent = content.eyebrow;
     elements.pageTitle.textContent = content.title;
+    document.title = `${content.title} · Bestie`;
     elements.pageDescription.textContent = content.description;
     // Trackers and the Dashboard have nothing "New session" would do.
     elements.newSessionButton.hidden = state.mode === "trackers" || state.mode === "dashboard";
     elements.workspaceMain.classList.toggle("is-trackers", state.mode === "trackers");
+    elements.workspaceMain.classList.toggle("is-proficiency", state.mode === "proficiency");
 }
 
 function renderApp() {
@@ -2274,6 +2310,7 @@ function renderApp() {
 
     applyPrimaryMode();
     applyWorkspaceChrome();
+    syncPageRoute();
 
     if (state.mode === "dashboard") {
         elements.huntWorkspace.hidden = true;
@@ -2303,6 +2340,11 @@ function renderApp() {
     closeDetailPanel();
     elements.huntWorkspace.hidden = false;
     renderHuntTabStrip();
+
+    if (state.mode === "proficiency") {
+        renderProficiencyView();
+        return;
+    }
 
     // The library manages the logs both modes share, so it renders identically
     // in either one.
@@ -2456,6 +2498,7 @@ function showComparison() {
         return;
     }
 
+    state.mode = "bestiary";
     state.bestiaryView = "comparison";
     renderApp();
     persistState();
@@ -3808,8 +3851,10 @@ function attachTaskActions() {
 }
 
 function processHuntLog(hunt, logText) {
-    const bestiary = analyzeSession(logText, state.bestiaryData);
-    const tasks = analyzeTaskSession(logText);
+    const session = parseHuntSession(logText);
+    const bestiary = analyzeSession(logText, state.bestiaryData, session);
+    const tasks = analyzeTaskSession(logText, session);
+    hunt.parseIssues = session.issues;
     const taskNames = new Set(tasks.monsters.map((monster) => monster.name));
 
     dropAllTabsEntriesOfHunt(hunt.id);
@@ -3860,6 +3905,9 @@ function processLog() {
 }
 
 function applyWorkspace(workspace) {
+    state.weaponPlans = workspace.weaponPlans;
+    state.activeWeaponPlanId = workspace.activeWeaponPlanId;
+    state.projectionCreature = "";
     state.mode = workspace.mode;
     state.trackerProgress = workspace.trackerProgress ?? createTrackerProgress();
     state.changeLog = workspace.changeLog ?? createChangeLog();
@@ -3923,6 +3971,114 @@ function downloadFile(text, fileName, mimeType) {
 }
 
 
+function renderProficiencyView() {
+    const hunt = getActiveHunt();
+    const session = getHuntProficiency(hunt, state.bestiaryData);
+    elements.inputSection.hidden = false;
+    elements.analysisSection.hidden = false;
+    elements.comparisonSection.hidden = true;
+    applySessionInput(hunt, session.rows.length);
+    showSectionHeading(getHuntLabelById(hunt.id), "Proficiency belongs to the weapon receiving kill credit.");
+    renderProficiency(elements.output, session, {
+        processed: hunt.hasProcessedLog, sort: state.proficiencySort,
+        plans: state.weaponPlans, activeId: state.activeWeaponPlanId, projectionCreature: state.projectionCreature
+    });
+    elements.output.querySelectorAll("[data-proficiency-sort]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const key = button.dataset.proficiencySort;
+            state.proficiencySort = { key, direction: state.proficiencySort.key === key && state.proficiencySort.direction === "desc" ? "asc" : "desc" };
+            renderProficiencyView();
+            elements.output.querySelector(`[data-proficiency-sort="${key}"]`).focus();
+        });
+    });
+    const refreshProjection = () => {
+        const plan = state.weaponPlans.find((entry) => entry.id === state.activeWeaponPlanId);
+        document.getElementById("weaponProjection").innerHTML = buildWeaponProjection(plan, session, state.projectionCreature);
+    };
+    elements.output.querySelectorAll("[data-weapon-field]").forEach((input) => {
+        input.addEventListener("input", () => {
+            const plan = state.weaponPlans.find((entry) => entry.id === state.activeWeaponPlanId);
+            plan[input.dataset.weaponField] = input.value;
+            if (input.dataset.weaponField === "name") {
+                const select = document.getElementById("weaponPlanSelect");
+                select.selectedOptions[0].textContent = plan.name || `Weapon ${select.selectedIndex + 1}`;
+            }
+            refreshProjection();
+            persistState();
+        });
+    });
+    document.getElementById("weaponPlanSelect").addEventListener("change", (event) => {
+        state.activeWeaponPlanId = event.target.value;
+        renderProficiencyView();
+        document.getElementById("weaponPlanSelect").focus();
+        persistState();
+    });
+    document.getElementById("addWeaponPlan").addEventListener("click", () => {
+        const plan = createWeaponPlan(crypto.randomUUID());
+        state.weaponPlans.push(plan);
+        state.activeWeaponPlanId = plan.id;
+        renderProficiencyView();
+        document.getElementById("weaponName").focus();
+        persistState();
+    });
+    document.getElementById("proficiencyCreature")?.addEventListener("change", (event) => {
+        state.projectionCreature = event.target.value;
+        refreshProjection();
+    });
+}
+
+let routeReady = false;
+let restoringRoute = false;
+let lastPageRoute = "";
+
+function applyPageRoute() {
+    const route = readPageRoute(window.location.hash);
+    leaveRecordFlow();
+    state.mode = route.mode;
+    if (route.view === "changes") state.recordView = "changes";
+    else setModeView(route.view);
+    if (state.hunts.some((hunt) => hunt.id === route.sessionId)) state.activeHuntId = route.sessionId;
+    state.isSessionInputOpen = false;
+}
+
+function syncPageRoute() {
+    if (!routeReady) return;
+    const route = buildPageRoute(state.mode, state.recordView === "changes" ? "changes" : getModeView(), state.activeHuntId);
+    if (route === lastPageRoute && !restoringRoute) return;
+    const wasNavigation = Boolean(lastPageRoute);
+    if (!restoringRoute && lastPageRoute && window.location.hash !== route) history.pushState(null, "", route);
+    else if (window.location.hash !== route) history.replaceState(null, "", route);
+    lastPageRoute = route;
+    if (wasNavigation) {
+        elements.pageTitle.focus({ preventScroll: true });
+        announce(`${elements.pageTitle.textContent} page`);
+    }
+}
+
+function restorePageFromHistory() {
+    if (!routeReady) return;
+    captureVisibleInputs();
+    restoringRoute = true;
+    applyPageRoute();
+    renderApp();
+    restoringRoute = false;
+    persistState();
+}
+window.addEventListener("popstate", restorePageFromHistory);
+window.addEventListener("hashchange", () => {
+    if (window.location.hash !== lastPageRoute) restorePageFromHistory();
+});
+
+function openProficiencyFromSession(event) {
+    const button = event.target.closest?.("[data-proficiency-open]");
+    if (!button) return;
+    captureVisibleInputs();
+    state.activeHuntId = button.dataset.proficiencyOpen;
+    navigateWorkspace("proficiency", "session");
+}
+elements.output.addEventListener("click", openProficiencyFromSession);
+elements.comparisonOutput.addEventListener("click", openProficiencyFromSession);
+
 async function initializeApp() {
     try {
         setBusyState(true);
@@ -3931,10 +4087,9 @@ async function initializeApp() {
 
         const hasRestoredContent = restoreAppState();
 
-        // The site always opens on the Dashboard, regardless of whichever
-        // page a prior session left off on. Restored progress is untouched —
-        // only the landing page is forced.
-        state.mode = "dashboard";
+        // A plain URL still lands on Dashboard; a deep link restores its page.
+        applyPageRoute();
+        routeReady = true;
         renderApp();
 
         if (hasRestoredContent) {
@@ -4143,7 +4298,7 @@ elements.detailCloseButton.addEventListener("click", () => {
     }
 });
 elements.newSessionButton.addEventListener("click", () => {
-    if (state.mode !== "bestiary") {
+    if (state.mode !== "bestiary" && state.mode !== "proficiency") {
         captureVisibleInputs();
         state.mode = "bestiary";
     }
@@ -4189,7 +4344,9 @@ elements.sidebarPlanningList.addEventListener("click", (event) => {
         return;
     }
 
-    if (button.dataset.navPlanning === "taskSessions") {
+    if (button.dataset.navPlanning === "proficiency") {
+        navigateWorkspace("proficiency", "session");
+    } else if (button.dataset.navPlanning === "taskSessions") {
         navigateWorkspace("tasks", "allSessions");
     } else {
         navigateWorkspace("bestiary", button.dataset.navPlanning);

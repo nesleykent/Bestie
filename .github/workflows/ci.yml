@@ -31,3 +31,17 @@ jobs:
           for f in src/data/*.json; do
             python3 -m json.tool "$f" > /dev/null
           done
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test calculations and integrations
+        run: npm test
+
+      - name: Static lint
+        run: npm run lint
+
+      - name: Validate static build
+        run: npm run build

@@ -226,6 +226,16 @@ The history can be searched across session names, notes, and creatures; filtered
 - longest completion time within the session;
 - projected charm points per hour.
 
+### Weapon Proficiency
+
+[Weapon Proficiency](https://nesleykent.github.io/Bestie/src/index.html#weapon-proficiency) is a dedicated page in **Planning & Sessions**. It reuses the active character's Hunt Analyzer sessions and the canonical Bestiary creature difficulty to calculate weapon Proficiency XP, XP/h, kills, duration, and sortable per-creature contributions. Normal character/creature experience and Bestiary completion do not enter the formula.
+
+Session History exposes total proficiency, proficiency rate and kills; **Proficiency** opens a session's complete breakdown. Compare Sessions includes a separate proficiency ranking with the best complete measured rate highlighted, independently of charm rate.
+
+Players can maintain multiple named weapon plans per character with current XP and manual target XP. Remaining XP, estimated time, equivalent sessions and optional single-creature kills are derived from the selected session. Official weapon milestone thresholds are not bundled; the app does not invent them. XP is not automatically credited to a weapon because the Hunt Analyzer does not identify which weapon received each kill.
+
+Unknown creatures, missing difficulty and invalid kill data produce an explicitly partial result. Invalid/zero duration leaves the hourly estimate unavailable. Partial results cannot win the ranking or drive session-based weapon projections. See [Weapon Proficiency architecture](docs/weapon-proficiency.md) for data boundaries, compatibility and verification.
+
 ### Task Sessions and Task Estimate
 
 **Purpose:** Organizes and estimates creature-kill objectives—particularly Bounty Tasks and Weekly Kill Tasks—using performance measured from corresponding Hunt Analyzer sessions.
@@ -315,6 +325,18 @@ http://127.0.0.1:4173/src/
 ```
 
 Python's basic server can leave JavaScript modules cached. After source changes, use a hard reload (`Cmd+Shift+R` or `Ctrl+Shift+R`) or use the no-cache server documented in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+### Automated verification
+
+With Node.js 22 or newer (no package installation required):
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+`lint` checks JavaScript syntax, module paths, JSON, HTML IDs and local assets. `build` stages the static entry points in ignored `dist/`; production remains the unchanged GitHub Pages static deployment. This JavaScript repository has no TypeScript typecheck configuration.
 
 ### Accepted Hunt Analyzer shape
 

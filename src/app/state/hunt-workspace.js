@@ -1,3 +1,4 @@
+import { createWeaponPlan, restoreWeaponPlans } from "./weapon-plans.js";
 import { restoreTrackerProgress } from "./tracker-progress.js";
 import { restoreChangeLog } from "./change-log.js";
 import { getTrackerEntryDefaults, getTrackerIds } from "../trackers/registry.js";
@@ -7,7 +8,7 @@ let huntSequence = 0;
 const BESTIARY_VIEWS = ["session", "allSessions", "charmPlan", "comparison", "library", "opportunities"];
 const TASKS_VIEWS = ["session", "allSessions", "library"];
 const RESPAWN_MODES = ["regular", "rapid"];
-const MODES = ["bestiary", "trackers", "tasks", "dashboard"];
+const MODES = ["bestiary", "trackers", "tasks", "dashboard", "proficiency"];
 
 function normalizeRespawnMode(value) {
     return RESPAWN_MODES.includes(value) ? value : "regular";
@@ -32,6 +33,7 @@ export function createHunt() {
         hasProcessedLog: false,
         matchedMonsters: [],
         selectedBestiaryMonsterNames: [],
+        parseIssues: null,
         taskMonsters: [],
         selectedTaskMonsterName: "",
         taskTargetKills: ""
@@ -44,6 +46,8 @@ export function createWorkspace() {
     return {
         // The Dashboard is the app's homepage — where a brand-new character lands.
         mode: "dashboard",
+        weaponPlans: [createWeaponPlan()],
+        activeWeaponPlanId: "weapon-1",
         trackerProgress: {},
         // The undo trail. Empty for a new workspace.
         changeLog: [],
@@ -140,6 +144,7 @@ function normalizeHunt(savedHunt, adoptedIds) {
         selectedBestiaryMonsterNames: Array.isArray(savedHunt?.selectedBestiaryMonsterNames)
             ? savedHunt.selectedBestiaryMonsterNames
             : matchedMonsters.map((monster) => monster.name),
+        parseIssues: Array.isArray(savedHunt?.parseIssues) ? savedHunt.parseIssues.filter((issue) => typeof issue === "string") : null,
         taskMonsters: Array.isArray(savedHunt?.taskMonsters) ? savedHunt.taskMonsters : [],
         selectedTaskMonsterName: savedHunt?.selectedTaskMonsterName || "",
         taskTargetKills: savedHunt?.taskTargetKills ?? ""
@@ -173,6 +178,7 @@ export function restoreWorkspace(savedState) {
 
     reserveSavedHuntIds(savedHunts);
 
+    const weaponPlans = restoreWeaponPlans(savedState?.weaponPlans);
     const adoptedIds = new Set();
     const hunts = savedHunts.map((savedHunt) => normalizeHunt(savedHunt, adoptedIds));
     const savedActiveIndex = savedHunts.findIndex((hunt) => hunt?.id === savedState?.activeHuntId);
@@ -185,6 +191,8 @@ export function restoreWorkspace(savedState) {
 
     return {
         mode: normalizeMode(savedState?.mode),
+        weaponPlans,
+        activeWeaponPlanId: weaponPlans.some((plan) => plan.id === savedState?.activeWeaponPlanId) ? savedState.activeWeaponPlanId : weaponPlans[0].id,
         // `bestiaryProgress` is the pre-framework shape, when Bestiary was the
         // only tracker and its record sat at the top level.
         trackerProgress: restoreTrackerProgress(

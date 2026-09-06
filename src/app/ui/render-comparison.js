@@ -1,10 +1,11 @@
+import { escapeText } from "./render-tracker.js";
 import { formatCharmsPerHour, formatNumber, formatTime } from "../utils/formatters.js";
 import { buildAnswer, buildPill, buildStatLine } from "./render-blocks.js";
 
 function buildRow(row) {
     return `
         <tr class="${row.isBest ? "is-best" : ""}">
-            <td>${row.label} ${row.isBest ? buildPill("Best", true) : ""}</td>
+            <td>${escapeText(row.label)} ${row.isBest ? buildPill("Best", true) : ""}</td>
             <td>${formatNumber(row.totalCharms)}</td>
             <td>${formatTime(row.maxTimeRemainingMinutes)}</td>
             <td>${formatCharmsPerHour(row.totalCharmsPerHour)}</td>
@@ -24,15 +25,15 @@ export function renderComparison(container, comparison) {
 
     const best = comparison.bestRow;
     const pending = comparison.pendingLabels.length
-        ? `not analyzed: ${comparison.pendingLabels.join(", ")}`
+        ? `not analyzed: ${comparison.pendingLabels.map(escapeText).join(", ")}`
         : "";
 
     container.className = "results-shell";
     container.innerHTML = `
         ${best
-            ? buildAnswer("Best Session", best.label,
+            ? buildAnswer("Best Charm Session", escapeText(best.label),
                 `${formatCharmsPerHour(best.totalCharmsPerHour)} &mdash; ${formatNumber(best.totalCharms)} charm points over ${formatTime(best.maxTimeRemainingMinutes)}.`)
-            : buildAnswer("Best Session", "&mdash;",
+            : buildAnswer("Best Charm Session", "&mdash;",
                 "No session projects any charm points per hour yet. Update the total kills or the creature selection.")}
         ${buildStatLine([`${formatNumber(comparison.rows.length)} sessions ranked`, pending])}
 
