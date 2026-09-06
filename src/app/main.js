@@ -900,9 +900,18 @@ function getBestiaryTabMeta(hunt) {
         : "No analysis";
 }
 
+/**
+ * Weapon Proficiency reads both catalogues: the Bestiary classifies regular
+ * creatures, and the Bosstiary dataset the tracker already loaded classifies
+ * bosses. Neither is fetched a second time.
+ */
+function getProficiencySources() {
+    return { bestiary: state.bestiaryData, bosstiary: state.trackerItems.bosstiary ?? [] };
+}
+
 function getProficiencyTabMeta(hunt) {
     if (!hunt.hasProcessedLog) return "No analysis";
-    const result = getHuntProficiency(hunt, state.bestiaryData);
+    const result = getHuntProficiency(hunt, getProficiencySources());
     return result.perHour === null ? "Proficiency rate unavailable"
         : `${result.isPartial ? "Known: " : ""}${formatNumber(result.perHour)} Proficiency XP/h`;
 }
@@ -1094,7 +1103,7 @@ function renderComparisonView() {
     elements.comparisonOutput.className = "results-shell";
     elements.comparisonOutput.insertAdjacentHTML("beforeend", buildProficiencyComparison(state.hunts.map((hunt, index) => ({
         id: hunt.id, label: getHuntLabel(index, hunt),
-        proficiency: hunt.hasProcessedLog ? getHuntProficiency(hunt, state.bestiaryData) : null
+        proficiency: hunt.hasProcessedLog ? getHuntProficiency(hunt, getProficiencySources()) : null
     }))));
 }
 
@@ -2073,7 +2082,7 @@ function attachOpportunityActions() {
 
 function buildLibraryRows() {
     return state.hunts.map((hunt, index) => {
-        const proficiency = getHuntProficiency(hunt, state.bestiaryData);
+        const proficiency = getHuntProficiency(hunt, getProficiencySources());
         const summary = hasBestiaryAnalysis(hunt) ? calculateBestiaryResult(hunt).summary : null;
 
         return {
@@ -3980,7 +3989,7 @@ function downloadFile(text, fileName, mimeType) {
 
 function renderProficiencyView() {
     const hunt = getActiveHunt();
-    const session = getHuntProficiency(hunt, state.bestiaryData);
+    const session = getHuntProficiency(hunt, getProficiencySources());
     elements.inputSection.hidden = false;
     elements.analysisSection.hidden = false;
     elements.comparisonSection.hidden = true;

@@ -228,13 +228,13 @@ The history can be searched across session names, notes, and creatures; filtered
 
 ### Weapon Proficiency
 
-[Weapon Proficiency](https://nesleykent.github.io/Bestie/src/index.html#weapon-proficiency) is a dedicated page in **Planning & Sessions**. It reuses the active character's Hunt Analyzer sessions and the canonical Bestiary creature difficulty to calculate weapon Proficiency XP, XP/h, kills, duration, and sortable per-creature contributions. Normal character/creature experience and Bestiary completion do not enter the formula.
+[Weapon Proficiency](https://nesleykent.github.io/Bestie/src/index.html#weapon-proficiency) is a dedicated page in **Planning & Sessions**. It reuses the active character's Hunt Analyzer sessions, the canonical Bestiary creature difficulty and the canonical Bosstiary boss category to calculate weapon Proficiency XP, XP/h, kills, duration, and sortable per-row contributions. Regular creatures are rewarded by difficulty (Harmless 1 through Challenging 240) and bosses by category (Bane 500, Archfoe 5,000, Nemesis 15,000); a session may contain both, and every row contributes to the same total. Normal character/creature experience, boss points and Bestiary completion do not enter the formula.
 
 Session History exposes total proficiency, proficiency rate and kills; **Proficiency** opens a session's complete breakdown. Compare Sessions includes a separate proficiency ranking with the best complete measured rate highlighted, independently of charm rate.
 
 Players can maintain multiple named weapon plans per character with current XP and manual target XP. Remaining XP, estimated time, equivalent sessions and optional single-creature kills are derived from the selected session. Official weapon milestone thresholds are not bundled; the app does not invent them. XP is not automatically credited to a weapon because the Hunt Analyzer does not identify which weapon received each kill.
 
-Unknown creatures, missing difficulty and invalid kill data produce an explicitly partial result. Invalid/zero duration leaves the hourly estimate unavailable. Partial results cannot win the ranking or drive session-based weapon projections. See [Weapon Proficiency architecture](docs/weapon-proficiency.md) for data boundaries, compatibility and verification.
+Unknown creatures, unknown bosses, missing difficulty or boss category and invalid kill data produce an explicitly partial result. Invalid/zero duration leaves the hourly estimate unavailable. Partial results cannot win the ranking or drive session-based weapon projections. See [Weapon Proficiency architecture](docs/weapon-proficiency.md) for data boundaries, compatibility and verification.
 
 ### Task Sessions and Task Estimate
 
