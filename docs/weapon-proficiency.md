@@ -10,7 +10,8 @@ The existing sidebar owns navigation; `render-proficiency.js` renders a full pag
 |---|---|
 | Hunt Analyzer | `features/session-parser.js`: one `parseHuntSession` result feeds Bestiary and Tasks when processed |
 | Creature source | `data/bestiary.json` → `services/bestiary-repository.js`; canonical `difficulty` → `Difficulty` |
-| Name matching | `features/creature-names.js`: trim, collapse whitespace, case-insensitive exact match; no alias catalog exists in this snapshot |
+| Boss source | `data/bosstiary.json` → `services/bosstiary-repository.js`, already loaded by the Bosstiary tracker; canonical `category` (Bane / Archfoe / Nemesis). No second dataset, fetch or normalization was added |
+| Name matching | `features/creature-names.js`: trim, collapse whitespace, case-insensitive exact match; no alias catalog exists in this snapshot. `findBestiaryCreature` and `findBosstiaryBoss` share one matcher because both repositories normalize to a canonical `Name` |
 | Bestiary calculations | `features/session-analysis.js`; character-wide progress and charm reward remain independent |
 | Charm Plan | `features/charm-plan.js`; no proficiency changes to its reward optimization |
 | Shared session | `state/hunt-workspace.js`: duration plus all normalized kills in existing `taskMonsters`, Bestiary analysis in `matchedMonsters` |
@@ -25,7 +26,7 @@ The existing sidebar owns navigation; `render-proficiency.js` renders a full pag
 ```text
 Hunt Analyzer → parseHuntSession → normalized duration + all creature kills
                                   ├─ Bestiary engine → progress / charm plan
-                                  └─ shared session → difficulty → proficiency engine
+                                  └─ shared session → Bestiary difficulty / Bosstiary category → proficiency engine
                                                       ├─ Weapon Proficiency page
                                                       ├─ Session History
                                                       └─ Compare Sessions
@@ -33,11 +34,11 @@ Hunt Analyzer → parseHuntSession → normalized duration + all creature kills
 
 ## Calculation and data contract
 
-`PROFICIENCY_BY_DIFFICULTY` in `features/weapon-proficiency.js` is the only runtime XP reward table. It contains Harmless 1, Trivial 30, Easy 70, Medium 100, Hard 165, Challenging 240. Every one of the 833 canonical creature entries has a recognized difficulty in the current snapshot. No classification discrepancies were found and no dataset values were changed. Normal creature XP is neither loaded for this engine nor used to infer difficulty.
+`features/weapon-proficiency.js` holds the only two runtime XP reward tables. `PROFICIENCY_BY_DIFFICULTY` covers regular creatures by Bestiary difficulty — Harmless 1, Trivial 30, Easy 70, Medium 100, Hard 165, Challenging 240. `PROFICIENCY_BY_BOSS_CATEGORY` covers bosses by Bosstiary category — Bane 500, Archfoe 5,000, Nemesis 15,000. Every one of the 833 canonical creature entries has a recognized difficulty and every one of the 316 canonical boss entries has a recognized category in the current snapshot. The two datasets share no names, so a logged name resolves to at most one classification; the Bestiary is consulted first, which leaves regular-creature resolution unchanged. No classification discrepancies were found and no dataset values were changed. Normal creature XP and boss points are neither loaded for this engine nor used to infer a classification.
 
-Per creature: kills × reward. Session total: sum of classified, valid creature totals. XP/h: total ÷ (duration in minutes ÷ 60). Contributions are unrounded percentages of the known subtotal; the UI rounds percentages to one decimal, so displayed percentages may not sum to exactly 100%. XP totals remain exact integers. The fixture contains 600 Makara (Hard) and 450 Rotten Golem (Challenging): 99,000 + 108,000 = 207,000 XP; 90 minutes yields 138,000 XP/h.
+Per row: kills × reward. Session total: sum of classified, valid rows, creatures and bosses alike. XP/h: total ÷ (duration in minutes ÷ 60). Contributions are unrounded percentages of the known subtotal; the UI rounds percentages to one decimal, so displayed percentages may not sum to exactly 100%. XP totals remain exact integers. The creature fixture contains 600 Makara (Hard) and 450 Rotten Golem (Challenging): 99,000 + 108,000 = 207,000 XP; 90 minutes yields 138,000 XP/h. The mixed fixture adds 2 Annihilon (Bane), 3 Abyssador (Archfoe) and 1 Ferumbras (Nemesis): 1,000 + 15,000 + 15,000 = 31,000, for 238,000 XP over 2 hours, or 119,000 XP/h.
 
-Unknown creatures remain visible as **Unclassified** with no invented XP. Invalid kills or unsupported integer ranges create diagnostics. A partial result displays **Known** XP/rate and a subtotal; no partial result wins the proficiency ranking or drives time/session projections. Zero/invalid duration displays an unavailable rate rather than Infinity. Valid zero kills remain zero. Integer XP is supported up to JavaScript's safe integer range; totals exceeding it are unavailable rather than rounded silently.
+Unknown creatures and unknown bosses remain visible as **Unclassified** with no invented XP. A boss carrying a category outside the three known ones is diagnosed as an unclassified boss category rather than falling back to a difficulty reward. Boss rows are labelled with their Bosstiary category in the breakdown's Classification column. Invalid kills or unsupported integer ranges create diagnostics. A partial result displays **Known** XP/rate and a subtotal; no partial result wins the proficiency ranking or drives time/session projections. Zero/invalid duration displays an unavailable rate rather than Infinity. Valid zero kills remain zero. Integer XP is supported up to JavaScript's safe integer range; totals exceeding it are unavailable rather than rounded silently.
 
 The parser preserves the documented English `Session: HH:MMh` and `<count>x <name>` format. Invalid kill lines and unsafe counts are diagnosed instead of silently converting a negative or fractional suffix to positive kills. Its legacy extraction exports remain available. Bestiary and Tasks consume the same parsed object during processing.
 
@@ -51,7 +52,7 @@ No official weapon threshold catalog or reliable threshold reference was present
 
 ## Verification
 
-`npm test` covers all six reward classes, the exact mixed-session example, unknown/missing difficulty, invalid and zero duration/kills, large and tiny values, subtotal equality, parsing and domain integration, legacy saves, character isolation, export/import, route serialization, rendered escaping, ranking and existing Bestiary/Task/Charm contracts.
+`npm test` covers all six creature reward classes and all three boss categories, the exact mixed creature/boss session example, breakdown-to-total equality, unknown/missing difficulty, invalid and zero duration/kills, large and tiny values, subtotal equality, parsing and domain integration, legacy saves, character isolation, export/import, route serialization, rendered escaping, ranking and existing Bestiary/Task/Charm contracts.
 
 `npm run lint` checks every JS module's syntax, relative imports, bundled JSON, duplicate entry-page IDs and local assets. `npm run build` stages the unchanged static application under ignored `dist/`. There was no automated unit test suite, package manifest, lint tool or compiler before this feature; existing CI structure/data validation is retained and the new checks are added. No TypeScript typecheck is configured or claimed.
 

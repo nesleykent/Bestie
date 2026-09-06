@@ -52,6 +52,20 @@ test("proficiency page has complete breakdown, scoped sortable headers and escap
     assert.match(container.innerHTML, /&lt;img/);
     assert.doesNotMatch(container.innerHTML, /<img|NaN|Infinity|undefined/);
 });
+test("bosses render in the breakdown with their Bosstiary category and reward", () => {
+    const sources = { bestiary: [{ Name: "Rotten Golem", Difficulty: "Challenging" }], bosstiary: [{ Name: "Ferumbras", category: "Nemesis" }, { Name: "Annihilon", category: "Bane" }] };
+    const result = calculateSessionProficiency([{ name: "Rotten Golem", killsThisSession: 10 }, { name: "Ferumbras", killsThisSession: 1 }, { name: "Annihilon", killsThisSession: 2 }], sources, 60);
+    const container = {};
+    renderProficiency(container, result, { processed: true, sort: { key: "classification", direction: "asc" }, plans: createWorkspace().weaponPlans, activeId: "weapon-1", projectionCreature: "" });
+    assert.match(container.innerHTML, /Ferumbras<\/th><td>Nemesis<span class="row-aside">Bosstiary<\/span>/);
+    assert.match(container.innerHTML, /Annihilon<\/th><td>Bane<span class="row-aside">Bosstiary<\/span>/);
+    assert.match(container.innerHTML, /Rotten Golem<\/th><td>Challenging<\/td>/);
+    // Ascending by classification puts the Challenging creature ahead of Bane, then Nemesis.
+    assert.match(container.innerHTML, /Rotten Golem[\s\S]*Annihilon[\s\S]*Ferumbras/);
+    assert.match(container.innerHTML, /Session total<\/th><td><\/td><td class="is-num">13<\/td><td><\/td><td class="is-num">18,400<\/td>/);
+    assert.match(container.innerHTML, /Nemesis: 15,000 XP\/kill/);
+    assert.doesNotMatch(container.innerHTML, /Unclassified|NaN|undefined/);
+});
 test("comparison never rewards partial sessions and escapes session names", () => {
     const markup = buildProficiencyComparison([
         { id: "a", label: "<script>bad</script>", proficiency: { perHour: 999, total: 999, duration: 60, kills: 10, isPartial: true } },

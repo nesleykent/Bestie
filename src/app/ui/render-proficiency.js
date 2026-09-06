@@ -1,14 +1,16 @@
-import { PROFICIENCY_BY_DIFFICULTY, calculateWeaponProjection } from "../features/weapon-proficiency.js";
+import { PROFICIENCY_BY_BOSS_CATEGORY, PROFICIENCY_BY_DIFFICULTY, PROFICIENCY_ORDER, calculateWeaponProjection } from "../features/weapon-proficiency.js";
 import { formatNumber, formatTime, formatTimeDetailed } from "../utils/formatters.js";
 import { buildAnswer, buildEmptyState, buildPill, buildMetricLine, escapeAttribute } from "./render-blocks.js";
 import { escapeText } from "./render-tracker.js";
 
 const number = (value) => value === null ? "—" : formatNumber(value);
-const difficultyLabel = (value) => value ? value[0].toUpperCase() + value.slice(1) : "Unclassified";
+const classificationLabel = (value) => value ? value[0].toUpperCase() + value.slice(1) : "Unclassified";
 const COLUMNS = [
-    ["name", "Creature"], ["difficulty", "Bestiary Difficulty"], ["kills", "Kills"],
+    ["name", "Creature"], ["classification", "Classification"], ["kills", "Kills"],
     ["perKill", "Proficiency XP / Kill"], ["total", "Total Proficiency XP"], ["contribution", "Contribution %"]
 ];
+/** Bosses share the breakdown with regular creatures, so the row says where its reward came from. */
+const sourceNote = (source) => source === "bosstiary" ? '<span class="row-aside">Bosstiary</span>' : "";
 
 export function buildWeaponProjection(plan, session, creatureName = "") {
     const currentXP = plan.currentXP.trim() === "" ? NaN : Number(plan.currentXP);
@@ -44,16 +46,15 @@ function buildPlanner(session, plans, activeId, projectionCreature) {
 
 export function renderProficiency(container, session, { processed, sort, plans, activeId, projectionCreature }) {
     const factor = sort.direction === "asc" ? 1 : -1;
-    const difficulties = Object.keys(PROFICIENCY_BY_DIFFICULTY);
     const rows = [...session.rows].sort((a, b) => {
-        const leftMissing = a[sort.key] === null || (sort.key === "difficulty" && !a.difficulty);
-        const rightMissing = b[sort.key] === null || (sort.key === "difficulty" && !b.difficulty);
+        const leftMissing = a[sort.key] === null || (sort.key === "classification" && !a.classification);
+        const rightMissing = b[sort.key] === null || (sort.key === "classification" && !b.classification);
         if (leftMissing || rightMissing) {
             if (leftMissing && rightMissing) return a.name.localeCompare(b.name);
             return leftMissing ? 1 : -1;
         }
-        const left = sort.key === "difficulty" ? difficulties.indexOf(a.difficulty) : a[sort.key];
-        const right = sort.key === "difficulty" ? difficulties.indexOf(b.difficulty) : b[sort.key];
+        const left = sort.key === "classification" ? PROFICIENCY_ORDER.indexOf(a.classification) : a[sort.key];
+        const right = sort.key === "classification" ? PROFICIENCY_ORDER.indexOf(b.classification) : b[sort.key];
         return (typeof left === "string" ? left.localeCompare(right) : left - right) * factor || a.name.localeCompare(b.name);
     });
     container.className = "results-shell proficiency-page";
@@ -67,14 +68,14 @@ export function renderProficiency(container, session, { processed, sort, plans, 
         ${session.isPartial ? `<details class="proficiency-warning" open><summary>Partial result · ${number(session.warnings.length)} data issues</summary><ul>${session.warnings.map((issue) => `<li>${escapeText(issue)}</li>`).join("")}</ul><p>Unclassified or invalid rows are excluded from known XP; contributions use the known subtotal.</p></details>` : ""}
         ${buildPlanner(session, plans, activeId, projectionCreature)}
         <section class="results-section" aria-labelledby="proficiencyBreakdownTitle">
-            <h3 class="subsection-title" id="proficiencyBreakdownTitle">Creature breakdown</h3>
-            ${rows.length ? `<div class="table-container proficiency-table" tabindex="0" role="region" aria-label="Creature proficiency breakdown, scroll horizontally for all columns">
-                <table><caption class="sr-only">Proficiency XP by creature. Contributions are percentages of classified XP.</caption><thead><tr>${COLUMNS.map(([key, label]) => `<th scope="col" aria-sort="${sort.key === key ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}"><button class="column-sort" type="button" data-proficiency-sort="${key}">${label}<span class="sort-mark">${sort.key === key ? (sort.direction === "asc" ? "▲" : "▼") : ""}</span></button></th>`).join("")}</tr></thead>
-                <tbody>${rows.map((row) => `<tr><th scope="row">${escapeText(row.name)}${row.issue ? `<span class="row-aside">${escapeText(row.issue)}</span>` : ""}</th><td>${difficultyLabel(row.difficulty)}</td><td class="is-num">${number(row.kills)}</td><td class="is-num">${number(row.perKill)}</td><td class="is-num">${number(row.total)}</td><td class="is-num">${row.contribution === null ? "—" : `${row.contribution.toFixed(1)}%`}</td></tr>`).join("")}</tbody>
+            <h3 class="subsection-title" id="proficiencyBreakdownTitle">Creature and boss breakdown</h3>
+            ${rows.length ? `<div class="table-container proficiency-table" tabindex="0" role="region" aria-label="Creature and boss proficiency breakdown, scroll horizontally for all columns">
+                <table><caption class="sr-only">Proficiency XP by creature and boss. Contributions are percentages of classified XP.</caption><thead><tr>${COLUMNS.map(([key, label]) => `<th scope="col" aria-sort="${sort.key === key ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}"><button class="column-sort" type="button" data-proficiency-sort="${key}">${label}<span class="sort-mark">${sort.key === key ? (sort.direction === "asc" ? "▲" : "▼") : ""}</span></button></th>`).join("")}</tr></thead>
+                <tbody>${rows.map((row) => `<tr><th scope="row">${escapeText(row.name)}${row.issue ? `<span class="row-aside">${escapeText(row.issue)}</span>` : ""}</th><td>${classificationLabel(row.classification)}${sourceNote(row.source)}</td><td class="is-num">${number(row.kills)}</td><td class="is-num">${number(row.perKill)}</td><td class="is-num">${number(row.total)}</td><td class="is-num">${row.contribution === null ? "—" : `${row.contribution.toFixed(1)}%`}</td></tr>`).join("")}</tbody>
                 <tfoot><tr><th scope="row">${session.isPartial ? "Known subtotal" : "Session total"}</th><td></td><td class="is-num">${number(session.kills)}</td><td></td><td class="is-num">${number(session.total)}</td><td class="is-num">${session.total === null ? "—" : session.total > 0 ? "100.0%" : "0.0%"}</td></tr></tfoot></table></div>
-                <div class="library-controls proficiency-controls"><div><label class="input-label" for="proficiencyCreature">Optional kill projection · one creature only</label><select id="proficiencyCreature"><option value="">Select a classified creature</option>${rows.filter((row) => row.perKill !== null).map((row) => `<option value="${escapeAttribute(row.name)}" ${row.name === projectionCreature ? "selected" : ""}>${escapeText(row.name)} · ${number(row.perKill)} XP/kill</option>`).join("")}</select></div></div>` : buildEmptyState("No creature kills to calculate.", processed ? "Check the Killed Monsters section in the Hunt Analyzer." : "Process or reopen a session to see its creatures.")}
+                <div class="library-controls proficiency-controls"><div><label class="input-label" for="proficiencyCreature">Optional kill projection · one creature only</label><select id="proficiencyCreature"><option value="">Select a classified creature or boss</option>${rows.filter((row) => row.perKill !== null).map((row) => `<option value="${escapeAttribute(row.name)}" ${row.name === projectionCreature ? "selected" : ""}>${escapeText(row.name)} · ${number(row.perKill)} XP/kill</option>`).join("")}</select></div></div>` : buildEmptyState("No kills to calculate.", processed ? "Check the Killed Monsters section in the Hunt Analyzer." : "Process or reopen a session to see its creatures.")}
         </section>
-        <details><summary>How Proficiency XP is calculated</summary><p class="helper-text">Kills × Bestiary Difficulty reward. Character experience, weapon combat skill, Bestiary completion and Charm Points do not change this calculation.</p>${buildMetricLine(Object.entries(PROFICIENCY_BY_DIFFICULTY).map(([key, value]) => `${difficultyLabel(key)}: ${number(value)} XP/kill`))}</details>`;
+        <details><summary>How Proficiency XP is calculated</summary><p class="helper-text">Kills × Bestiary Difficulty reward for regular creatures, and Kills × Bosstiary category reward for bosses. Character experience, weapon combat skill, Bestiary completion and Charm Points do not change this calculation.</p>${buildMetricLine(Object.entries(PROFICIENCY_BY_DIFFICULTY).map(([key, value]) => `${classificationLabel(key)}: ${number(value)} XP/kill`))}${buildMetricLine(Object.entries(PROFICIENCY_BY_BOSS_CATEGORY).map(([key, value]) => `${classificationLabel(key)}: ${number(value)} XP/kill`))}</details>`;
 }
 
 export function buildProficiencyComparison(entries) {
