@@ -72,3 +72,19 @@ test("existing Bestiary, Tasks, charm time parsing and comparison contracts", ()
     assert.equal(summary.totalCharmsPerHour, 30);
     assert.equal(buildHuntComparison([{ id: "a", label: "A", summary }, { id: "b", label: "B", summary: null }]).bestRow.id, "a");
 });
+
+test("shared session tab names and IDs remain text, including in the proficiency page", async () => {
+    const { renderHuntTabs } = await import("../src/app/ui/render-hunt-tabs.js");
+    const container = {};
+    renderHuntTabs(container, [], [{ id: 'x" onclick="bad()', label: '<img src=x onerror="bad()">', meta: "138,000 Proficiency XP/h", isActive: true }, { id: "b", label: "Other", meta: "" }]);
+    assert.doesNotMatch(container.innerHTML, /<img|data-hunt-select="x" onclick/);
+    assert.match(container.innerHTML, /&lt;img/);
+});
+
+test("session changes replace the URL without becoming page-history entries", () => {
+    const first = buildPageRoute("proficiency", "session", "hunt-1");
+    const second = buildPageRoute("proficiency", "session", "hunt-2");
+    assert.equal(buildPageRoute("proficiency", "session", null), "#weapon-proficiency");
+    assert.equal(readPageRoute(first).mode, readPageRoute(second).mode);
+    assert.equal(readPageRoute(first).view, readPageRoute(second).view);
+});

@@ -1,6 +1,6 @@
 import { PROFICIENCY_BY_DIFFICULTY, calculateWeaponProjection } from "../features/weapon-proficiency.js";
 import { formatNumber, formatTime, formatTimeDetailed } from "../utils/formatters.js";
-import { buildAnswer, buildEmptyState, buildPill, buildStatLine, escapeAttribute } from "./render-blocks.js";
+import { buildAnswer, buildEmptyState, buildPill, buildMetricLine, escapeAttribute } from "./render-blocks.js";
 import { escapeText } from "./render-tracker.js";
 
 const number = (value) => value === null ? "—" : formatNumber(value);
@@ -15,9 +15,9 @@ export function buildWeaponProjection(plan, session, creatureName = "") {
     const targetXP = plan.targetXP.trim() === "" ? NaN : Number(plan.targetXP);
     const creature = session.rows.find((row) => row.name === creatureName);
     const projection = calculateWeaponProjection({ currentXP, targetXP }, session, creature?.perKill);
-    if (!projection) return '<p class="helper-text">Enter non-negative whole XP values and a target within the safe integer range.</p>';
+    if (!projection) return `<p class="helper-text">Enter non-negative whole XP values and a target up to ${formatNumber(Number.MAX_SAFE_INTEGER)}.</p>`;
     const time = projection.hoursRemaining === null ? "—" : formatTimeDetailed(projection.hoursRemaining * 60);
-    return `${buildStatLine([
+    return `${buildMetricLine([
         `<strong>${number(projection.remainingXP)}</strong> XP remaining`,
         `<strong>${time}</strong> estimated time`,
         `<strong>${projection.sessionsRemaining === null ? "—" : projection.sessionsRemaining.toFixed(1)}</strong> equivalent sessions`,
@@ -46,16 +46,20 @@ export function renderProficiency(container, session, { processed, sort, plans, 
     const factor = sort.direction === "asc" ? 1 : -1;
     const difficulties = Object.keys(PROFICIENCY_BY_DIFFICULTY);
     const rows = [...session.rows].sort((a, b) => {
+        const leftMissing = a[sort.key] === null || (sort.key === "difficulty" && !a.difficulty);
+        const rightMissing = b[sort.key] === null || (sort.key === "difficulty" && !b.difficulty);
+        if (leftMissing || rightMissing) {
+            if (leftMissing && rightMissing) return a.name.localeCompare(b.name);
+            return leftMissing ? 1 : -1;
+        }
         const left = sort.key === "difficulty" ? difficulties.indexOf(a.difficulty) : a[sort.key];
         const right = sort.key === "difficulty" ? difficulties.indexOf(b.difficulty) : b[sort.key];
-        if (left === null) return right === null ? 0 : 1;
-        if (right === null) return -1;
         return (typeof left === "string" ? left.localeCompare(right) : left - right) * factor || a.name.localeCompare(b.name);
     });
     container.className = "results-shell proficiency-page";
     container.innerHTML = `
         ${processed ? `<div class="proficiency-metrics">
-            ${buildAnswer(`${session.isPartial ? "Known " : ""}Proficiency XP/h`, number(session.perHour), session.perHour === null ? "Duration unavailable; no hourly estimate." : "Measured hunt rate")}
+            ${buildAnswer(`${session.isPartial ? "Known " : ""}Proficiency XP/h`, number(session.perHour), session.duration === null ? "Duration unavailable; no hourly estimate." : session.perHour === null ? "Rate unavailable; see data issues." : "Measured hunt rate")}
             ${buildAnswer(`${session.isPartial ? "Known " : ""}Proficiency XP`, number(session.total), session.isPartial ? "Partial result — see issues below" : "Total across all creatures")}
             ${buildAnswer("Session duration", session.duration === null ? "—" : formatTime(session.duration))}
             ${buildAnswer("Kills", number(session.kills))}
@@ -70,7 +74,7 @@ export function renderProficiency(container, session, { processed, sort, plans, 
                 <tfoot><tr><th scope="row">${session.isPartial ? "Known subtotal" : "Session total"}</th><td></td><td class="is-num">${number(session.kills)}</td><td></td><td class="is-num">${number(session.total)}</td><td class="is-num">${session.total === null ? "—" : session.total > 0 ? "100.0%" : "0.0%"}</td></tr></tfoot></table></div>
                 <div class="library-controls proficiency-controls"><div><label class="input-label" for="proficiencyCreature">Optional kill projection · one creature only</label><select id="proficiencyCreature"><option value="">Select a classified creature</option>${rows.filter((row) => row.perKill !== null).map((row) => `<option value="${escapeAttribute(row.name)}" ${row.name === projectionCreature ? "selected" : ""}>${escapeText(row.name)} · ${number(row.perKill)} XP/kill</option>`).join("")}</select></div></div>` : buildEmptyState("No creature kills to calculate.", processed ? "Check the Killed Monsters section in the Hunt Analyzer." : "Process or reopen a session to see its creatures.")}
         </section>
-        <details><summary>How Proficiency XP is calculated</summary><p class="helper-text">Kills × Bestiary Difficulty reward. Character experience, weapon combat skill, Bestiary completion and Charm Points do not change this calculation.</p>${buildStatLine(Object.entries(PROFICIENCY_BY_DIFFICULTY).map(([key, value]) => `${difficultyLabel(key)}: ${number(value)} XP/kill`))}</details>`;
+        <details><summary>How Proficiency XP is calculated</summary><p class="helper-text">Kills × Bestiary Difficulty reward. Character experience, weapon combat skill, Bestiary completion and Charm Points do not change this calculation.</p>${buildMetricLine(Object.entries(PROFICIENCY_BY_DIFFICULTY).map(([key, value]) => `${difficultyLabel(key)}: ${number(value)} XP/kill`))}</details>`;
 }
 
 export function buildProficiencyComparison(entries) {

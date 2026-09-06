@@ -3170,7 +3170,10 @@ th.is-sorted .column-sort {
     .proficiency-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 900px) {
     .proficiency-metrics .answer:first-child .answer-value { font-size: var(--t-400); }
     .workspace-main.is-proficiency .page-eyebrow { padding-left: var(--u8); }
 }
+
+.proficiency-page .stat-line { border: var(--hairline); border-radius: var(--radius-surface); padding: var(--u3); gap: var(--u2) 0; }
+.proficiency-page .stat-item { white-space: normal; overflow-wrap: anywhere; }

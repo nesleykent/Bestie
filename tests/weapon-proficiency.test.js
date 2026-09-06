@@ -93,3 +93,12 @@ test("weapon projection: manual target, reached target, missing rate, optional s
     assert.equal(calculateWeaponProjection({ currentXP: -1, targetXP: 3 }, session), null);
     assert.equal(calculateWeaponProjection({ currentXP: 0, targetXP: 3 }, { total: 0, perHour: null }).hoursRemaining, null);
 });
+
+test("processed evidence is stable while raw Hunt Analyzer text is being edited", () => {
+    const saved = { hasProcessedLog: true, taskMonsters: mixed, parseIssues: [], sessionDuration: 90, sessionLog: "edited draft" };
+    assert.equal(getHuntProficiency(saved, data).total, 207000);
+    assert.equal(getHuntProficiency({ ...saved, taskMonsters: [], sessionLog: log }, data).total, 0);
+    assert.equal(getHuntProficiency({ ...saved, parseIssues: ["Invalid count"] }, data).isPartial, true);
+    assert.equal(calculateCreatureProficiency(Symbol("invalid"), "Hard"), null);
+    assert.equal(calculateSessionProficiency(mixed, null, 90).isPartial, true);
+});

@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=./src/index.html">
+    <script>
+        // Preserve deep-link hashes when GitHub Pages enters through the root.
+        window.location.replace(`./src/index.html${window.location.search}${window.location.hash}`);
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bestie</title>
 </head>

@@ -25,8 +25,9 @@ export function getProficiencyPerKill(difficulty) {
 
 export function calculateCreatureProficiency(kills, difficulty) {
     const perKill = getProficiencyPerKill(difficulty);
+    if (!isCount(kills) || perKill === null) return null;
     const total = kills * perKill;
-    return isCount(kills) && perKill !== null && isCount(total) ? total : null;
+    return isCount(total) ? total : null;
 }
 
 /** Duration is in minutes, like the existing normalized session. null means unavailable. */

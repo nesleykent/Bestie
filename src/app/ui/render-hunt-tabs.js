@@ -1,3 +1,6 @@
+import { escapeText } from "./render-tracker.js";
+import { escapeAttribute } from "./render-blocks.js";
+
 function buildTabButton(selectAttribute, tab) {
     return `
         <button
@@ -6,8 +9,8 @@ function buildTabButton(selectAttribute, tab) {
             ${selectAttribute}
             aria-pressed="${tab.isActive ? "true" : "false"}"
         >
-            <span class="hunt-tab-label">${tab.label}</span>
-            <span class="hunt-tab-meta">${tab.meta}</span>
+            <span class="hunt-tab-label">${escapeText(tab.label)}</span>
+            <span class="hunt-tab-meta">${escapeText(tab.meta)}</span>
         </button>
     `;
 }
@@ -15,7 +18,7 @@ function buildTabButton(selectAttribute, tab) {
 function buildFixedTab(tab) {
     return `
         <div class="hunt-tab hunt-tab-fixed${tab.isActive ? " is-active" : ""}">
-            ${buildTabButton(`data-fixed-select="${tab.key}"`, tab)}
+            ${buildTabButton(`data-fixed-select="${escapeAttribute(tab.key)}"`, tab)}
         </div>
     `;
 }
@@ -23,13 +26,13 @@ function buildFixedTab(tab) {
 function buildHuntTab(tab, canClose) {
     return `
         <div class="hunt-tab${tab.isActive ? " is-active" : ""}">
-            ${buildTabButton(`data-hunt-select="${tab.id}"`, tab)}
+            ${buildTabButton(`data-hunt-select="${escapeAttribute(tab.id)}"`, tab)}
             ${canClose ? `
                 <button
                     class="hunt-tab-close"
                     type="button"
-                    data-hunt-close="${tab.id}"
-                    aria-label="Close ${tab.label}"
+                    data-hunt-close="${escapeAttribute(tab.id)}"
+                    aria-label="Close ${escapeAttribute(tab.label)}"
                 >&times;</button>
             ` : ""}
         </div>

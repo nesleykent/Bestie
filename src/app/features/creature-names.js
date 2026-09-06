@@ -5,5 +5,6 @@ export function normalizeCreatureName(name) {
 
 export function findBestiaryCreature(name, bestiaryData) {
     const key = normalizeCreatureName(name);
-    return key ? bestiaryData.find((entry) => normalizeCreatureName(entry.Name) === key) : undefined;
+    return key && Array.isArray(bestiaryData)
+        ? bestiaryData.find((entry) => normalizeCreatureName(entry?.Name) === key) : undefined;
 }

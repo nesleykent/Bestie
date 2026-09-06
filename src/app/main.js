@@ -900,6 +900,13 @@ function getBestiaryTabMeta(hunt) {
         : "No analysis";
 }
 
+function getProficiencyTabMeta(hunt) {
+    if (!hunt.hasProcessedLog) return "No analysis";
+    const result = getHuntProficiency(hunt, state.bestiaryData);
+    return result.perHour === null ? "Proficiency rate unavailable"
+        : `${result.isPartial ? "Known: " : ""}${formatNumber(result.perHour)} Proficiency XP/h`;
+}
+
 function getTaskTabMeta(hunt) {
     if (!hasTaskAnalysis(hunt)) {
         return "No analysis";
@@ -980,7 +987,7 @@ function buildFixedTabs(view) {
     ];
 }
 
-function applySessionInput(hunt, creatureCount) {
+function applySessionInput(hunt, creatureCount, duration = hunt.sessionDuration) {
     const canCollapse = hunt.hasProcessedLog;
     const isOpen = !canCollapse || state.isSessionInputOpen;
 
@@ -998,7 +1005,7 @@ function applySessionInput(hunt, creatureCount) {
         ? "Hide Hunt Analyzer"
         : [
             getHuntLabelById(hunt.id),
-            formatTimeDetailed(hunt.sessionDuration),
+            formatTimeDetailed(duration),
             `${formatNumber(creatureCount)} ${creatureCount === 1 ? "creature" : "creatures"}`,
             RESPAWN_MODE_LABELS[hunt.respawnMode]
         ].join(" · ");
@@ -1015,7 +1022,7 @@ function renderHuntTabStrip() {
         id: hunt.id,
         label: getHuntLabel(index, hunt),
         meta: [
-            state.mode === "proficiency" ? (hunt.hasProcessedLog ? `${formatNumber(getHuntProficiency(hunt, state.bestiaryData).perHour ?? 0)} Proficiency XP/h` : "No analysis") : isBestiary ? getBestiaryTabMeta(hunt) : getTaskTabMeta(hunt),
+            state.mode === "proficiency" ? getProficiencyTabMeta(hunt) : isBestiary ? getBestiaryTabMeta(hunt) : getTaskTabMeta(hunt),
             hunt.hasProcessedLog ? RESPAWN_MODE_SHORT_LABELS[hunt.respawnMode] : ""
         ].filter(Boolean).join(" · "),
         isActive: view === "session" && hunt.id === state.activeHuntId
@@ -2077,7 +2084,7 @@ function buildLibraryRows() {
             notes: hunt.notes,
             respawnMode: hunt.respawnMode,
             respawnModeLabel: RESPAWN_MODE_LABELS[hunt.respawnMode],
-            duration: hunt.sessionDuration,
+            duration: proficiency.duration ?? 0,
             proficiency,
             proficiencyTotal: proficiency.total,
             proficiencyRate: proficiency.perHour,
@@ -3977,7 +3984,7 @@ function renderProficiencyView() {
     elements.inputSection.hidden = false;
     elements.analysisSection.hidden = false;
     elements.comparisonSection.hidden = true;
-    applySessionInput(hunt, session.rows.length);
+    applySessionInput(hunt, session.rows.length, session.duration ?? 0);
     showSectionHeading(getHuntLabelById(hunt.id), "Proficiency belongs to the weapon receiving kill credit.");
     renderProficiency(elements.output, session, {
         processed: hunt.hasProcessedLog, sort: state.proficiencySort,
@@ -4046,10 +4053,19 @@ function syncPageRoute() {
     const route = buildPageRoute(state.mode, state.recordView === "changes" ? "changes" : getModeView(), state.activeHuntId);
     if (route === lastPageRoute && !restoringRoute) return;
     const wasNavigation = Boolean(lastPageRoute);
-    if (!restoringRoute && lastPageRoute && window.location.hash !== route) history.pushState(null, "", route);
+    const previous = lastPageRoute ? readPageRoute(lastPageRoute) : null;
+    const pageRoute = buildPageRoute(state.mode, state.recordView === "changes" ? "changes" : getModeView(), null);
+    const previousPageRoute = previous
+        ? buildPageRoute(previous.mode, previous.view, null)
+        : "";
+    const pageChanged = !previous || pageRoute !== previousPageRoute;
+    if (!restoringRoute && lastPageRoute && window.location.hash !== route) {
+        (pageChanged ? history.pushState : history.replaceState).call(history, null, "", route);
+    }
     else if (window.location.hash !== route) history.replaceState(null, "", route);
     lastPageRoute = route;
-    if (wasNavigation) {
+    if (wasNavigation && pageChanged) {
+        if (!restoringRoute) window.scrollTo({ top: 0, behavior: "instant" });
         elements.pageTitle.focus({ preventScroll: true });
         announce(`${elements.pageTitle.textContent} page`);
     }
