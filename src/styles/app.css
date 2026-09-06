@@ -389,10 +389,12 @@ h3 {
     margin-top: var(--u4);
 }
 
+.mobile-bar,
 .sidebar-menu-toggle,
-.sidebar-scrim {
-    display: none;
-}
+.sidebar-scrim { display: none; }
+.sidebar-close.icon-button { display: none; }
+body.has-sidebar-open { overflow: hidden; }
+
 
 /* Collapsed: an icon rail. Labels, section titles and the character name hide;
    the switcher keeps only the actions a rail still has room for. */
@@ -430,12 +432,31 @@ h3 {
         inset: 0 auto 0 0;
         z-index: 50;
         transform: translateX(-100%);
+        visibility: hidden;
+        height: 100dvh;
         box-shadow: var(--elevation-2);
     }
 
     .app-sidebar.is-open {
         transform: translateX(0);
+        visibility: visible;
     }
+    .mobile-bar {
+        display: flex;
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 40;
+        align-items: center;
+        gap: var(--u3);
+        height: calc(var(--u12) + var(--u2));
+        padding: var(--u2) var(--u4);
+        background: var(--surface);
+        border-bottom: var(--hairline);
+    }
+    .mobile-brand { font-weight: var(--weight-bold); letter-spacing: var(--tracking-title); }
+    .mobile-bar .icon-button { margin-left: auto; width: var(--control-height); height: var(--control-height); }
+    .sidebar-close.icon-button { display: flex; align-self: flex-end; flex: 0 0 auto; margin-bottom: var(--u2); }
+
 
     /* A rail makes no sense as a drawer — the drawer is either open at full
        width or fully offscreen. */
@@ -464,15 +485,11 @@ h3 {
     }
 
     .sidebar-menu-toggle {
-        position: fixed;
-        top: var(--u4);
-        left: var(--u4);
-        z-index: 40;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: var(--u8);
-        height: var(--u8);
+        width: var(--control-height);
+        height: var(--control-height);
         border: 1px solid var(--ink-100);
         border-radius: var(--radius-control);
         background: var(--surface);
@@ -505,16 +522,6 @@ h3 {
     border-bottom: 1px solid var(--ink-100);
 }
 
-@media (min-width: 901px) {
-    .workspace-main.is-trackers .workspace-content {
-        padding-top: var(--u12);
-    }
-
-    .workspace-main.is-trackers .page-heading-row {
-        padding-bottom: var(--u6);
-        margin-bottom: var(--u2);
-    }
-}
 
 .page-eyebrow {
     margin-bottom: var(--u2);
@@ -558,8 +565,7 @@ h3 {
 
 .btn-primary:hover:not([disabled]),
 .btn-primary-context:hover:not([disabled]) {
-    background: var(--ink-900);
-    border-color: var(--ink-900);
+    filter: brightness(0.9);
 }
 
 .btn-tertiary {
@@ -588,8 +594,8 @@ h3 {
 }
 
 #processLogButton {
-    border-color: var(--ink-900);
-    background: var(--ink-900);
+    border-color: var(--accent);
+    background: var(--accent);
     color: var(--surface);
     font-weight: var(--weight-bold);
     box-shadow: var(--elevation-1);
@@ -818,7 +824,7 @@ input[type="checkbox"] {
     display: grid;
     gap: var(--u1);
     margin: 0;
-    padding: var(--u4) var(--u6) var(--u2);
+    padding: var(--u4) var(--u4) var(--u2);
     border: 1px solid var(--ink-100);
     border-bottom: 0;
     border-radius: var(--radius-surface) var(--radius-surface) 0 0;
@@ -869,9 +875,9 @@ input[type="checkbox"] {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0;
+    gap: var(--u2) 0;
     margin: 0;
-    padding: var(--u2) var(--u6) var(--u4);
+    padding: var(--u2) var(--u4) var(--u4);
     border: 1px solid var(--ink-100);
     border-top: 0;
     border-radius: 0 0 var(--radius-surface) var(--radius-surface);
@@ -884,7 +890,8 @@ input[type="checkbox"] {
     margin-right: var(--u4);
     border-right: 1px solid var(--ink-100);
     color: var(--ink-700);
-    white-space: nowrap;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .stat-item:last-child {
@@ -893,39 +900,45 @@ input[type="checkbox"] {
     border-right: 0;
 }
 
-/* On desktop the tracker answer and its supporting counts are one metric strip.
-   Keeping them in separate stacked boxes left half the header visually unused. */
-@media (min-width: 1400px) {
+/* Summary columns respond to available space, including an open detail panel. */
+.workspace-main.is-trackers #output.results-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+}
+.workspace-main.is-trackers #output > .stat-line {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--u2) var(--u4);
+}
+.workspace-main.is-trackers #output > .stat-line .stat-item {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+}
+.workspace-main.is-trackers #output > .results-section {
+    margin-top: var(--u4);
+}
+@media (min-width: 1100px) {
     .workspace-main.is-trackers #output.results-shell {
-        display: grid;
-        grid-template-columns: calc(var(--u24) * 3 + var(--u16)) minmax(0, 1fr);
-        column-gap: 0;
-        row-gap: var(--u6);
+        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
     }
-
     .workspace-main.is-trackers #output > .answer {
-        align-content: center;
-        min-height: var(--u24);
-        padding: var(--u4) var(--u6);
         border-right: 0;
-        border-bottom: 1px solid var(--ink-100);
+        border-bottom: var(--hairline);
         border-radius: var(--radius-surface) 0 0 var(--radius-surface);
+        padding: var(--u4);
+        align-content: center;
     }
-
     .workspace-main.is-trackers #output > .stat-line {
-        flex-wrap: nowrap;
-        min-height: var(--u24);
-        padding: var(--u4) var(--u6);
-        border-top: 1px solid var(--ink-100);
+        border: var(--hairline);
         border-left: 0;
         border-radius: 0 var(--radius-surface) var(--radius-surface) 0;
+        padding: var(--u4);
+        align-content: center;
     }
-
-    .workspace-main.is-trackers #output > .stat-line .stat-item {
-        flex: 1;
-        text-align: center;
-    }
-
     .workspace-main.is-trackers #output > :not(.answer):not(.stat-line) {
         grid-column: 1 / -1;
     }
@@ -991,7 +1004,7 @@ input[type="checkbox"] {
 .progress-card:hover {
     border-color: var(--ink-300);
     box-shadow: var(--elevation-1);
-    transform: translateY(calc(var(--u1) / -2));
+
 }
 
 .progress-card.is-done {
@@ -1163,8 +1176,9 @@ input[type="checkbox"] {
 }
 
 .stage.is-on {
-    background: var(--accent);
-    color: var(--surface);
+    background: var(--accent-tint);
+    color: var(--accent);
+    box-shadow: inset 0 -2px var(--accent);
     font-weight: var(--weight-bold);
 }
 
@@ -1210,8 +1224,8 @@ input[type="checkbox"] {
 }
 
 .tick-option.is-on {
-    background: var(--ink-900);
-    color: var(--surface);
+    background: var(--accent-tint);
+    color: var(--accent);
     font-weight: var(--weight-bold);
 }
 
@@ -1435,8 +1449,9 @@ input[type="checkbox"] {
 /* --- 6  record: landing, unit, review --------------------------------- */
 
 .results-section + .results-section {
-    margin-top: var(--u12);
+    margin-top: var(--u6);
 }
+.results-shell > .stat-line + .results-section { margin-top: var(--u6); }
 
 .results-section .subsection-title {
     margin-bottom: var(--u2);
@@ -2170,7 +2185,8 @@ body.has-quick-add {
 /* --- 8  legacy surfaces: sessions, plans, library --------------------- */
 
 .content-section {
-    margin-top: var(--u8);
+    margin-top: 0;
+    min-width: 0;
 }
 
 /* Tracker pages already sit in the workspace grid below the page heading. The
@@ -2196,63 +2212,10 @@ body.has-quick-add {
     border: 0;
 }
 
-.hunt-workspace {
-    display: flex;
-    align-items: center;
-    gap: var(--u4);
-    flex-wrap: wrap;
-    margin-bottom: var(--u6);
-}
-
-.hunt-tab-strip {
-    display: flex;
-    gap: var(--u2);
-    flex-wrap: wrap;
-}
-
-.hunt-tab {
-    display: inline-flex;
-    align-items: center;
-}
-
-.hunt-tab-button {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--u1);
-    min-height: var(--control-height);
-    padding: var(--u2) var(--u3);
-    border: 1px solid var(--ink-100);
-    border-radius: var(--radius-control);
-    background: var(--surface);
-    font-size: var(--t-200);
-    cursor: pointer;
-}
-
-.hunt-tab.is-active .hunt-tab-button {
-    border-color: var(--ink-900);
-    box-shadow: inset 0 calc(var(--u1) / -2) 0 var(--ink-900);
-}
-
-.hunt-tab-add {
-    min-height: var(--control-height);
-    padding: 0 var(--u3);
-    border: 1px dashed var(--ink-300);
-    border-radius: var(--radius-control);
-    background: none;
-    color: var(--ink-700);
-    cursor: pointer;
-}
-
-.hunt-tab-close {
-    margin-left: var(--u1);
-    border: 0;
-    background: none;
-    color: var(--ink-500);
-    cursor: pointer;
-}
-
 .table-container {
+    max-width: 100%;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
     overflow-x: auto;
     border: 1px solid var(--ink-100);
     border-radius: var(--radius-surface);
@@ -2317,14 +2280,13 @@ body.has-quick-add {
 }
 
 .chip.is-selected {
-    border-color: var(--ink-900);
-    background: var(--ink-900);
-    color: var(--surface);
+    border-color: var(--accent);
+    background: var(--accent-tint);
+    color: var(--accent);
 }
 
 .chip.is-selected .chip-meta {
-    color: var(--surface);
-    opacity: 0.75;
+    color: var(--ink-700);
 }
 
 /*
@@ -2480,32 +2442,6 @@ body.has-quick-add {
 
 /* --- 9  responsive ---------------------------------------------------- */
 
-/* The tracker canvas is too narrow here for the wide metric strip. Give wrapped
-   information a deliberate two-column rhythm and preserve the major-region gap
-   used at 1400px+. */
-@media (min-width: 901px) and (max-width: 1399px) {
-    .workspace-main.is-trackers #output > .stat-line {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--u3) var(--u6);
-        padding-top: var(--u4);
-        padding-bottom: var(--u6);
-    }
-
-    .workspace-main.is-trackers #output > .stat-line .stat-item {
-        min-width: 0;
-        margin: 0;
-        padding: 0;
-        border-right: 0;
-        white-space: normal;
-    }
-
-    .workspace-main.is-trackers #output > .stat-line + .results-section {
-        margin-top: var(--u6);
-    }
-
-}
-
 /* At the narrow end of desktop, search gets a complete row. Sort and the two
    secondary actions then share the next row without leaking into page padding. */
 @media (min-width: 901px) and (max-width: 1050px) {
@@ -2539,7 +2475,7 @@ body.has-quick-add {
 
 @media (max-width: 900px) {
     .workspace-content {
-        padding: var(--u6) var(--u4) var(--u12);
+        padding: calc(var(--u16) + var(--u2)) var(--u4) var(--u12);
     }
 
     h1 {
@@ -2644,75 +2580,72 @@ body.has-quick-add {
    and numbers are tabular and right-aligned so a column reads as a column.
    ========================================================================== */
 
-/* --- the session strip: real tabs, not boxes with loose × ------------- */
-
+/* --- session navigation: compact, scrollable, with the active tab in view --- */
 .hunt-workspace {
+    display: flex;
     align-items: center;
     gap: var(--u3);
-    padding-bottom: var(--u4);
-    margin-bottom: var(--u6);
-    border-bottom: 1px solid var(--ink-100);
+    padding-bottom: var(--u3);
+    border-bottom: var(--hairline);
+    min-width: 0;
 }
-
 .hunt-tab-strip {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
     gap: var(--u2);
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    padding: var(--u1) 0;
+    scrollbar-width: thin;
 }
-
-.hunt-tab {
-    position: relative;
-}
-
+.hunt-tab { position: relative; display: flex; flex: 0 0 auto; }
 .hunt-tab-button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--u1);
-    min-width: calc(var(--u24) + var(--u4));
-    padding: var(--u2) var(--u4) var(--u2) var(--u3);
-    border-color: var(--ink-100);
-    box-shadow: var(--elevation-1);
+    padding: var(--u2) var(--u3);
+    min-height: var(--control-height);
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
 }
-
-.hunt-tab-button:hover {
-    border-color: var(--ink-300);
-}
-
-.hunt-tab-label {
-    font-weight: var(--weight-medium);
-}
-
+.hunt-tab:not(.hunt-tab-fixed) .hunt-tab-button { padding-right: var(--u8); }
+.hunt-tab-button:hover { background: var(--surface); border-color: var(--ink-100); }
+.hunt-tab-label { font-weight: var(--weight-medium); white-space: nowrap; }
+.hunt-tab-meta { white-space: nowrap; }
 .hunt-tab.is-active .hunt-tab-button {
-    border-color: var(--ink-900);
-    box-shadow: inset 0 calc(var(--u1) / -2) 0 var(--ink-900), var(--elevation-1);
+    background: var(--accent-tint);
+    border-color: var(--accent-tint);
+    box-shadow: inset 0 -2px var(--accent);
+    color: var(--accent);
 }
-
-/* The close control belongs inside its own tab, not floating between two. */
 .hunt-tab-close {
     position: absolute;
     top: var(--u1);
-    right: var(--u1);
-    width: var(--u6);
-    height: var(--u6);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    right: 0;
+    width: var(--u8);
+    height: var(--u8);
+    border: 0;
     border-radius: var(--radius-control);
-    font-size: var(--t-100);
-    line-height: 1;
+    background: transparent;
     color: var(--ink-500);
+    cursor: pointer;
 }
-
-.hunt-tab-close:hover {
-    background: rgb(var(--shadow-rgb) / 0.08);
-    color: var(--ink-900);
-}
-
+.hunt-tab-close:hover { background: var(--surface); color: var(--ink-900); }
 .hunt-tab-add {
     min-width: var(--control-height);
+    border: var(--hairline);
+    border-radius: var(--radius-control);
+    background: transparent;
     font-size: var(--t-300);
+    cursor: pointer;
 }
-
-.hunt-workspace-actions {
-    margin-left: auto;
-}
-
+.hunt-workspace-actions { flex: 0 0 auto; }
+.hunt-workspace-actions .btn { white-space: nowrap; }
 /* --- the session itself ---------------------------------------------- */
 
 .session-summary {
@@ -2731,7 +2664,9 @@ body.has-quick-add {
 }
 
 .session-input-section textarea {
-    min-height: var(--u24);
+    display: block;
+    width: 100%;
+    min-height: calc(var(--u24) + var(--u8));
     font-family: var(--font-mono);
     font-size: var(--t-200);
 }
@@ -2739,6 +2674,21 @@ body.has-quick-add {
 .session-input-section .input-label {
     margin-bottom: var(--u2);
 }
+.session-input-section .respawn-mode-block {
+    margin: var(--u3) 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    align-items: center;
+    gap: var(--u2) var(--u4);
+}
+.session-input-section .respawn-mode-block .input-label { margin: 0; }
+.session-input-section .respawn-mode-block .helper-text { flex-basis: 100%; font-size: var(--t-100); }
+.session-input-section .toolbar { padding: 0; border: 0; background: none; flex-wrap: wrap; gap: var(--u2); }
+.session-input-section .toolbar > :first-child { flex: 0 0 auto; }
+.session-input-section .toolbar #clearLogButton { margin-left: auto; }
+.session-input-section #sessionEditor { padding-top: var(--u2); }
+
 
 /* Creature chips: an outline until chosen, filled when chosen. Every chip looking
    selected told the player nothing. */
@@ -2756,9 +2706,7 @@ body.has-quick-add {
     font-weight: var(--weight-medium);
 }
 
-.chip.is-selected {
-    border-color: var(--ink-900);
-}
+
 
 /* --- estimate and comparison tables --------------------------------- */
 
@@ -2858,6 +2806,7 @@ body.has-quick-add {
 
 .route-step::before {
     content: counter(step);
+    grid-row: 1 / span 2;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -2868,6 +2817,16 @@ body.has-quick-add {
     color: var(--surface);
     font-size: var(--t-100);
     font-variant-numeric: tabular-nums;
+}
+
+.route-step > .row-list {
+    grid-column: 2;
+    min-width: 0;
+}
+
+.route-step > .row-list.cols-4 .row {
+    grid-template-columns: minmax(0, 1fr) repeat(3, auto);
+    gap: var(--u3);
 }
 
 .summary-label {
@@ -2915,9 +2874,9 @@ th.is-sorted .column-sort {
 }
 
 /* The library edits in place, so its fields read as text until you touch them. */
-.library-name,
-.library-date,
-.library-notes {
+.library-table input.library-name,
+.library-table input.library-date,
+.library-table input.library-notes {
     width: 100%;
     min-height: var(--u8);
     border: 1px solid transparent;
@@ -2991,51 +2950,15 @@ th.is-sorted .column-sort {
 }
 
 /* Two figures in one cell need to read as two figures. */
-.library-table .row-aside,
 .table-container .row-aside {
-    display: inline;
-    margin-left: var(--u1);
-}
-
-/* A growing session history must not push the current page below the viewport.
-   Keep every tab and its metadata, but contain them in one familiar scrollable
-   tab rail instead of wrapping the rail into several rows. */
-.hunt-workspace {
-    flex-wrap: nowrap;
-}
-
-.hunt-tab-strip {
-    flex: 1 1 auto;
-    min-width: 0;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overscroll-behavior-inline: contain;
-    padding-bottom: var(--u1);
-    scrollbar-width: thin;
-}
-
-.hunt-tab {
-    flex: 0 0 auto;
+    display: block;
+    margin-top: var(--u1);
 }
 
 @media (max-width: 900px) {
-    .hunt-workspace {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: var(--u3);
-        margin-bottom: var(--u4);
-    }
-
-    .hunt-tab-strip {
-        grid-column: 1 / -1;
-        width: 100%;
-    }
-
-    .hunt-workspace-actions {
-        grid-column: 1 / -1;
-        justify-self: end;
-        margin-left: 0;
-    }
+    .hunt-workspace { flex-wrap: wrap; gap: var(--u2); }
+    .hunt-tab-strip { flex-basis: 100%; }
+    .hunt-workspace-actions { margin-left: auto; }
 }
 
 /* --- Dashboard ---------------------------------------------------------- */
@@ -3045,7 +2968,7 @@ th.is-sorted .column-sort {
     grid-template-columns: repeat(auto-fill, minmax(clamp(calc(var(--u24) * 2 + var(--u4)), 22vw, calc(var(--u24) * 3)), 1fr));
     column-gap: var(--grid-gutter);
     row-gap: var(--grid-gutter);
-    margin: var(--u4) 0 var(--u6);
+    margin: 0 0 var(--u6);
 }
 
 .dashboard-card {
@@ -3065,7 +2988,7 @@ th.is-sorted .column-sort {
 .dashboard-card:hover {
     border-color: var(--ink-300);
     box-shadow: var(--elevation-1);
-    transform: translateY(calc(var(--u1) / -2));
+
 }
 
 .dashboard-card-head {
@@ -3076,7 +2999,7 @@ th.is-sorted .column-sort {
 }
 
 .dashboard-card-head .material-symbols-outlined {
-    color: var(--ink-500);
+    color: var(--accent);
 }
 
 .dashboard-card-disclosure {
@@ -3090,11 +3013,10 @@ th.is-sorted .column-sort {
 }
 
 .dashboard-card-title {
-    font-size: var(--t-100);
+    font-size: var(--t-200);
     font-weight: var(--weight-bold);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--ink-500);
+    letter-spacing: var(--tracking-title);
+    color: var(--ink-900);
 }
 
 .dashboard-card-eyebrow {
@@ -3103,6 +3025,7 @@ th.is-sorted .column-sort {
 }
 
 .dashboard-card-figure {
+    font-variant-numeric: tabular-nums;
     font-size: var(--t-400);
     font-weight: var(--weight-bold);
     letter-spacing: var(--tracking-heading);
@@ -3131,6 +3054,7 @@ th.is-sorted .column-sort {
 
 .dashboard-card-stats {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: calc(var(--u1) / 2);
     margin-top: var(--u3);
     padding-top: var(--u3);
@@ -3142,7 +3066,7 @@ th.is-sorted .column-sort {
 /* Weapon Proficiency reuses the shared answer, table, form and spacing system. */
 .proficiency-page { min-width: 0; }
 .proficiency-metrics { margin-bottom: var(--u4); }
-.workspace-main.is-proficiency .content-section { margin-top: var(--u6); }
+
 .proficiency-metrics {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3172,8 +3096,50 @@ th.is-sorted .column-sort {
 
 @media (max-width: 900px) {
     .proficiency-metrics .answer:first-child .answer-value { font-size: var(--t-400); }
-    .workspace-main.is-proficiency .page-heading-row > div { padding-left: var(--u8); }
+
 }
 
 .proficiency-page .stat-line { border: var(--hairline); border-radius: var(--radius-surface); padding: var(--u3); gap: var(--u2) 0; }
 .proficiency-page .stat-item { white-space: normal; overflow-wrap: anywhere; }
+
+/* Finishing details shared by every surface. */
+.stage:focus-visible, .tick-option:focus-visible { outline-offset: -3px; }
+.tick-option { display: inline-flex; align-items: center; justify-content: center; gap: var(--u2); }
+.tick-option .material-symbols-outlined { font-size: var(--u4); }
+.progress-card.is-unrecorded .stage.is-on { background: var(--paper); color: var(--ink-500); box-shadow: none; }
+.card-content { cursor: pointer; }
+.page-heading-row > div { min-width: 0; }
+.description { margin-top: var(--u1); }
+.answer-note { font-size: var(--t-100); color: var(--ink-500); }
+.answer { align-content: start; }
+.dashboard-card-note { min-height: calc(var(--u4) * 2); }
+.dashboard-card-stats { margin-top: auto; }
+.dashboard-card-stats li { overflow-wrap: anywhere; }
+.dashboard-card { gap: var(--u1); }
+.dashboard-card-figure { line-height: var(--leading-tight); }
+.workspace-content { overflow-anchor: none; }
+.library-table table { min-width: 1360px; }
+.library-table td:first-child { min-width: 176px; }
+.library-table input.library-name { min-width: 144px; }
+.library-table input.library-notes { min-width: 180px; }
+.library-table input.library-date { min-width: 152px; }
+.estimate-table table { min-width: 1080px; }
+.task-sessions-table table { min-width: 800px; }
+.table-scroll-hint { font-size: var(--t-100); color: var(--ink-500); margin: var(--u2) 0; }
+@media (max-width: 900px) {
+    .dashboard-card-note { min-height: 0; }
+    .page-heading-row { gap: var(--u3); }
+    .workspace-main.is-trackers #output > .results-section { margin-top: 0; }
+    .page-eyebrow { margin-bottom: var(--u1); }
+    .answer-value { font-size: var(--t-400); }
+    .stat-line { font-size: var(--t-100); }
+    .stage, .stages.is-compact .stage { min-height: var(--control-height); }
+    .sidebar-link { min-height: var(--control-height); }
+    .sidebar-section { margin-top: var(--u4); padding-top: var(--u3); }
+    .sidebar-section-data { margin-top: var(--u4); }
+    .sidebar-character { margin-bottom: var(--u2); }
+    .row-name { flex-wrap: wrap; }
+    .row-list.cols-4 .row { grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)); gap: var(--u2); }
+    .row { font-size: var(--t-100); }
+    .row.is-head span { letter-spacing: 0; }
+}

@@ -15,7 +15,7 @@ export function buildWeaponProjection(plan, session, creatureName = "") {
     const targetXP = plan.targetXP.trim() === "" ? NaN : Number(plan.targetXP);
     const creature = session.rows.find((row) => row.name === creatureName);
     const projection = calculateWeaponProjection({ currentXP, targetXP }, session, creature?.perKill);
-    if (!projection) return `<p class="helper-text">Enter non-negative whole XP values and a target up to ${formatNumber(Number.MAX_SAFE_INTEGER)}.</p>`;
+    if (!projection) return `<p class="helper-text">${plan.targetXP.trim() === "" ? "Enter your target XP to estimate the remaining time." : "Use non-negative whole numbers for current and target XP."}</p>`;
     const time = projection.hoursRemaining === null ? "—" : formatTimeDetailed(projection.hoursRemaining * 60);
     return `${buildMetricLine([
         `<strong>${number(projection.remainingXP)}</strong> XP remaining`,

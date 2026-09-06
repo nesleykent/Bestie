@@ -50,7 +50,8 @@ export function renderTaskSessions(container, sessions) {
         <section class="results-section">
             <p class="results-intro">Select a session to change its creature or task target.</p>
 
-            <div class="table-container task-sessions-table">
+            <p class="table-scroll-hint">Scroll horizontally to see all task estimates.</p>
+            <div class="table-container task-sessions-table" tabindex="0" role="region" aria-label="Task session estimates">
                 <table>
                     <thead>
                         <tr>

@@ -40,7 +40,7 @@ export function renderComparison(container, comparison) {
         <section class="results-section" aria-labelledby="comparisonTableTitle">
             <h3 class="subsection-title" id="comparisonTableTitle">Charm Rate Ranking</h3>
 
-            <div class="table-container comparison-table">
+            <div class="table-container comparison-table" tabindex="0" role="region" aria-label="Charm rate ranking">
                 <table>
                     <thead>
                         <tr>
@@ -51,7 +51,7 @@ export function renderComparison(container, comparison) {
                         </tr>
                     </thead>
                     <tbody>
-                        ${comparison.rows.map(buildRow).join("")}
+                        ${[...comparison.rows].sort((a, b) => b.totalCharmsPerHour - a.totalCharmsPerHour || b.totalCharms - a.totalCharms).map(buildRow).join("")}
                     </tbody>
                 </table>
             </div>

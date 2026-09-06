@@ -13,12 +13,13 @@
 <body>
     <div class="app-shell">
         <nav class="app-sidebar" id="appSidebar" aria-label="Main navigation">
+            <button class="icon-button sidebar-close" id="sidebarCloseButton" type="button" aria-label="Close menu"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
             <div class="sidebar-character" id="sidebarCharacter">
                 <button class="sidebar-character-switch" id="sidebarCharacterButton" type="button" aria-haspopup="listbox" aria-expanded="false">
                     <span class="sidebar-character-name" id="sidebarCharacterName">Character 1</span>
                     <span class="material-symbols-outlined sidebar-character-chevron" aria-hidden="true">expand_more</span>
                 </button>
-                <input class="sidebar-character-input" id="sidebarCharacterInput" type="text" maxlength="32" placeholder="Character name" hidden>
+                <input class="sidebar-character-input" id="sidebarCharacterInput" aria-label="Character name" type="text" maxlength="32" placeholder="Character name" hidden>
                 <div class="sidebar-character-actions">
                     <button class="icon-button sidebar-icon-btn" id="sidebarRenameButton" type="button" aria-label="Rename character"><span class="material-symbols-outlined" aria-hidden="true">edit</span></button>
                     <button class="icon-button sidebar-icon-btn" id="sidebarDeleteCharacterButton" type="button" aria-label="Delete character"><span class="material-symbols-outlined" aria-hidden="true">delete</span></button>
@@ -62,7 +63,11 @@
             <button class="icon-button sidebar-collapse" id="sidebarCollapseButton" type="button" aria-label="Collapse sidebar" aria-expanded="true"><span class="material-symbols-outlined" id="sidebarCollapseIcon" aria-hidden="true">left_panel_close</span></button>
         </nav>
 
+        <header class="mobile-bar" aria-label="Bestie">
         <button class="sidebar-menu-toggle" id="sidebarMenuToggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="appSidebar"><span class="material-symbols-outlined" aria-hidden="true">menu</span></button>
+        <span class="mobile-brand">Bestie</span>
+        <button class="icon-button" id="mobileSearchButton" type="button" aria-label="Search all trackers"><span class="material-symbols-outlined" aria-hidden="true">search</span></button>
+        </header>
         <div class="sidebar-scrim" id="sidebarScrim" hidden></div>
 
         <main class="workspace-main" id="workspaceMain">

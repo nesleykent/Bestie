@@ -136,7 +136,8 @@ export function renderSessionLibrary(container, sessions, sort, filters, counts)
     container.className = "grid results-shell";
     container.innerHTML = `
         ${sessions.length ? `
-            <div class="table-container library-table">
+            <p class="table-scroll-hint">Edit names, dates and notes directly. Scroll horizontally for all metrics and actions.</p>
+            <div class="table-container library-table" tabindex="0" role="region" aria-label="Session history">
                 <table>
                     <thead>${buildHead(sort)}</thead>
                     <tbody>${sessions.map(buildRow).join("")}</tbody>

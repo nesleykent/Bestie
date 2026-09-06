@@ -11,6 +11,7 @@ import { parseHuntSession } from "../src/app/features/session-parser.js";
 import { summarizeBestiaryMonsters } from "../src/app/features/session-analysis.js";
 import { analyzeTaskSession, calculateTaskEstimate } from "../src/app/features/task-analysis.js";
 import { buildHuntComparison } from "../src/app/features/hunt-comparison.js";
+import { renderComparison } from "../src/app/ui/render-comparison.js";
 import { parsePlayTimeMinutes } from "../src/app/features/charm-plan.js";
 
 test("dedicated direct route and all existing mode/view routes round-trip", () => {
@@ -71,6 +72,20 @@ test("existing Bestiary, Tasks, charm time parsing and comparison contracts", ()
     const summary = summarizeBestiaryMonsters([{ totalKills: 0, killsToUnlock: 1000, charms: 15, timeRemainingMinutes: 30 }]);
     assert.equal(summary.totalCharmsPerHour, 30);
     assert.equal(buildHuntComparison([{ id: "a", label: "A", summary }, { id: "b", label: "B", summary: null }]).bestRow.id, "a");
+});
+
+test("charm ranking shows the best rate first without reordering saved sessions", () => {
+    const rows = [
+        { label: "Slow", totalCharmsPerHour: 5, totalCharms: 10, maxTimeRemainingMinutes: 120 },
+        { label: "Fast", totalCharmsPerHour: 20, totalCharms: 20, maxTimeRemainingMinutes: 60, isBest: true },
+        { label: "Middle", totalCharmsPerHour: 10, totalCharms: 10, maxTimeRemainingMinutes: 60 }
+    ];
+    const container = {};
+    renderComparison(container, { rows, bestRow: rows[1], pendingLabels: [] });
+    const table = container.innerHTML.split("<tbody>")[1];
+    assert.ok(table.indexOf("Fast") < table.indexOf("Middle"));
+    assert.ok(table.indexOf("Middle") < table.indexOf("Slow"));
+    assert.deepEqual(rows.map((row) => row.label), ["Slow", "Fast", "Middle"]);
 });
 
 test("shared session tab names and IDs remain text, including in the proficiency page", async () => {

@@ -595,11 +595,25 @@ function setSidebarCollapsed(isCollapsed) {
     saveSidebarCollapsed(isCollapsed);
 }
 
+const mobileNavigation = window.matchMedia("(max-width: 900px)");
+
 function setSidebarOpen(isOpen) {
-    elements.appSidebar.classList.toggle("is-open", isOpen);
-    elements.sidebarScrim.hidden = !isOpen;
-    elements.sidebarMenuToggle.setAttribute("aria-expanded", String(isOpen));
+    const open = mobileNavigation.matches && isOpen;
+    const focusWasInDrawer = elements.appSidebar.contains(document.activeElement);
+    elements.appSidebar.classList.toggle("is-open", open);
+    elements.appSidebar.inert = mobileNavigation.matches && !open;
+    elements.workspaceMain.inert = open;
+    elements.sidebarScrim.hidden = !open;
+    elements.sidebarMenuToggle.setAttribute("aria-expanded", String(open));
+    document.body.classList.toggle("has-sidebar-open", open);
+    if (open) {
+        document.getElementById("sidebarCloseButton").focus();
+    } else if (mobileNavigation.matches && focusWasInDrawer && !isQuickAddOpen()) {
+        elements.sidebarMenuToggle.focus();
+    }
 }
+
+mobileNavigation.addEventListener("change", () => setSidebarOpen(false));
 
 /**
  * Reads every visible total-kills field into the canonical progress record.
@@ -1031,6 +1045,13 @@ function renderHuntTabStrip() {
 
     renderHuntTabs(elements.huntTabStrip, buildFixedTabs(view), huntTabs, { canAdd: !isTrackers });
     attachHuntTabActions();
+    const active = elements.huntTabStrip.querySelector(".hunt-tab.is-active");
+    if (active) {
+        const left = active.offsetLeft - elements.huntTabStrip.offsetLeft;
+        if (left < elements.huntTabStrip.scrollLeft || left + active.offsetWidth > elements.huntTabStrip.scrollLeft + elements.huntTabStrip.clientWidth) {
+            elements.huntTabStrip.scrollLeft = Math.max(0, left - (elements.huntTabStrip.clientWidth - active.offsetWidth) / 2);
+        }
+    }
 
     elements.huntWorkspaceActions.hidden = !isBestiary && state.mode !== "proficiency";
     elements.compareHuntsButton.disabled = getComparableHunts().length < 2;
@@ -3086,6 +3107,14 @@ function bindTrackerDelegation() {
 
         const tracker = getActiveTracker();
 
+        if (target.closest("[data-tracker-reset-filters]")) {
+            state.trackerFilters[tracker.id] = buildInitialFilters(tracker);
+            state.trackerPageIndex = 0;
+            renderTrackerView();
+            elements.output.querySelector('[data-tracker-facet="search"]')?.focus();
+            return;
+        }
+
         const selectionMode = target.closest("[data-tracker-selection-mode]");
 
         if (selectionMode) {
@@ -3331,6 +3360,28 @@ function bindGridKeyboard() {
         if (!card || target.closest("input, textarea, select")) {
             return;
         }
+
+        const radio = target.closest('[role="radio"]');
+        if (radio && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) {
+            event.preventDefault();
+            const options = [...radio.parentElement.querySelectorAll('[role="radio"]')];
+            const direction = ["ArrowLeft", "ArrowUp"].includes(event.key) ? -1 : 1;
+            const index = event.key === "Home" ? 0 : event.key === "End" ? options.length - 1
+                : (options.indexOf(radio) + direction + options.length) % options.length;
+            const next = options[index];
+            const value = next.dataset.trackerStageValue;
+            next.click();
+            elements.output.querySelector(`[data-tracker-row="${CSS.escape(card.dataset.trackerRow)}"] [data-tracker-stage-value="${CSS.escape(value)}"]`)?.focus();
+            return;
+        }
+        if (target === card && (event.key === "Enter" || event.key === " ")) {
+            event.preventDefault();
+            state.selectedTrackerKey = card.dataset.trackerRow;
+            renderTrackerView();
+            elements.detailCloseButton.focus();
+            return;
+        }
+        if (target.closest("button, a")) return;
 
         const cards = [...elements.output.querySelectorAll("[data-tracker-row]")];
         const index = cards.indexOf(card);
@@ -3880,7 +3931,7 @@ function processHuntLog(hunt, logText) {
     hunt.selectedTaskMonsterName = taskNames.has(hunt.selectedTaskMonsterName)
         ? hunt.selectedTaskMonsterName
         : (tasks.monsters[0]?.name ?? "");
-    state.isSessionInputOpen = false;
+    state.isSessionInputOpen = bestiary.sessionDuration <= 0 || !tasks.monsters.length || session.issues.length > 0;
 
     renderApp();
     persistState();
@@ -4283,6 +4334,32 @@ function focusWorkspaceSearch(returnFocusSelector) {
 }
 
 document.addEventListener("keydown", (event) => {
+    if (elements.appSidebar.classList.contains("is-open")) {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            setSidebarOpen(false);
+            return;
+        }
+        if (event.key === "Tab") {
+            const controls = [...elements.appSidebar.querySelectorAll('button:not([disabled]), input:not([hidden])')]
+                .filter((control) => control.getClientRects().length);
+            const first = controls[0];
+            const last = controls.at(-1);
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault(); last?.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault(); first?.focus();
+            }
+        }
+        return;
+    }
+    if (event.key === "Escape" && !elements.detailPanel.hidden && !isQuickAddOpen()) {
+        event.preventDefault();
+        const key = state.selectedTrackerKey;
+        closeDetailPanel();
+        elements.output.querySelector(`[data-tracker-row="${CSS.escape(key)}"]`)?.focus();
+        return;
+    }
     // The event target can be the document itself, which has no closest().
     const target = event.target instanceof Element ? event.target : null;
     const inField = (selector) => Boolean(target?.closest(selector));
@@ -4338,8 +4415,8 @@ elements.sidebarDashboardLink.addEventListener("click", () => {
     setSidebarOpen(false);
 });
 elements.sidebarSearchLink.addEventListener("click", () => {
-    focusWorkspaceSearch();
     setSidebarOpen(false);
+    focusWorkspaceSearch(mobileNavigation.matches ? "#mobileSearchButton" : "#sidebarSearchLink");
 });
 elements.sidebarTrackerList.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target : null;
@@ -4440,6 +4517,9 @@ elements.sidebarMenuToggle.addEventListener("click", () => {
     setSidebarOpen(!elements.appSidebar.classList.contains("is-open"));
 });
 elements.sidebarScrim.addEventListener("click", () => setSidebarOpen(false));
+document.getElementById("sidebarCloseButton").addEventListener("click", () => setSidebarOpen(false));
+document.getElementById("mobileSearchButton").addEventListener("click", () => focusWorkspaceSearch("#mobileSearchButton"));
+setSidebarOpen(false);
 
 setSidebarCollapsed(loadSidebarCollapsed());
 

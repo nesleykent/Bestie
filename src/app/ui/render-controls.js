@@ -63,6 +63,7 @@ export function stageControl(row, field, stages, options = {}) {
                     role="radio"
                     aria-checked="${current === stage.value ? "true" : "false"}"
                     title="${escapeAttribute(stage.title ?? stage.label)}"
+                    aria-label="${escapeAttribute(stage.title ?? stage.label)}"
                     data-tracker-item="${escapeAttribute(row.key)}"
                     data-tracker-stage="${escapeAttribute(field)}"
                     data-tracker-stage-value="${stage.value}"
@@ -104,7 +105,7 @@ export function tickControl(row, field, options = {}) {
                 data-tracker-item="${escapeAttribute(row.key)}"
                 data-tracker-set="${escapeAttribute(field)}"
                 data-tracker-set-value="1"
-            >${escapeText(yesLabel)}</button>
+            ><span class="material-symbols-outlined" aria-hidden="true">${isYes ? "check_circle" : "radio_button_unchecked"}</span>${escapeText(isYes ? yesLabel : `Mark ${yesLabel.toLowerCase()}`)}</button>
         </div>
     `;
 }
@@ -166,6 +167,7 @@ export function chipControl(row, field, options = {}) {
             data-tracker-flag="${escapeAttribute(field)}"
             aria-pressed="${row[field] ? "true" : "false"}"
             title="${escapeAttribute(title || field)}"
+            aria-label="${escapeAttribute(title || label || field)} for ${escapeAttribute(row.name)}"
         >${escapeText(label)}</button>
     `;
 }

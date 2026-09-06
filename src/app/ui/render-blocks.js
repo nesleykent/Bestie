@@ -45,7 +45,7 @@ export function buildAnswer(label, value, note = "", progress = null) {
 export function buildStatLine(parts) {
     const filled = parts.filter(Boolean);
 
-    return filled.length ? `<p class="stat-line">${filled.join("<span>·</span>")}</p>` : "";
+    return buildMetricLine(filled);
 }
 
 export function buildMetricLine(parts) {
@@ -99,6 +99,7 @@ function buildEstimateRow(entry) {
                 <input
                     type="number"
                     class="kills-input"
+                    aria-label="Total kills for ${escapeAttribute(monster.name)}${entry.huntLabel ? ` in ${escapeAttribute(entry.huntLabel)}` : ""}"
                     data-monster-name="${escapeAttribute(monster.name)}"
                     ${entry.huntId ? `data-hunt-id="${escapeAttribute(entry.huntId)}"` : ""}
                     min="0"
@@ -122,7 +123,8 @@ function buildEstimateRow(entry) {
 
 export function buildEstimateTable(entries) {
     return `
-        <div class="table-container">
+        <p class="table-scroll-hint">Scroll horizontally to see all estimates.</p>
+        <div class="table-container estimate-table" tabindex="0" role="region" aria-label="Bestiary estimates">
             <table>
                 <thead>
                     <tr>

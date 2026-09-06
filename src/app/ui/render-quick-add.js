@@ -221,6 +221,7 @@ export function openQuickAdd({ items, onSet, returnFocusSelector = "" }) {
                     class="quick-input"
                     type="text"
                     role="combobox"
+                    aria-label="Search all trackers"
                     aria-expanded="true"
                     aria-controls="quickAddResults"
                     aria-autocomplete="list"

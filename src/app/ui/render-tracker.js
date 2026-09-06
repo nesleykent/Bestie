@@ -267,6 +267,7 @@ function buildPager(page) {
                         class="row-action${page.size === size ? " is-on" : ""}"
                         type="button"
                         data-tracker-page-size="${size}"
+                        aria-pressed="${page.size === size}"
                     >${size === 0 ? "All" : size}</button>
                 `).join("")}
             </div>
@@ -322,7 +323,8 @@ export function renderTracker(container, view) {
                 ${buildPager(page)}
             ` : buildEmptyState(
                 "Nothing matches these filters.",
-                "Clear the search, or set the filters back to All."
+                "Try another name or reset the filters to see every item.",
+                '<button class="btn btn-secondary" type="button" data-tracker-reset-filters>Reset filters</button>'
             )}
         </section>
 

@@ -28,7 +28,6 @@ function buildEntryRows(plan) {
 
 function buildRouteStep(step) {
     const head = buildRow([
-        `<span class="row-order">${formatNumber(step.order)}</span>`,
         `<span class="row-name">${buildLinkButton(step.huntLabel, "data-plan-hunt", step.huntId)}</span>`,
         `<span class="row-num">${formatTime(step.minutes)}</span>`,
         `<span class="row-charm">+${formatNumber(step.charms)}</span>`,
@@ -40,7 +39,7 @@ function buildRouteStep(step) {
         `<span class="row-charm">+${formatNumber(entry.charms)}</span>`
     ], "is-sub"));
 
-    return `<li class="route-step">${buildRowList([head], 5)}${buildRowList(entries, 3)}</li>`;
+    return `<li class="route-step">${buildRowList([head], 4)}${buildRowList(entries, 3)}</li>`;
 }
 
 function buildRoute(plan) {
