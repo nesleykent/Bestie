@@ -3172,7 +3172,7 @@ th.is-sorted .column-sort {
 
 @media (max-width: 900px) {
     .proficiency-metrics .answer:first-child .answer-value { font-size: var(--t-400); }
-    .workspace-main.is-proficiency .page-eyebrow { padding-left: var(--u8); }
+    .workspace-main.is-proficiency .page-heading-row > div { padding-left: var(--u8); }
 }
 
 .proficiency-page .stat-line { border: var(--hairline); border-radius: var(--radius-surface); padding: var(--u3); gap: var(--u2) 0; }
