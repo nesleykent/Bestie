@@ -1,23 +1,10 @@
-import { extractKilledMonsters, extractSessionDuration } from "./session-parser.js";
+import { parseHuntSession } from "./session-parser.js";
 
-function toTaskMonsters(killedMonsters) {
-    return Object.entries(killedMonsters)
-        .map(([name, killsThisSession]) => ({
-            name,
-            displayName: name,
-            killsThisSession
-        }))
-        .sort((left, right) => right.killsThisSession - left.killsThisSession || left.name.localeCompare(right.name));
-}
-
-export function analyzeTaskSession(logText) {
-    const sessionDuration = extractSessionDuration(logText);
-    const killedMonsters = extractKilledMonsters(logText);
-    const monsters = toTaskMonsters(killedMonsters);
-
+export function analyzeTaskSession(logText, session = parseHuntSession(logText)) {
     return {
-        sessionDuration,
-        monsters
+        sessionDuration: session.sessionDuration,
+        monsters: session.monsters.map((monster) => ({ ...monster, displayName: monster.name }))
+            .sort((left, right) => right.killsThisSession - left.killsThisSession || left.name.localeCompare(right.name))
     };
 }
 

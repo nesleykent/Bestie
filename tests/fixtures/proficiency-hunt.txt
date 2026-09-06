@@ -1,0 +1,9 @@
+Session data: From 2026-09-06, 10:00:00 to 2026-09-06, 11:30:00
+Session: 01:30h
+Raw XP Gain: 9,999,999
+XP Gain: 19,999,999
+Killed Monsters:
+    600x Makara
+    450x Rotten Golem
+Looted Items:
+    12x gold coin

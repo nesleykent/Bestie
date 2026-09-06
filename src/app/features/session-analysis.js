@@ -1,4 +1,5 @@
-import { extractKilledMonsters, extractSessionDuration } from "./session-parser.js";
+import { parseHuntSession } from "./session-parser.js";
+import { findBestiaryCreature } from "./creature-names.js";
 
 function buildMonsterProgress(entry, killsThisSession, sessionDuration, totalKills = 0) {
     const killsToUnlock = Number(entry["Kills to Unlock"]) || 0;
@@ -51,21 +52,12 @@ export function summarizeBestiaryMonsters(monsters) {
     };
 }
 
-export function analyzeSession(logText, bestiaryData) {
-    const sessionDuration = extractSessionDuration(logText);
-    const killedMonsters = extractKilledMonsters(logText);
-
-    const monsters = Object.entries(killedMonsters)
-        .map(([name, killsThisSession]) => {
-            const bestiaryEntry = bestiaryData.find((entry) => entry.Name.toLowerCase() === name);
-            return bestiaryEntry ? buildMonsterProgress(bestiaryEntry, killsThisSession, sessionDuration) : null;
-        })
-        .filter(Boolean);
-
-    return {
-        sessionDuration,
-        monsters
-    };
+export function analyzeSession(logText, bestiaryData, session = parseHuntSession(logText)) {
+    const monsters = session.monsters.map(({ name, killsThisSession }) => {
+        const entry = findBestiaryCreature(name, bestiaryData);
+        return entry ? buildMonsterProgress(entry, killsThisSession, session.sessionDuration) : null;
+    }).filter(Boolean);
+    return { sessionDuration: session.sessionDuration, monsters };
 }
 
 export function recalculateProgress(monsters, bestiaryData, sessionDuration, totalKillsByName) {
