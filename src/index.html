@@ -150,8 +150,14 @@ Looted Items:" spellcheck="false"></textarea>
         </main>
 
         <aside class="detail-panel" id="detailPanel" aria-label="Item details" hidden>
-            <button class="icon-button detail-close" id="detailCloseButton" type="button" aria-label="Close details"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
-            <div id="detailPanelContent"></div>
+            <header class="detail-header">
+                <div id="detailHeading" class="detail-heading"></div>
+                <div class="detail-header-actions">
+                    <div id="detailBookmark"></div>
+                    <button class="icon-button detail-close" id="detailCloseButton" type="button" aria-label="Close details"><span class="material-symbols-outlined" aria-hidden="true">close</span></button>
+                </div>
+            </header>
+            <div id="detailPanelContent" class="detail-body"></div>
         </aside>
     </div>
 

@@ -128,6 +128,8 @@ const elements = {
     detailCloseButton: document.getElementById("detailCloseButton"),
     detailPanel: document.getElementById("detailPanel"),
     detailPanelContent: document.getElementById("detailPanelContent"),
+    detailHeading: document.getElementById("detailHeading"),
+    detailBookmark: document.getElementById("detailBookmark"),
     huntTabStrip: document.getElementById("huntTabStrip"),
     huntWorkspace: document.getElementById("huntWorkspace"),
     huntWorkspaceActions: document.getElementById("huntWorkspaceActions"),
@@ -1384,7 +1386,21 @@ function getTrackerView(tracker) {
 function closeDetailPanel() {
     state.selectedTrackerKey = "";
     elements.detailPanel.hidden = true;
+    delete elements.detailPanel.dataset.entity;
     elements.appShell.classList.remove("has-detail");
+}
+
+function dismissDetailPanel() {
+    const key = state.selectedTrackerKey;
+    closeDetailPanel();
+    if (state.mode === "trackers") renderTrackerView();
+    const origin = elements.output.querySelector(`[data-tracker-row="${CSS.escape(key)}"]`);
+    (origin ?? elements.output.querySelector('[data-tracker-facet="search"]'))?.focus({ preventScroll: true });
+}
+
+function renderDetailHeading(row, icon, meta) {
+    elements.detailHeading.innerHTML = `<h2 class="detail-title"><span class="material-symbols-outlined" aria-hidden="true">${icon}</span>${escapeText(row.name)}</h2><p class="detail-header-meta">${escapeText(meta)}</p>`;
+    elements.detailBookmark.innerHTML = bookmarkControl(row);
 }
 
 function formatDetailRecordedAt(trackerId, itemKey) {
@@ -1415,13 +1431,8 @@ function renderBestiaryDetail(row) {
     const progressPercent = row.progress * 100;
     const progressLabel = `${progressPercent.toFixed(1)}%`;
 
+    renderDetailHeading(row, "pets", `${row.className} · ${formatNumber(row.charms)} charm points`);
     elements.detailPanelContent.innerHTML = `
-        <header class="detail-header">
-            <h2 class="detail-title"><span class="material-symbols-outlined" aria-hidden="true">pets</span>${escapeText(row.name)}</h2>
-            <p class="detail-header-meta">${escapeText(row.className)} <span aria-hidden="true">·</span> ${formatNumber(row.charms)} charm points</p>
-            <div class="detail-header-actions">${bookmarkControl(row)}</div>
-        </header>
-
         <section class="detail-group">
             <h3 class="detail-group-title">Progress</h3>
             <div class="detail-kills-row">
@@ -1475,12 +1486,6 @@ function renderBestiaryDetail(row) {
         </section>
     `;
 
-    elements.detailPanelContent.querySelector('[data-tracker-flag="bookmark"]').addEventListener("click", (event) => {
-        commitTrackerFlag(event.currentTarget);
-        const updated = buildTrackerRows(bestiaryTracker).find((candidate) => candidate.key === row.key);
-        if (updated) renderBestiaryDetail(updated);
-        elements.detailPanelContent.querySelector('[data-tracker-flag="bookmark"]')?.focus();
-    });
     const killsInput = elements.detailPanelContent.querySelector(".detail-kills-input");
     let killsDirty = false;
 
@@ -1786,13 +1791,8 @@ function renderGenericTrackerDetail(tracker, row) {
     const icon = TRACKER_DETAIL_ICONS[tracker.id] ?? "checklist";
     const infoGroups = buildDetailInfoGroups(tracker, row).filter(Boolean).join("");
 
+    renderDetailHeading(row, icon, buildDetailMeta(tracker, row));
     elements.detailPanelContent.innerHTML = `
-        <header class="detail-header">
-            <h2 class="detail-title"><span class="material-symbols-outlined" aria-hidden="true">${icon}</span>${escapeText(row.name)}</h2>
-            <p class="detail-header-meta">${escapeText(buildDetailMeta(tracker, row))}</p>
-            <div class="detail-header-actions">${bookmarkControl(row)}</div>
-        </header>
-
         <section class="detail-group detail-state${tracker.tickField ? " is-boolean" : ""}">
             <h3 class="detail-group-title">Progress</h3>
             ${buildDetailPrimaryControl(tracker, row)}
@@ -1876,8 +1876,10 @@ function renderTrackerDetail(tracker) {
         return;
     }
 
+    const entity = `${tracker.id}:${row.key}`;
+    if (elements.detailPanel.dataset.entity !== entity) elements.detailPanelContent.scrollTop = 0;
+    elements.detailPanel.dataset.entity = entity;
     elements.detailPanel.hidden = false;
-    elements.detailPanel.scrollTop = 0;
     elements.appShell.classList.add("has-detail");
 
     if (tracker.id === "bestiary") {
@@ -4417,9 +4419,7 @@ document.addEventListener("keydown", (event) => {
     }
     if (event.key === "Escape" && !elements.detailPanel.hidden && !isQuickAddOpen()) {
         event.preventDefault();
-        const key = state.selectedTrackerKey;
-        closeDetailPanel();
-        elements.output.querySelector(`[data-tracker-row="${CSS.escape(key)}"]`)?.focus();
+        dismissDetailPanel();
         return;
     }
     // The event target can be the document itself, which has no closest().
@@ -4446,11 +4446,13 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-elements.detailCloseButton.addEventListener("click", () => {
-    closeDetailPanel();
-    if (state.mode === "trackers") {
-        renderTrackerView();
-    }
+elements.detailCloseButton.addEventListener("click", dismissDetailPanel);
+elements.detailBookmark.addEventListener("click", (event) => {
+    const button = event.target.closest('[data-tracker-flag="bookmark"]');
+    if (!button) return;
+    commitTrackerFlag(button);
+    renderTrackerDetail(getActiveTracker());
+    elements.detailBookmark.querySelector("button")?.focus({ preventScroll: true });
 });
 elements.newSessionButton.addEventListener("click", () => {
     if (state.mode !== "bestiary" && state.mode !== "proficiency") {

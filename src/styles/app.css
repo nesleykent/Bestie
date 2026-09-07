@@ -1834,8 +1834,10 @@ body.has-quick-add {
     inset: var(--u2) var(--u2) var(--u2) auto;
     z-index: 40;
     width: min(calc(var(--u24) * 3 + var(--u16)), calc(100vw - var(--u4)));
-    overflow-y: auto;
-    padding: var(--u6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
     border: 1px solid var(--ink-100);
     border-radius: var(--radius-surface);
     background: var(--surface);
@@ -1843,7 +1845,10 @@ body.has-quick-add {
 }
 
 #detailPanelContent {
-    display: block;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 var(--u4) var(--u4);
 }
 
 .detail-title .material-symbols-outlined {
@@ -2944,18 +2949,18 @@ th.is-sorted .column-sort {
 
 .dashboard-card-stats li { flex: 1 1 40%; }
 .detail-header {
-    padding: var(--u2) var(--u8) var(--u4) 0;
-    border-bottom: 1px solid var(--ink-100);
-    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--u2);
+    flex: 0 0 auto;
+    padding: var(--u4);
+    border-bottom: var(--hairline);
 }
-.detail-header-actions { position: absolute; right: -4px; top: 44px; }
-.detail-close {
-    position: absolute;
-    top: var(--u4);
-    right: var(--u4);
-    border-radius: var(--radius-pill);
-    background: transparent;
-}
+.detail-heading { min-width: 0; }
+.detail-header-actions { display: flex; align-items: center; }
+.detail-header-actions .icon-button, .detail-header-actions .bookmark-toggle { width: 40px; height: 40px; flex: 0 0 auto; }
+.detail-close { position: static; background: transparent; border: 0; box-shadow: none; }
 .detail-title {
     font-size: var(--t-300);
     font-weight: var(--weight-bold);
@@ -3058,9 +3063,8 @@ th.is-sorted .column-sort {
     .filter-toggle, .active-filter, .text-action { min-height: 40px; }
     .active-filters { min-height: 40px; }
     .dashboard-card { padding: var(--u4); }
-    .detail-panel { inset: 0; width: 100%; border-radius: 0; padding: var(--u4); }
-    .detail-header { padding-right: var(--u12); }
-    .detail-header-actions { right: 0; }
+    .detail-panel { inset: 0; width: 100%; border-radius: 0; padding: 0; }
+    .detail-header-actions .icon-button, .detail-header-actions .bookmark-toggle { width: 44px; height: 44px; }
     .detail-entity-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .proficiency-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .proficiency-metrics .answer:nth-child(-n+2) .answer-value { font-size: var(--t-400); }
