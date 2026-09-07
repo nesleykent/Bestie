@@ -105,7 +105,7 @@ export function tickControl(row, field, options = {}) {
                 data-tracker-item="${escapeAttribute(row.key)}"
                 data-tracker-set="${escapeAttribute(field)}"
                 data-tracker-set-value="1"
-            ><span class="material-symbols-outlined" aria-hidden="true">${isYes ? "check_circle" : "radio_button_unchecked"}</span>${escapeText(isYes ? yesLabel : `Mark ${yesLabel.toLowerCase()}`)}</button>
+            >${escapeText(yesLabel)}</button>
         </div>
     `;
 }

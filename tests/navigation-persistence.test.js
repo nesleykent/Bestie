@@ -57,9 +57,9 @@ test("bosses render in the breakdown with their Bosstiary category and reward", 
     const result = calculateSessionProficiency([{ name: "Rotten Golem", killsThisSession: 10 }, { name: "Ferumbras", killsThisSession: 1 }, { name: "Annihilon", killsThisSession: 2 }], sources, 60);
     const container = {};
     renderProficiency(container, result, { processed: true, sort: { key: "classification", direction: "asc" }, plans: createWorkspace().weaponPlans, activeId: "weapon-1", projectionCreature: "" });
-    assert.match(container.innerHTML, /Ferumbras<\/th><td>Nemesis<span class="row-aside">Bosstiary<\/span>/);
-    assert.match(container.innerHTML, /Annihilon<\/th><td>Bane<span class="row-aside">Bosstiary<\/span>/);
-    assert.match(container.innerHTML, /Rotten Golem<\/th><td>Challenging<\/td>/);
+    assert.match(container.innerHTML, /Ferumbras<\/th><td[^>]*>Nemesis<span class="row-aside">Bosstiary<\/span>/);
+    assert.match(container.innerHTML, /Annihilon<\/th><td[^>]*>Bane<span class="row-aside">Bosstiary<\/span>/);
+    assert.match(container.innerHTML, /Rotten Golem<\/th><td[^>]*>Challenging<\/td>/);
     // Ascending by classification puts the Challenging creature ahead of Bane, then Nemesis.
     assert.match(container.innerHTML, /Rotten Golem[\s\S]*Annihilon[\s\S]*Ferumbras/);
     assert.match(container.innerHTML, /Session total<\/th><td><\/td><td class="is-num">13<\/td><td><\/td><td class="is-num">18,400<\/td>/);

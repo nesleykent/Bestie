@@ -73,88 +73,29 @@ function buildFacet(facet, filters, items) {
     return "";
 }
 
-function buildChecks(checks, filters) {
-    if (!checks.length) {
-        return "";
-    }
-
-    return `
-        <div>
-            <span class="input-label">Only show</span>
-            <div class="check-row">
-                ${checks.map((facet) => `
-                    <label class="check">
-                        <input
-                            type="checkbox"
-                            id="trackerFacet-${escapeAttribute(facet.key)}"
-                            data-tracker-facet="${escapeAttribute(facet.key)}"
-                            ${filters[facet.key] ? "checked" : ""}
-                        >
-                        ${escapeText(facet.label)}
-                    </label>
-                `).join("")}
-            </div>
-        </div>
-    `;
-}
-
-/**
- * Search and sort stay in the open because they are what people reach for; the rest
- * fold behind one control that says how many are active. Folded, never removed.
- */
 function buildToolbar(tracker, filters, items, sort, options = {}) {
     const { canSelect = false, selectionMode = false } = options;
-    const statusFacet = tracker.facets.find((facet) => facet.kind === "segmented" && facet.isStatus);
-    const searchFacet = tracker.facets.find((facet) => facet.kind === "search");
-    const checks = tracker.facets.filter((facet) => facet.kind === "check");
-    const rest = tracker.facets.filter((facet) => facet !== statusFacet && facet !== searchFacet && facet.kind !== "check");
-    const active = rest.concat(checks).filter((facet) => {
-        const value = filters[facet.key];
-
-        return facet.kind === "check" ? Boolean(value) : value !== undefined && value !== "all";
-    }).length;
-
-    return `
-        ${statusFacet ? buildFacet(statusFacet, filters, items) : ""}
-
-        <div class="toolbar">
-            ${searchFacet ? buildFacet(searchFacet, filters, items) : ""}
-
-            <div>
-                <label class="input-label" for="trackerSort">Sort by</label>
-                <select id="trackerSort" class="progress-select">
-                    ${(tracker.sortOptions ?? []).map((option) => `
-                        <option value="${escapeAttribute(option.key)}"${sort.key === option.key ? " selected" : ""}>${escapeText(option.label)}</option>
-                    `).join("")}
-                </select>
-            </div>
-
-            ${rest.length || checks.length ? `
-                <details class="filter-disclosure"${active ? " open" : ""}>
-                    <summary>
-                        <span class="material-symbols-outlined" aria-hidden="true">tune</span>
-                        Filters${active ? `<span class="filter-count">${active}</span>` : ""}
-                    </summary>
-                    <div class="progress-filters">
-                        ${rest.map((facet) => buildFacet(facet, filters, items)).join("")}
-                        ${buildChecks(checks, filters)}
-                    </div>
-                </details>
-            ` : ""}
-
-            ${canSelect ? `
-                <button
-                    class="toolbar-button${selectionMode ? " is-on" : ""}"
-                    type="button"
-                    data-tracker-selection-mode
-                    aria-pressed="${selectionMode ? "true" : "false"}"
-                >
-                    <span class="material-symbols-outlined" aria-hidden="true">${selectionMode ? "done" : "checklist"}</span>
-                    ${selectionMode ? "Done selecting" : "Select items"}
-                </button>
-            ` : ""}
+    const status = tracker.facets.find((facet) => facet.isStatus);
+    const search = tracker.facets.find((facet) => facet.kind === "search");
+    const facets = tracker.facets.filter((facet) => facet !== status && facet !== search);
+    const active = tracker.facets.filter((facet) => facet.kind === "check" ? filters[facet.key] : filters[facet.key] && filters[facet.key] !== "all");
+    return `<div class="tracker-controls">
+        ${status ? buildFacet(status, filters, items) : ""}
+        <div class="tracker-search-row">
+            ${search ? buildFacet(search, filters, items) : ""}
+            <div><label class="input-label" for="trackerSort">Sort by</label><select id="trackerSort">${(tracker.sortOptions ?? []).map((option) => `<option value="${escapeAttribute(option.key)}"${sort.key === option.key ? " selected" : ""}>${escapeText(option.label)}</option>`).join("")}</select></div>
+            ${canSelect ? `<button class="toolbar-button" type="button" data-tracker-selection-mode aria-pressed="${selectionMode}">${selectionMode ? "Done selecting" : "Select items"}</button>` : ""}
         </div>
-    `;
+        ${facets.length ? `<div class="filter-strip" role="group" aria-label="Filters">${facets.map((facet) => facet.kind === "check"
+            ? `<button class="filter-toggle" type="button" data-tracker-facet="${escapeAttribute(facet.key)}" data-tracker-facet-value="${!filters[facet.key]}" aria-pressed="${Boolean(filters[facet.key])}">${escapeText(facet.label)}</button>`
+            : buildFacet(facet, filters, items)).join("")}</div>` : ""}
+        <div class="active-filters" aria-label="Active filters">${active.length ? active.map((facet) => {
+            const value = filters[facet.key];
+            const option = facet.options?.(items).find((entry) => String(entry.value) === String(value));
+            const label = facet.kind === "check" ? facet.label : `${facet.label}: ${option?.label ?? value}`;
+            return `<button type="button" class="active-filter" data-tracker-remove-filter="${escapeAttribute(facet.key)}" aria-label="Remove ${escapeAttribute(label)}">${escapeText(label)}<span aria-hidden="true">×</span></button>`;
+        }).join("") + '<button class="text-action" type="button" data-tracker-reset-filters>Clear all</button>' : '<span class="filter-hint">All items · no filters applied</span>'}</div>
+    </div>`;
 }
 
 function buildBulkBar(view) {
@@ -310,17 +251,15 @@ export function renderTracker(container, view) {
             ${buildBulkBar({ selection, bulkActions, rows })}
 
             ${rows.length ? `
-                <div class="card-grid" role="list">
-                    ${rows.map((row) => `
-                        <article
-                            class="${cardClassName(row, selection.has(row.key))}"
-                            role="listitem"
-                            tabindex="-1"
-                            data-tracker-row="${escapeAttribute(row.key)}"
-                        >${buildCardHtml(tracker, row, { selectable, isSelected: selection.has(row.key) })}</article>
-                    `).join("")}
-                </div>
-                ${buildPager(page)}
+                ${(tracker.groups ?? [{ label: "", matches: () => true }]).map((group) => {
+                    const grouped = rows.filter(group.matches);
+                    if (!grouped.length) return "";
+                    return `${group.label ? `<div class="tracker-group-heading"><h3>${escapeText(group.label)}</h3><span>${grouped.length} shown · ${escapeText(group.description)}</span></div>` : ""}
+                    <div class="card-grid" role="list"${group.label ? ` aria-label="${escapeAttribute(group.label)}"` : ""}>
+                        ${grouped.map((row) => `<article class="${cardClassName(row, selection.has(row.key))}" role="listitem" tabindex="-1" data-tracker-row="${escapeAttribute(row.key)}">${buildCardHtml(tracker, row, { selectable, isSelected: selection.has(row.key) })}</article>`).join("")}
+                    </div>`;
+                }).join("")}
+                ${tracker.groups ? "" : buildPager(page)}
             ` : buildEmptyState(
                 "Nothing matches these filters.",
                 "Try another name or reset the filters to see every item.",

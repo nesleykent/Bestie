@@ -26,8 +26,10 @@ function buildCard({ tracker, totals }) {
                 <span class="dashboard-card-title">${escapeText(tracker.label)}</span>
                 <span class="material-symbols-outlined dashboard-card-disclosure" aria-hidden="true">chevron_right</span>
             </div>
-            ${answer.label ? `<div class="dashboard-card-eyebrow">${escapeText(answer.label)}</div>` : ""}
-            <div class="dashboard-card-figure">${escapeText(answer.value)}</div>
+            <div class="dashboard-card-summary">
+                <span class="dashboard-card-figure">${escapeText(answer.value)}</span>
+                ${answer.label ? `<span class="dashboard-card-eyebrow">${escapeText(answer.label)}</span>` : ""}
+            </div>
             ${hasProgress ? `
                 <div class="dashboard-card-progress">
                     <span style="width: ${Math.max(0, Math.min(1, answer.progress)) * 100}%"></span>

@@ -115,6 +115,10 @@ export const charmsTracker = {
     itemKey: (charm) => charm.Name,
     derive: deriveCharmRow,
     defaultSortKey: "name",
+    groups: [
+        { label: "Major charms", description: "Charm points", matches: (row) => row.type === "Major" },
+        { label: "Minor charms", description: "Minor Charm Echoes", matches: (row) => row.type === "Minor" }
+    ],
 
 
     /** Major charms spend what the Bestiary earns. */

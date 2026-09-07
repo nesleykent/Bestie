@@ -55,7 +55,7 @@ export const titlesTracker = {
             key: "permanence",
             kind: "select",
             label: "Permanence",
-            allLabel: "Any",
+            allLabel: "Any permanence",
             options: () => [
                 { value: "permanent", label: "Permanent" },
                 { value: "losable", label: "Losable" }

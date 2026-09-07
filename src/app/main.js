@@ -92,7 +92,7 @@ import { renderComparison } from "./ui/render-comparison.js";
 import { renderHuntTabs } from "./ui/render-hunt-tabs.js";
 import { renderOpportunities } from "./ui/render-opportunities.js";
 import { renderResults } from "./ui/render-results.js";
-import { LIBRARY_COLUMNS, renderSessionLibrary } from "./ui/render-session-library.js";
+import { LIBRARY_COLUMNS, formatSessionDate, renderSessionLibrary } from "./ui/render-session-library.js";
 import { renderTaskResults } from "./ui/render-task-results.js";
 import { renderTaskSessions } from "./ui/render-task-sessions.js";
 import { formatCharmsPerHour, formatNumber, formatTaskRate, formatTimeDetailed } from "./utils/formatters.js";
@@ -1052,7 +1052,7 @@ function renderHuntTabStrip() {
     }));
     const isComparing = view === "comparison";
 
-    renderHuntTabs(elements.huntTabStrip, buildFixedTabs(view), huntTabs, { canAdd: !isTrackers });
+    renderHuntTabs(elements.huntTabStrip, isBestiary ? buildFixedTabs(view).filter((tab) => tab.key === "allSessions") : [], huntTabs, { canAdd: false });
     attachHuntTabActions();
     const active = elements.huntTabStrip.querySelector(".hunt-tab.is-active");
     if (active) {
@@ -1340,8 +1340,7 @@ function sortTrackerRows(tracker, rows) {
  * Hundreds of rows re-render on every keystroke in a count field, so the default
  * page size is a deliberate performance guard rather than a nicety.
  */
-function paginateTrackerRows(rows) {
-    const size = state.trackerPageSize;
+function paginateTrackerRows(rows, size = state.trackerPageSize) {
 
     if (!size) {
         return { rows, page: { from: rows.length ? 1 : 0, to: rows.length, total: rows.length, size, index: 0, lastIndex: 0 } };
@@ -1365,7 +1364,7 @@ function getTrackerView(tracker) {
     const context = getTrackerContext(tracker);
     const allRows = buildTrackerRows(tracker, context);
     const visible = sortTrackerRows(tracker, filterTrackerRows(tracker, allRows));
-    const { rows, page } = paginateTrackerRows(visible);
+    const { rows, page } = paginateTrackerRows(visible, tracker.groups ? 0 : state.trackerPageSize);
 
     return {
         tracker,
@@ -1420,6 +1419,7 @@ function renderBestiaryDetail(row) {
         <header class="detail-header">
             <h2 class="detail-title"><span class="material-symbols-outlined" aria-hidden="true">pets</span>${escapeText(row.name)}</h2>
             <p class="detail-header-meta">${escapeText(row.className)} <span aria-hidden="true">·</span> ${formatNumber(row.charms)} charm points</p>
+            <div class="detail-header-actions">${bookmarkControl(row)}</div>
         </header>
 
         <section class="detail-group">
@@ -1463,20 +1463,24 @@ function renderBestiaryDetail(row) {
             <div class="detail-checks">
                 ${row.echoWardenEligible ? `<label class="detail-check"><input type="checkbox" data-detail-flag="echoWarden" ${row.echoWarden ? "checked" : ""}><span>Echo Warden</span></label>` : ""}
                 <label class="detail-check"><input type="checkbox" data-detail-flag="animusMastery" ${row.animusMastery ? "checked" : ""}><span>Animus Mastery</span></label>
-                <label class="detail-check"><input type="checkbox" data-detail-flag="bookmark" ${row.bookmark ? "checked" : ""}><span>Bookmarked</span></label>
             </div>
         </section>
 
         <section class="detail-group">
-            <h3 class="detail-group-title">Actions</h3>
             <div class="detail-actions">
                 <button class="btn btn-secondary detail-action" type="button" id="detailSessionsButton"><span class="material-symbols-outlined" aria-hidden="true">monitoring</span><span>View measured sessions</span></button>
-                <a class="btn btn-secondary detail-action" href="${row.wikiLink}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span><span>Open Tibia Wiki</span><span class="material-symbols-outlined detail-action-tail" aria-hidden="true">north_east</span></a>
+                <a class="detail-action source-action" href="${row.wikiLink}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span><span>Open Tibia Wiki</span><span class="material-symbols-outlined detail-action-tail" aria-hidden="true">north_east</span></a>
             </div>
             <p class="detail-last-recorded">Last recorded: ${escapeText(formatDetailRecordedAt(bestiaryTracker.id, row.key))}</p>
         </section>
     `;
 
+    elements.detailPanelContent.querySelector('[data-tracker-flag="bookmark"]').addEventListener("click", (event) => {
+        commitTrackerFlag(event.currentTarget);
+        const updated = buildTrackerRows(bestiaryTracker).find((candidate) => candidate.key === row.key);
+        if (updated) renderBestiaryDetail(updated);
+        elements.detailPanelContent.querySelector('[data-tracker-flag="bookmark"]')?.focus();
+    });
     const killsInput = elements.detailPanelContent.querySelector(".detail-kills-input");
     let killsDirty = false;
 
@@ -1657,6 +1661,7 @@ function buildDetailStageList(items) {
 }
 
 function buildDetailGroupHtml(title, innerHtml) {
+    if (!innerHtml) return "";
     return `
         <section class="detail-group">
             <h3 class="detail-group-title">${escapeText(title)}</h3>
@@ -1740,7 +1745,10 @@ function buildDetailInfoGroups(tracker, row) {
         return [
             buildDetailInfoGroup("Area progress", `${formatNumber(areaDiscovered)} <span class="row-aside">of ${formatNumber(row.areaSubareaCount)} subareas in ${escapeText(row.area)} discovered</span>`),
             buildDetailInfoGroup("Area achievement", escapeText(row.areaAchievement)),
-            buildDetailInfoGroup("Bestiary creatures", row.creatureCount === null ? "" : formatNumber(row.creatureCount))
+            buildDetailGroupHtml("Creatures in this subarea", (() => {
+                const creatures = getTrackerItems(bestiaryTracker).filter((creature) => creature.locationList?.includes(row.name));
+                return creatures.length ? `<p class="helper-text">${formatNumber(creatures.length)} Bestiary creatures</p><ul class="detail-entity-list">${creatures.map((creature) => `<li><button type="button" class="text-action" data-detail-creature="${escapeAttribute(bestiaryTracker.itemKey(creature))}">${escapeText(creature.Name)}</button></li>`).join("")}</ul>` : "";
+            })())
         ];
     }
 
@@ -1782,9 +1790,10 @@ function renderGenericTrackerDetail(tracker, row) {
         <header class="detail-header">
             <h2 class="detail-title"><span class="material-symbols-outlined" aria-hidden="true">${icon}</span>${escapeText(row.name)}</h2>
             <p class="detail-header-meta">${escapeText(buildDetailMeta(tracker, row))}</p>
+            <div class="detail-header-actions">${bookmarkControl(row)}</div>
         </header>
 
-        <section class="detail-group">
+        <section class="detail-group detail-state${tracker.tickField ? " is-boolean" : ""}">
             <h3 class="detail-group-title">Progress</h3>
             ${buildDetailPrimaryControl(tracker, row)}
         </section>
@@ -1792,17 +1801,9 @@ function renderGenericTrackerDetail(tracker, row) {
         ${infoGroups}
 
         <section class="detail-group">
-            <h3 class="detail-group-title">Tracking</h3>
-            <div class="detail-checks">
-                <div class="detail-check">${bookmarkControl(row)}<span>Bookmarked</span></div>
-            </div>
-        </section>
-
-        <section class="detail-group">
-            <h3 class="detail-group-title">Actions</h3>
             ${row.wikiLink ? `
                 <div class="detail-actions">
-                    <a class="btn btn-secondary detail-action" href="${escapeAttribute(row.wikiLink)}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span><span>Open Tibia Wiki</span><span class="material-symbols-outlined detail-action-tail" aria-hidden="true">north_east</span></a>
+                    <a class="detail-action source-action" href="${escapeAttribute(row.wikiLink)}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span><span>Open Tibia Wiki</span><span class="material-symbols-outlined detail-action-tail" aria-hidden="true">north_east</span></a>
                 </div>
             ` : ""}
             <p class="detail-last-recorded">Last recorded: ${escapeText(formatDetailRecordedAt(tracker.id, row.key))}</p>
@@ -1819,6 +1820,15 @@ function renderGenericTrackerDetail(tracker, row) {
  * those functions have no reason to know about.
  */
 function attachGenericDetailActions(tracker, itemKey) {
+    elements.detailPanelContent.querySelectorAll("[data-detail-creature]").forEach((button) => {
+        button.addEventListener("click", () => {
+            state.activeTrackerId = bestiaryTracker.id;
+            state.selectedTrackerKey = button.dataset.detailCreature;
+            renderApp();
+            persistState();
+            elements.detailCloseButton.focus();
+        });
+    });
     const refresh = () => {
         const updated = buildTrackerRows(tracker).find((candidate) => candidate.key === itemKey);
 
@@ -1840,6 +1850,7 @@ function attachGenericDetailActions(tracker, itemKey) {
         button.addEventListener("click", () => {
             commitTrackerSet(button);
             refresh();
+            elements.detailPanelContent.querySelector("[data-tracker-set]")?.focus();
         });
     });
 
@@ -1847,6 +1858,7 @@ function attachGenericDetailActions(tracker, itemKey) {
         button.addEventListener("click", () => {
             commitTrackerFlag(button);
             refresh();
+            elements.detailPanelContent.querySelector(`[data-tracker-flag="${button.dataset.trackerFlag}"]`)?.focus();
         });
     });
 }
@@ -2172,14 +2184,14 @@ function renderSessionLibraryView() {
     elements.inputSection.hidden = true;
     elements.analysisSection.hidden = false;
     elements.respawnModeBlock.hidden = true;
-    showSectionHeading(VIEW_CONTENT.library.resultsTitle, VIEW_CONTENT.library.resultsCopy);
+    showSectionHeading(VIEW_CONTENT.library.resultsTitle, "");
 
     renderSessionLibrary(
         elements.output,
         visible,
         state.librarySort,
         state.libraryFilters,
-        { shown: visible.length, total: rows.length }
+        { shown: visible.length, total: rows.length, comparable: getComparableHunts().length }
     );
     attachLibraryActions();
 }
@@ -2377,6 +2389,7 @@ function renderApp() {
     closeDetailPanel();
     elements.huntWorkspace.hidden = false;
     renderHuntTabStrip();
+    if (state.mode === "proficiency" && state.hunts.length < 2) elements.huntWorkspace.hidden = true;
 
     if (state.mode === "proficiency") {
         renderProficiencyView();
@@ -2386,6 +2399,7 @@ function renderApp() {
     // The library manages the logs both modes share, so it renders identically
     // in either one.
     if (view === "library") {
+        elements.huntWorkspace.hidden = true;
         renderSessionLibraryView();
         return;
     }
@@ -3124,6 +3138,16 @@ function bindTrackerDelegation() {
             return;
         }
 
+        const removeFilter = target.closest("[data-tracker-remove-filter]");
+        if (removeFilter) {
+            const key = removeFilter.dataset.trackerRemoveFilter;
+            getTrackerFilters(tracker)[key] = buildInitialFilters(tracker)[key];
+            state.trackerPageIndex = 0;
+            renderTrackerView();
+            elements.output.querySelector(`[data-tracker-facet="${CSS.escape(key)}"]`)?.focus();
+            return;
+        }
+
         const selectionMode = target.closest("[data-tracker-selection-mode]");
 
         if (selectionMode) {
@@ -3191,7 +3215,9 @@ function bindTrackerDelegation() {
         const facetButton = target.closest("[data-tracker-facet-value]");
 
         if (facetButton) {
-            getTrackerFilters(tracker)[facetButton.dataset.trackerFacet] = facetButton.dataset.trackerFacetValue;
+            const key = facetButton.dataset.trackerFacet;
+            const definition = tracker.facets.find((facet) => facet.key === key);
+            getTrackerFilters(tracker)[key] = definition?.kind === "check" ? facetButton.dataset.trackerFacetValue === "true" : facetButton.dataset.trackerFacetValue;
             state.trackerPageIndex = 0;
             renderTrackerView();
             return;
@@ -3769,6 +3795,13 @@ function attachLibraryFieldEditors() {
                 }
 
                 apply(hunt, input.value);
+                const record = input.closest("[data-library-record]");
+                if (record) {
+                    record.querySelector("[data-library-display-name]").textContent = getHuntLabelById(huntId);
+                    record.querySelector("[data-library-display-notes]").textContent = hunt.notes;
+                    record.querySelector("[data-library-display-date]").textContent = formatSessionDate(hunt.huntedOn);
+                    record.setAttribute("aria-label", getHuntLabelById(huntId));
+                }
                 persistState();
                 syncHuntTabLabel(huntId);
 
@@ -3790,6 +3823,12 @@ function attachLibraryFieldEditors() {
 
 function attachLibraryActions() {
     attachLibraryFieldEditors();
+    document.getElementById("libraryCompareButton")?.addEventListener("click", showComparison);
+    document.getElementById("librarySort")?.addEventListener("change", (event) => {
+        state.librarySort.key = event.target.value;
+        renderSessionLibraryView();
+        document.getElementById("librarySort")?.focus();
+    });
 
     elements.output.querySelectorAll("[data-library-sort]").forEach((button) => {
         button.addEventListener("click", () => {
@@ -3943,6 +3982,11 @@ function processHuntLog(hunt, logText) {
     state.isSessionInputOpen = bestiary.sessionDuration <= 0 || !tasks.monsters.length || session.issues.length > 0;
 
     renderApp();
+    if (state.mode === "proficiency" && !state.isSessionInputOpen) {
+        elements.resultsTitle.setAttribute("tabindex", "-1");
+        elements.resultsTitle.focus({ preventScroll: true });
+        elements.resultsTitle.scrollIntoView({ block: "start" });
+    }
     persistState();
     announce(bestiary.monsters.length
         ? `Analysis updated, ${bestiary.monsters.length} creatures matched.`
@@ -4038,17 +4082,19 @@ function downloadFile(text, fileName, mimeType) {
 }
 
 
+let proficiencyExpandedHuntId = null;
+
 function renderProficiencyView() {
     const hunt = getActiveHunt();
     const session = getHuntProficiency(hunt, getProficiencySources());
     elements.inputSection.hidden = false;
-    elements.analysisSection.hidden = false;
+    elements.analysisSection.hidden = !hunt.hasProcessedLog;
     elements.comparisonSection.hidden = true;
     applySessionInput(hunt, session.rows.length, session.duration ?? 0);
-    showSectionHeading(getHuntLabelById(hunt.id), "Proficiency belongs to the weapon receiving kill credit.");
+    showSectionHeading(getHuntLabelById(hunt.id), "");
     renderProficiency(elements.output, session, {
         processed: hunt.hasProcessedLog, sort: state.proficiencySort,
-        plans: state.weaponPlans, activeId: state.activeWeaponPlanId, projectionCreature: state.projectionCreature
+        plans: state.weaponPlans, activeId: state.activeWeaponPlanId, projectionCreature: state.projectionCreature, expanded: proficiencyExpandedHuntId === hunt.id
     });
     elements.output.querySelectorAll("[data-proficiency-sort]").forEach((button) => {
         button.addEventListener("click", () => {
@@ -4057,6 +4103,13 @@ function renderProficiencyView() {
             renderProficiencyView();
             elements.output.querySelector(`[data-proficiency-sort="${key}"]`).focus();
         });
+    });
+    document.getElementById("proficiencyExpand")?.addEventListener("click", (event) => {
+        const expanded = event.currentTarget.getAttribute("aria-expanded") !== "true";
+        proficiencyExpandedHuntId = expanded ? hunt.id : null;
+        elements.output.querySelectorAll("[data-proficiency-extra]").forEach((row) => { row.hidden = !expanded; });
+        event.currentTarget.setAttribute("aria-expanded", String(expanded));
+        event.currentTarget.textContent = expanded ? "Show fewer creatures" : `Show all ${session.rows.length} creatures`;
     });
     const refreshProjection = () => {
         const plan = state.weaponPlans.find((entry) => entry.id === state.activeWeaponPlanId);

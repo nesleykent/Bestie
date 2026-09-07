@@ -10,7 +10,7 @@
                   a column of numbers reads as a block rather than a list.
    3  Spacing     One unit: 4px. Every gap in the app is 1, 2, 3, 4, 6, 8, 12, 16 or
                   24 of them. No arbitrary pixel value is allowed downstream.
-   4  Colour      Five inks, two papers, one blue for state, one clay for caution.
+   4  Colour      Five inks, two papers, a warm ink for emphasis, clay for caution.
                   Nothing else in the interface carries colour.
    5  Type        One sans on a 1.25 ratio, three weights. Tracking tightens as size
                   grows; labels are the only capitals in the product.
@@ -20,7 +20,7 @@
                   outlined, never both.
    8  Motion      Two durations, one easing curve, and motion only ever confirms a
                   state change.
-   9  Whitespace  Major regions separate by 48px or 64px. Related controls stay on
+   9  Whitespace  Major regions separate by 24px or 32px. Related controls stay on
                   the 8px or 16px rhythm; empty space does the grouping before boxes.
   10  Hierarchy   Display, answer, section, body and label each have one type role.
                   Every view has one dominant heading and one dominant figure.
@@ -52,8 +52,9 @@
     --ink-100: #d8d5c9;
     --paper: #faf9f6;
     --surface: #ffffff;
-    --accent: #1d55c9;
-    --accent-tint: #eef2fc;
+    --accent: #3b3a33;
+    --accent-tint: #eeede6;
+    --section-gap: var(--u6);
     --caution: #8a4a12;
     --caution-tint: #fbf1e3;
     --caution-line: #e6cba6;

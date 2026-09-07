@@ -1,5 +1,5 @@
 import { formatCharmsPerHour, formatNumber, formatTimeDetailed } from "../utils/formatters.js";
-import { buildEmptyState, buildPill, escapeAttribute } from "./render-blocks.js";
+import { buildEmptyState, escapeAttribute } from "./render-blocks.js";
 
 export const LIBRARY_COLUMNS = [
     { key: "label", label: "Session", isNumeric: false },
@@ -13,147 +13,45 @@ export const LIBRARY_COLUMNS = [
     { key: "kills", label: "Kills", isNumeric: true }
 ];
 
-function buildHead(sort) {
-    const headers = LIBRARY_COLUMNS.map((column) => {
-        const isSorted = sort.key === column.key;
-        const nextDirection = isSorted && sort.direction === "asc" ? "desc" : "asc";
-        const indicator = isSorted ? (sort.direction === "asc" ? "▲" : "▼") : "";
-
-        return `
-            <th class="${column.isNumeric ? "is-num" : ""}${isSorted ? " is-sorted" : ""}">
-                <button
-                    class="column-sort"
-                    type="button"
-                    data-library-sort="${column.key}"
-                    data-library-direction="${nextDirection}"
-                    aria-label="Sort by ${column.label}"
-                >${column.label}<span class="sort-mark">${indicator}</span></button>
-            </th>
-        `;
-    }).join("");
-
-    return `<tr>${headers}<th>Notes</th><th></th></tr>`;
-}
+const value = (number) => number === null ? "—" : formatNumber(number);
+export const formatSessionDate = (date) => /^\d{4}-\d{2}-\d{2}$/.test(date) ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(`${date}T12:00:00`)) : "Undated";
 
 function buildRow(session) {
-    return `
-        <tr${session.isActive ? ' class="is-active"' : ""}>
-            <td>
-                <input
-                    class="library-name"
-                    type="text"
-                    data-library-name="${escapeAttribute(session.id)}"
-                    value="${escapeAttribute(session.name)}"
-                    placeholder="${escapeAttribute(session.label)}"
-                    aria-label="Name for ${escapeAttribute(session.label)}"
-                >
-                ${session.hasProcessedLog ? "" : buildPill("No log")}
-            </td>
-            <td>
-                <input
-                    class="library-date"
-                    type="date"
-                    data-library-date="${escapeAttribute(session.id)}"
-                    value="${escapeAttribute(session.huntedOn)}"
-                    aria-label="Date hunted for ${escapeAttribute(session.label)}"
-                >
-            </td>
-            <td class="is-num">${session.duration > 0 ? formatTimeDetailed(session.duration) : "&mdash;"}</td>
-            <td>${session.respawnModeLabel}</td>
-            <td class="is-num">${session.hasProcessedLog
-                ? `${formatNumber(session.charmPoints)}<span class="row-aside">${formatNumber(session.creatureCount)} creatures</span>`
-                : "&mdash;"}</td>
-            <td class="is-num">${session.hasProcessedLog ? formatCharmsPerHour(session.charmRate) : "&mdash;"}</td>
-            <td class="is-num">${session.hasProcessedLog && session.proficiencyRate !== null ? formatNumber(session.proficiencyRate) : "—"}${session.hasProcessedLog && session.proficiency.isPartial ? buildPill("Partial") : ""}</td>
-            <td class="is-num">${session.hasProcessedLog && session.proficiencyTotal !== null ? formatNumber(session.proficiencyTotal) : "—"}</td>
-            <td class="is-num">${session.hasProcessedLog && session.kills !== null ? formatNumber(session.kills) : "—"}</td>
-            <td>
-                <input
-                    class="library-notes"
-                    type="text"
-                    data-library-notes="${escapeAttribute(session.id)}"
-                    value="${escapeAttribute(session.notes)}"
-                    placeholder="Route, team, boosts…"
-                    aria-label="Notes for ${escapeAttribute(session.label)}"
-                >
-            </td>
-            <td class="library-actions">
-                <button class="row-action" type="button" data-proficiency-open="${escapeAttribute(session.id)}">Proficiency</button>
-                <button class="row-action" type="button" data-library-open="${escapeAttribute(session.id)}">Open</button>
-                <button
-                    class="row-action is-danger"
-                    type="button"
-                    data-library-delete="${escapeAttribute(session.id)}"
-                    ${session.canDelete ? "" : "disabled"}
-                >Delete</button>
-            </td>
-        </tr>
-    `;
+    const id = escapeAttribute(session.id);
+    const label = escapeAttribute(session.label);
+    return `<article class="history-record" data-library-record="${id}" aria-label="${label}">
+        <div class="history-record-main">
+            <div class="history-identity">
+                <button class="history-name" type="button" data-library-open="${id}" data-library-display-name>${label}</button>
+                <p class="history-context"><span data-library-display-date>${formatSessionDate(session.huntedOn)}</span> · ${session.duration > 0 ? formatTimeDetailed(session.duration) : "No duration"} · ${session.respawnModeLabel}</p>
+                <p class="history-note" data-library-display-notes>${escapeAttribute(session.notes)}</p>
+            </div>
+            <div class="history-metric"><span>Proficiency</span><strong>${session.hasProcessedLog ? value(session.proficiencyTotal) : "—"} <small>XP</small></strong><span>${session.hasProcessedLog ? value(session.proficiencyRate) : "—"} XP/h${session.proficiency?.isPartial ? " · Partial" : ""}</span></div>
+            <div class="history-metric"><span>Charm points</span><strong>${session.hasProcessedLog ? value(session.charmPoints) : "—"}</strong><span>${session.hasProcessedLog ? formatCharmsPerHour(session.charmRate) : "No log"}</span></div>
+            <div class="history-metric"><span>Kills</span><strong>${session.hasProcessedLog ? value(session.kills) : "—"}</strong><span>${session.creatureCount} creatures</span></div>
+            <button class="text-action history-analysis" type="button" data-proficiency-open="${id}">View proficiency</button>
+        </div>
+        <details class="history-edit"><summary>Edit details</summary><div class="history-edit-fields">
+            <label>Name<input type="text" data-library-name="${id}" value="${escapeAttribute(session.name)}" placeholder="${label}" aria-label="Name for ${label}"></label>
+            <label>Hunted on<input type="date" data-library-date="${id}" value="${escapeAttribute(session.huntedOn)}" aria-label="Date hunted for ${label}"></label>
+            <label>Notes<input type="text" data-library-notes="${id}" value="${escapeAttribute(session.notes)}" placeholder="Route, team, boosts…" aria-label="Notes for ${label}"></label>
+            <button class="text-action is-danger" type="button" data-library-delete="${id}" ${session.canDelete ? "" : "disabled"}>Delete session</button>
+        </div></details>
+    </article>`;
 }
 
-function buildControls(filters, counts) {
-    const modes = [
-        { key: "all", label: "All" },
-        { key: "regular", label: "Regular" },
-        { key: "rapid", label: "Rapid Respawn" }
-    ];
-
-    return `
-        <div class="library-controls">
-            <div>
-                <span class="input-label" id="libraryRespawnLabel">Respawn Mode</span>
-                <div class="segmented" role="group" aria-labelledby="libraryRespawnLabel">
-                    ${modes.map((mode) => `
-                        <button
-                            class="segmented-button${filters.respawnMode === mode.key ? " is-selected" : ""}"
-                            type="button"
-                            data-library-filter-respawn="${mode.key}"
-                            aria-pressed="${filters.respawnMode === mode.key ? "true" : "false"}"
-                        >${mode.label}</button>
-                    `).join("")}
-                </div>
-            </div>
-
-            <div>
-                <label class="input-label" for="librarySearch">Search</label>
-                <input
-                    id="librarySearch"
-                    class="library-search"
-                    type="text"
-                    autocomplete="off"
-                    value="${escapeAttribute(filters.search)}"
-                    placeholder="Name, notes, or creature"
-                >
-                <p class="helper-text">
-                    Showing ${formatNumber(counts.shown)} of ${formatNumber(counts.total)} sessions.
-                </p>
-            </div>
-        </div>
-    `;
+function buildControls(filters, counts, sort) {
+    return `<div class="history-controls">
+        <div class="history-search"><label class="input-label" for="librarySearch">Search sessions</label><input id="librarySearch" class="library-search" type="search" autocomplete="off" value="${escapeAttribute(filters.search)}" placeholder="Name, notes, or creature"></div>
+        <div><label class="input-label" for="librarySort">Sort by</label><select id="librarySort">${LIBRARY_COLUMNS.map((column) => `<option value="${column.key}"${sort.key === column.key ? " selected" : ""}>${column.label}</option>`).join("")}</select></div>
+        <button type="button" class="text-action" data-library-sort="${sort.key}" data-library-direction="${sort.direction === "asc" ? "desc" : "asc"}" aria-label="Reverse sort direction">${sort.direction === "asc" ? "Ascending ↑" : "Descending ↓"}</button>
+        <button class="btn btn-secondary" id="libraryCompareButton" type="button" ${counts.comparable < 2 ? "disabled" : ""}>Compare sessions</button>
+        <div class="history-filters segmented" role="group" aria-label="Respawn mode">${[{key:"all",label:"All sessions"},{key:"regular",label:"Regular"},{key:"rapid",label:"Rapid Respawn"}].map((mode) => `<button class="segmented-button${filters.respawnMode === mode.key ? " is-selected" : ""}" type="button" data-library-filter-respawn="${mode.key}" aria-pressed="${filters.respawnMode === mode.key}">${mode.label}</button>`).join("")}</div>
+        <span class="history-count">${counts.shown} of ${counts.total} sessions</span>
+    </div>`;
 }
 
 export function renderSessionLibrary(container, sessions, sort, filters, counts) {
-    container.className = "grid results-shell";
-    container.innerHTML = `
-        ${sessions.length ? `
-            <p class="table-scroll-hint">Edit names, dates and notes directly. Scroll horizontally for all metrics and actions.</p>
-            <div class="table-container library-table" tabindex="0" role="region" aria-label="Session history">
-                <table>
-                    <thead>${buildHead(sort)}</thead>
-                    <tbody>${sessions.map(buildRow).join("")}</tbody>
-                </table>
-            </div>
-        ` : buildEmptyState(
-            counts.total ? "No session matches these filters." : "No sessions yet.",
-            counts.total
-                ? "Clear the search or switch the respawn filter to see the rest."
-                : "Use + to add a session, then paste a Hunt Analyzer into it."
-        )}
-
-        ${buildControls(filters, counts)}
-
-        <div class="action-row">
-            <button class="btn btn-secondary" id="libraryAddButton" type="button">Add Session</button>
-        </div>
-    `;
+    container.className = "results-shell session-history";
+    container.innerHTML = `${buildControls(filters, counts, sort)}<div class="history-records">${sessions.length ? sessions.map(buildRow).join("") : buildEmptyState(counts.total ? "No sessions match." : "No sessions yet.", counts.total ? "Clear the search or select All sessions." : "Choose New session and paste a Hunt Analyzer.")}</div>`;
 }
