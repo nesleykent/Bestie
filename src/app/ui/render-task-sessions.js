@@ -7,10 +7,10 @@ function buildRow(session) {
     if (!estimate.selectedMonster) {
         return `
             <tr>
-                <td>
+                <th scope="row">
                     ${buildLinkButton(session.label, "data-task-session", session.id)}
                     ${buildPill(session.respawnModeLabel)}
-                </td>
+                </th>
                 <td colspan="6">No creature selected yet.</td>
             </tr>
         `;
@@ -20,16 +20,16 @@ function buildRow(session) {
 
     return `
         <tr>
-            <td>
+            <th scope="row">
                 ${buildLinkButton(session.label, "data-task-session", session.id)}
                 ${buildPill(session.respawnModeLabel)}
-            </td>
-            <td class="task-session-creature">${estimate.selectedMonster.displayName}</td>
-            <td>${formatNumber(estimate.alreadyKilled)}</td>
-            <td>${formatTaskRate(estimate.killRatePerHour)}</td>
-            <td>${hasTarget ? formatNumber(estimate.taskTotalKills) : "&mdash;"}</td>
-            <td>${hasTarget ? formatNumber(estimate.remainingKills) : "&mdash;"}</td>
-            <td>${hasTarget ? formatTimeDetailed(estimate.remainingTimeMinutes) : "&mdash;"}</td>
+            </th>
+            <td class="task-session-creature" data-label="Creature">${estimate.selectedMonster.displayName}</td>
+            <td data-label="Session kills">${formatNumber(estimate.alreadyKilled)}</td>
+            <td data-label="Kill rate">${formatTaskRate(estimate.killRatePerHour)}</td>
+            <td data-label="Task target">${hasTarget ? formatNumber(estimate.taskTotalKills) : "&mdash;"}</td>
+            <td data-label="Kills remaining">${hasTarget ? formatNumber(estimate.remainingKills) : "&mdash;"}</td>
+            <td data-label="Time remaining">${hasTarget ? formatTimeDetailed(estimate.remainingTimeMinutes) : "&mdash;"}</td>
         </tr>
     `;
 }
@@ -50,8 +50,7 @@ export function renderTaskSessions(container, sessions) {
         <section class="results-section">
             <p class="results-intro">Select a session to change its creature or task target.</p>
 
-            <p class="table-scroll-hint">Scroll horizontally to see all task estimates.</p>
-            <div class="table-container task-sessions-table" tabindex="0" role="region" aria-label="Task session estimates">
+            <div class="table-container task-sessions-table record-table" tabindex="0" role="region" aria-label="Task session estimates">
                 <table>
                     <thead>
                         <tr>

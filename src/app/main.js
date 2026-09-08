@@ -92,7 +92,7 @@ import { renderComparison } from "./ui/render-comparison.js";
 import { renderHuntTabs } from "./ui/render-hunt-tabs.js";
 import { renderOpportunities } from "./ui/render-opportunities.js";
 import { renderResults } from "./ui/render-results.js";
-import { LIBRARY_COLUMNS, formatSessionDate, renderSessionLibrary } from "./ui/render-session-library.js";
+import { LIBRARY_COLUMNS, renderSessionLibrary } from "./ui/render-session-library.js";
 import { renderTaskResults } from "./ui/render-task-results.js";
 import { renderTaskSessions } from "./ui/render-task-sessions.js";
 import { formatCharmsPerHour, formatNumber, formatTaskRate, formatTimeDetailed } from "./utils/formatters.js";
@@ -150,7 +150,7 @@ const elements = {
     pageTitle: document.getElementById("pageTitle"),
     sessionEditor: document.getElementById("sessionEditor"),
     sessionLog: document.getElementById("sessionLog"),
-    sessionToggle: document.getElementById("sessionToggle"),
+    sessionContext: document.getElementById("sessionContext"),
     sectionHeading: document.querySelector("#analysisSection .section-heading"),
     srStatus: document.getElementById("srStatus"),
     undoBar: document.getElementById("undoBar"),
@@ -216,7 +216,6 @@ const state = {
     isSidebarCollapsed: false,
     bestiaryData: [],
     bestiaryView: "session",
-    isSessionInputOpen: false,
     // Library sort and filters are view state, not workspace data, so they are
     // deliberately absent from getWorkspaceSnapshot() and the export format.
     librarySort: { key: "label", direction: "asc" },
@@ -502,7 +501,7 @@ function openRecentChanges() {
     state.mode = "trackers";
     state.recordView = "changes";
     state.selectedTrackerKey = "";
-    state.isSessionInputOpen = false;
+
     closeDetailPanel();
     renderApp();
     persistState();
@@ -1013,9 +1012,6 @@ function buildFixedTabs(view) {
 }
 
 function applySessionInput(hunt, creatureCount, duration = hunt.sessionDuration) {
-    const canCollapse = hunt.hasProcessedLog;
-    const isOpen = !canCollapse || state.isSessionInputOpen;
-
     elements.respawnModeBlock.hidden = false;
     elements.respawnModeHint.textContent = RESPAWN_MODE_HINT;
     elements.sessionRegularButton.classList.toggle("is-selected", hunt.respawnMode === "regular");
@@ -1024,17 +1020,11 @@ function applySessionInput(hunt, creatureCount, duration = hunt.sessionDuration)
     elements.sessionRapidButton.setAttribute("aria-pressed", String(hunt.respawnMode === "rapid"));
     elements.sessionLog.value = hunt.sessionLog;
 
-    elements.sessionToggle.hidden = !canCollapse;
-    elements.sessionToggle.setAttribute("aria-expanded", String(isOpen));
-    elements.sessionToggle.textContent = isOpen
-        ? "Hide Hunt Analyzer"
-        : [
-            getHuntLabelById(hunt.id),
-            formatTimeDetailed(duration),
-            `${formatNumber(creatureCount)} ${creatureCount === 1 ? "creature" : "creatures"}`,
-            RESPAWN_MODE_LABELS[hunt.respawnMode]
-        ].join(" · ");
-    elements.sessionEditor.hidden = !isOpen;
+    elements.sessionContext.textContent = hunt.hasProcessedLog
+        ? [getHuntLabelById(hunt.id), formatTimeDetailed(duration), `${creatureCount} ${creatureCount === 1 ? "creature" : "creatures"}`, RESPAWN_MODE_LABELS[hunt.respawnMode]].join(" · ")
+        : "";
+    elements.sessionContext.hidden = !hunt.hasProcessedLog;
+    elements.sessionEditor.hidden = false;
 }
 
 function renderHuntTabStrip() {
@@ -1656,8 +1646,7 @@ function buildDetailStageList(items) {
         <ul class="detail-stage-list">
             ${items.map((item) => `
                 <li class="${item.isDone ? "is-done" : ""}">
-                    <span class="material-symbols-outlined" aria-hidden="true">${item.isDone ? "check_circle" : "radio_button_unchecked"}</span>
-                    <span>${escapeText(item.label)}</span>
+                    <span>${escapeText(item.label)}${item.isDone ? '<small class="detail-stage-state"> · Unlocked</small>' : ""}</span>
                     <span class="row-aside">${item.meta}</span>
                 </li>
             `).join("")}
@@ -2083,7 +2072,7 @@ function renderOpportunitiesView() {
     elements.inputSection.hidden = true;
     elements.analysisSection.hidden = false;
     elements.respawnModeBlock.hidden = true;
-    showSectionHeading(VIEW_CONTENT.opportunities.resultsTitle, VIEW_CONTENT.opportunities.resultsCopy);
+    showSectionHeading(VIEW_CONTENT.opportunities.resultsTitle, "");
 
     renderOpportunities(elements.output, getOpportunityAnalysis());
     attachOpportunityActions();
@@ -2213,7 +2202,7 @@ function renderTaskSessionsView() {
     elements.inputSection.hidden = true;
     elements.analysisSection.hidden = false;
     elements.respawnModeBlock.hidden = true;
-    showSectionHeading("Task Sessions", "Every processed session with the creature and task target you chose for it, estimated from that session's own kill rate.");
+    showSectionHeading("Task Sessions", "");
 
     renderTaskSessions(elements.output, sessions);
     attachTaskSessionLinks();
@@ -2391,7 +2380,7 @@ function renderApp() {
     closeDetailPanel();
     elements.huntWorkspace.hidden = false;
     renderHuntTabStrip();
-    if (state.mode === "proficiency" && state.hunts.length < 2) elements.huntWorkspace.hidden = true;
+    elements.huntWorkspace.hidden = view !== "session" || (state.hunts.length < 2 && state.mode !== "bestiary");
 
     if (state.mode === "proficiency") {
         renderProficiencyView();
@@ -2440,7 +2429,6 @@ function renderApp() {
 }
 
 function setMode(mode) {
-    state.isSessionInputOpen = false;
     if (state.mode === mode) {
         return;
     }
@@ -2461,7 +2449,7 @@ async function pasteLog() {
     try {
         const clipboardText = await navigator.clipboard.readText();
         getActiveHunt().sessionLog = clipboardText;
-        state.isSessionInputOpen = true;
+
         renderApp();
         persistState();
         elements.sessionLog.focus();
@@ -2485,7 +2473,6 @@ function clearLog() {
 }
 
 function selectHunt(huntId) {
-    state.isSessionInputOpen = false;
     captureVisibleInputs();
     state.activeHuntId = huntId;
     setModeView("session");
@@ -2494,7 +2481,6 @@ function selectHunt(huntId) {
 }
 
 function addHuntTab() {
-    state.isSessionInputOpen = false;
     captureVisibleInputs();
 
     const { hunt, hunts } = addHunt(state.hunts);
@@ -2508,7 +2494,7 @@ function addHuntTab() {
 
 function openCurrentSession() {
     captureVisibleInputs();
-    state.isSessionInputOpen = true;
+
     setModeView("session");
     renderApp();
     persistState();
@@ -3368,7 +3354,7 @@ function commitTrackerSet(button) {
 
     const change = writeTrackerEntries(tracker, [itemKey], () => changes, {
         kind: "entry",
-        label: `${itemKey} — ${nextValue ? "yes" : "no"}`
+        label: `${itemKey} — ${TICK_YES_LABELS[tracker.id] ?? "Progress"}${nextValue ? "" : " cleared"}`
     });
 
     refreshTrackerRow(tracker, itemKey);
@@ -3799,10 +3785,11 @@ function attachLibraryFieldEditors() {
                 apply(hunt, input.value);
                 const record = input.closest("[data-library-record]");
                 if (record) {
-                    record.querySelector("[data-library-display-name]").textContent = getHuntLabelById(huntId);
-                    record.querySelector("[data-library-display-notes]").textContent = hunt.notes;
-                    record.querySelector("[data-library-display-date]").textContent = formatSessionDate(hunt.huntedOn);
-                    record.setAttribute("aria-label", getHuntLabelById(huntId));
+                    const label = getHuntLabelById(huntId);
+                    record.setAttribute("aria-label", label);
+                    for (const [field, prefix] of [["name", "Name"], ["date", "Date hunted"], ["notes", "Notes"]]) {
+                        record.querySelector(`[data-library-${field}]`)?.setAttribute("aria-label", `${prefix} for ${label}`);
+                    }
                 }
                 persistState();
                 syncHuntTabLabel(huntId);
@@ -3981,10 +3968,9 @@ function processHuntLog(hunt, logText) {
     hunt.selectedTaskMonsterName = taskNames.has(hunt.selectedTaskMonsterName)
         ? hunt.selectedTaskMonsterName
         : (tasks.monsters[0]?.name ?? "");
-    state.isSessionInputOpen = bestiary.sessionDuration <= 0 || !tasks.monsters.length || session.issues.length > 0;
 
     renderApp();
-    if (state.mode === "proficiency" && !state.isSessionInputOpen) {
+    if (state.mode === "proficiency" && bestiary.sessionDuration > 0 && tasks.monsters.length && !session.issues.length) {
         elements.resultsTitle.setAttribute("tabindex", "-1");
         elements.resultsTitle.focus({ preventScroll: true });
         elements.resultsTitle.scrollIntoView({ block: "start" });
@@ -4005,7 +3991,6 @@ function processLog() {
     const logText = getActiveHunt().sessionLog.trim();
 
     if (!logText) {
-        state.isSessionInputOpen = true;
         renderApp();
         showAlert("Paste the Hunt Analyzer text before processing.");
         elements.sessionLog.focus();
@@ -4084,8 +4069,6 @@ function downloadFile(text, fileName, mimeType) {
 }
 
 
-let proficiencyExpandedHuntId = null;
-
 function renderProficiencyView() {
     const hunt = getActiveHunt();
     const session = getHuntProficiency(hunt, getProficiencySources());
@@ -4096,22 +4079,21 @@ function renderProficiencyView() {
     showSectionHeading(getHuntLabelById(hunt.id), "");
     renderProficiency(elements.output, session, {
         processed: hunt.hasProcessedLog, sort: state.proficiencySort,
-        plans: state.weaponPlans, activeId: state.activeWeaponPlanId, projectionCreature: state.projectionCreature, expanded: proficiencyExpandedHuntId === hunt.id
+        plans: state.weaponPlans, activeId: state.activeWeaponPlanId, projectionCreature: state.projectionCreature
     });
     elements.output.querySelectorAll("[data-proficiency-sort]").forEach((button) => {
         button.addEventListener("click", () => {
             const key = button.dataset.proficiencySort;
             state.proficiencySort = { key, direction: state.proficiencySort.key === key && state.proficiencySort.direction === "desc" ? "asc" : "desc" };
             renderProficiencyView();
-            elements.output.querySelector(`[data-proficiency-sort="${key}"]`).focus();
+            const next = button.id ? document.getElementById(button.id) : elements.output.querySelector(`.column-sort[data-proficiency-sort="${key}"]`);
+            next?.focus({ preventScroll: true });
         });
     });
-    document.getElementById("proficiencyExpand")?.addEventListener("click", (event) => {
-        const expanded = event.currentTarget.getAttribute("aria-expanded") !== "true";
-        proficiencyExpandedHuntId = expanded ? hunt.id : null;
-        elements.output.querySelectorAll("[data-proficiency-extra]").forEach((row) => { row.hidden = !expanded; });
-        event.currentTarget.setAttribute("aria-expanded", String(expanded));
-        event.currentTarget.textContent = expanded ? "Show fewer creatures" : `Show all ${session.rows.length} creatures`;
+    document.getElementById("proficiencySort")?.addEventListener("change", (event) => {
+        state.proficiencySort = { key: event.target.value, direction: state.proficiencySort.direction };
+        renderProficiencyView();
+        document.getElementById("proficiencySort")?.focus({ preventScroll: true });
     });
     const refreshProjection = () => {
         const plan = state.weaponPlans.find((entry) => entry.id === state.activeWeaponPlanId);
@@ -4160,7 +4142,7 @@ function applyPageRoute() {
     if (route.view === "changes") state.recordView = "changes";
     else setModeView(route.view);
     if (state.hunts.some((hunt) => hunt.id === route.sessionId)) state.activeHuntId = route.sessionId;
-    state.isSessionInputOpen = false;
+
 }
 
 function syncPageRoute() {
@@ -4248,16 +4230,6 @@ elements.compareHuntsButton.addEventListener("click", showComparison);
 elements.sessionRegularButton.addEventListener("click", () => setSessionRespawnMode("regular"));
 elements.sessionRapidButton.addEventListener("click", () => setSessionRespawnMode("rapid"));
 elements.processLogButton.addEventListener("click", processLog);
-elements.sessionToggle.addEventListener("click", () => {
-    captureVisibleInputs();
-    state.isSessionInputOpen = !state.isSessionInputOpen;
-    renderApp();
-    persistState();
-
-    if (state.isSessionInputOpen) {
-        elements.sessionLog.focus();
-    }
-});
 elements.output.addEventListener("focusout", handleKillsCommit);
 elements.output.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && event.target.classList?.contains("kills-input")) {
@@ -4273,7 +4245,7 @@ function navigateWorkspace(mode, view) {
     // rendering over whatever the player chose, and there is no way back out.
     leaveRecordFlow();
     state.selectedTrackerKey = "";
-    state.isSessionInputOpen = false;
+
     renderApp();
     persistState();
 }

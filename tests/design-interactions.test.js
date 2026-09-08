@@ -9,21 +9,14 @@ import { achievementsTracker } from "../src/app/trackers/achievements.js";
 import { formatSessionDate, renderSessionLibrary } from "../src/app/ui/render-session-library.js";
 import { tickControl } from "../src/app/ui/render-controls.js";
 
-test("expanded proficiency retains every contribution and the same complete subtotal", () => {
+test("proficiency shows all contributions and calculation context without hiding rows", () => {
     const bestiary = Array.from({length:7}, (_, i) => ({Name:`Creature ${i}`, Difficulty:"Easy"}));
     const session = calculateSessionProficiency(bestiary.map((item) => ({name:item.Name, killsThisSession:10})), bestiary, 60);
-    const options = {processed:true,sort:{key:"total",direction:"desc"},plans:createWorkspace().weaponPlans,activeId:"weapon-1",projectionCreature:""};
-    const compact = {}, expanded = {};
-    renderProficiency(compact, session, options);
-    renderProficiency(expanded, session, {...options,expanded:true});
-    assert.equal((compact.innerHTML.match(/data-proficiency-extra hidden/g)||[]).length,2);
-    assert.doesNotMatch(expanded.innerHTML,/data-proficiency-extra hidden/);
-    assert.match(compact.innerHTML,/Show all 7 creatures/);
-    assert.match(expanded.innerHTML,/Show fewer creatures/);
-    for (const markup of [compact.innerHTML,expanded.innerHTML]) {
-        assert.match(markup,/4,900/);
-        for (const item of bestiary) assert.ok(markup.includes(item.Name));
-    }
+    const container = {};
+    renderProficiency(container, session, {processed:true,sort:{key:"total",direction:"desc"},plans:createWorkspace().weaponPlans,activeId:"weapon-1",projectionCreature:""});
+    assert.doesNotMatch(container.innerHTML, /data-proficiency-extra|<details|<summary|proficiencyExpand/);
+    assert.match(container.innerHTML, /4,900/);
+    for (const item of bestiary) assert.ok(container.innerHTML.includes(item.Name));
 });
 
 test("filters expose each active criterion as a removable action in normal flow", () => {
@@ -54,6 +47,7 @@ test("session history retains analysis values and edit targets in its compact re
     for (const field of ["name", "date", "notes"]) assert.match(container.innerHTML, new RegExp(`data-library-${field}="hunt-1"`));
     assert.match(container.innerHTML, /data-proficiency-open="hunt-1"/);
     assert.match(container.innerHTML, /id="libraryCompareButton"[^>]+disabled/);
+    assert.doesNotMatch(container.innerHTML, /<details|<summary/);
     assert.equal(formatSessionDate(""), "Undated");
     assert.equal(formatSessionDate("2026-09-07"), new Intl.DateTimeFormat(undefined, {dateStyle:"medium"}).format(new Date("2026-09-07T12:00:00")));
 });

@@ -74,7 +74,7 @@ function buildFacet(facet, filters, items) {
 }
 
 function buildToolbar(tracker, filters, items, sort, options = {}) {
-    const { canSelect = false, selectionMode = false } = options;
+    const { canSelect = false, selectionMode = false, resultCount = 0 } = options;
     const status = tracker.facets.find((facet) => facet.isStatus);
     const search = tracker.facets.find((facet) => facet.kind === "search");
     const facets = tracker.facets.filter((facet) => facet !== status && facet !== search);
@@ -84,17 +84,17 @@ function buildToolbar(tracker, filters, items, sort, options = {}) {
         <div class="tracker-search-row">
             ${search ? buildFacet(search, filters, items) : ""}
             <div><label class="input-label" for="trackerSort">Sort by</label><select id="trackerSort">${(tracker.sortOptions ?? []).map((option) => `<option value="${escapeAttribute(option.key)}"${sort.key === option.key ? " selected" : ""}>${escapeText(option.label)}</option>`).join("")}</select></div>
-            ${canSelect ? `<button class="toolbar-button" type="button" data-tracker-selection-mode aria-pressed="${selectionMode}">${selectionMode ? "Done selecting" : "Select items"}</button>` : ""}
+
         </div>
-        ${facets.length ? `<div class="filter-strip" role="group" aria-label="Filters">${facets.map((facet) => facet.kind === "check"
+        ${facets.length || canSelect ? `<div class="filter-strip" role="group" aria-label="Filters">${facets.map((facet) => facet.kind === "check"
             ? `<button class="filter-toggle" type="button" data-tracker-facet="${escapeAttribute(facet.key)}" data-tracker-facet-value="${!filters[facet.key]}" aria-pressed="${Boolean(filters[facet.key])}">${escapeText(facet.label)}</button>`
             : buildFacet(facet, filters, items)).join("")}</div>` : ""}
-        <div class="active-filters" aria-label="Active filters">${active.length ? active.map((facet) => {
+        <div class="active-filters" aria-label="Results and active filters"><span class="filter-hint">${formatNumber(resultCount)} results</span>${active.length ? active.map((facet) => {
             const value = filters[facet.key];
             const option = facet.options?.(items).find((entry) => String(entry.value) === String(value));
             const label = facet.kind === "check" ? facet.label : `${facet.label}: ${option?.label ?? value}`;
             return `<button type="button" class="active-filter" data-tracker-remove-filter="${escapeAttribute(facet.key)}" aria-label="Remove ${escapeAttribute(label)}">${escapeText(label)}<span aria-hidden="true">×</span></button>`;
-        }).join("") + '<button class="text-action" type="button" data-tracker-reset-filters>Clear all</button>' : '<span class="filter-hint">All items · no filters applied</span>'}</div>
+        }).join("") + '<button class="text-action" type="button" data-tracker-reset-filters>Clear all</button>' : ""}            ${canSelect ? `<button class="toolbar-button" type="button" data-tracker-selection-mode aria-pressed="${selectionMode}">${selectionMode ? "Done selecting" : "Select items"}</button>` : ""}</div>
     </div>`;
 }
 
@@ -246,7 +246,8 @@ export function renderTracker(container, view) {
 
             ${buildToolbar(tracker, filters, items, sort, {
                 canSelect: bulkActions.length > 0,
-                selectionMode
+                selectionMode,
+                resultCount: page.total
             })}
             ${buildBulkBar({ selection, bulkActions, rows })}
 
@@ -268,13 +269,13 @@ export function renderTracker(container, view) {
         </section>
 
         ${tracker.transfer ? `
-            <details class="transfer-disclosure">
-                <summary>Bring progress in, or take it out</summary>
+            <section class="reference-section" aria-label="Import and export progress">
+                <h3 class="reference-title">Import and export progress</h3>
 
                 <div class="action-row">
-                    <button class="btn" id="trackerPasteButton" type="button">Paste a list</button>
-                    <button class="btn" id="trackerImportButton" type="button">Import file</button>
-                    <button class="btn" id="trackerExportButton" type="button">Export CSV</button>
+                    <button class="btn btn-secondary" id="trackerPasteButton" type="button">Paste a list</button>
+                    <button class="btn btn-secondary" id="trackerImportButton" type="button">Import file</button>
+                    <button class="btn btn-secondary" id="trackerExportButton" type="button">Export CSV</button>
                     <input class="sr-only" id="trackerImportInput" type="file" accept=".csv,.json,text/csv,application/json" tabindex="-1" aria-hidden="true">
                 </div>
 
@@ -283,7 +284,7 @@ export function renderTracker(container, view) {
                     exports. Either way you see what will change before it is saved, and only your own progress is
                     read &mdash; points, thresholds and categories always come from the game data.
                 </p>
-            </details>
+            </section>
         ` : ""}
     `;
 }

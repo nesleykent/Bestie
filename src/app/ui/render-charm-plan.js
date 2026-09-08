@@ -2,7 +2,6 @@ import { formatNumber, formatTime } from "../utils/formatters.js";
 import {
     buildAnswer,
     buildLinkButton,
-    buildPill,
     buildRow,
     buildRowList,
     buildStatLine,
@@ -71,16 +70,16 @@ export function buildCharmPlanResultMarkup(planView) {
 
     if (!planView.hasModeMatchedHunts) {
         return buildAnswer(ANSWER_LABEL, "&mdash;",
-            `No ${planView.planRespawnModeLabel} sessions. Switch the plan mode below, or set a session's recorded mode in its own tab.`);
+            `No ${planView.planRespawnModeLabel} sessions. Switch the plan mode above, or change its recorded mode from Session History.`);
     }
 
     if (!planView.hasEligibleHunts) {
         return buildAnswer(ANSWER_LABEL, "&mdash;",
-            `Every ${planView.planRespawnModeLabel} session is ignored. Enable one below.`);
+            `Every ${planView.planRespawnModeLabel} session is unavailable. Make one available above.`);
     }
 
     if (!planView.plan) {
-        return buildAnswer(ANSWER_LABEL, "&mdash;", "Enter the time you have available below.");
+        return buildAnswer(ANSWER_LABEL, "&mdash;", "Enter the time you have available above.");
     }
 
     const plan = planView.plan;
@@ -113,23 +112,18 @@ function buildConsideredSessions(planView) {
 
     const rows = planView.consideredSessions.map((session) => {
         const isEligible = session.isAvailable && session.matchesPlanMode;
-        const status = !session.matchesPlanMode
-            ? "Wrong respawn mode"
-            : (session.isAvailable ? "Available" : "Spawn unavailable");
-
         return buildRow([
-            `<span class="row-name">${session.label}</span>`,
-            buildPill(session.respawnModeLabel),
-            `<span class="row-num">${status}</span>`,
-            `<button class="row-action" type="button" data-plan-availability="${escapeAttribute(session.id)}" aria-pressed="${session.isAvailable ? "true" : "false"}">${session.isAvailable ? "Ignore" : "Enable"}</button>`
+            `<span class="row-name">${buildLinkButton(session.label, "data-plan-hunt", session.id)}</span>`,
+            `<span class="plan-session-mode">${session.respawnModeLabel}${session.matchesPlanMode ? "" : " · Wrong respawn mode"}</span>`,
+            `<button class="row-action" type="button" data-plan-availability="${escapeAttribute(session.id)}" aria-pressed="${session.isAvailable ? "true" : "false"}">${session.isAvailable ? "Available" : "Unavailable"}</button>`
         ], isEligible ? "is-on" : "");
     });
 
     return `
         <div class="plan-sessions-block">
             <span class="input-label" id="planSessionsLabel">Sessions Considered</span>
-            ${buildRowList(rows, 4)}
-            <p class="helper-text">Ignoring a session affects Charm Points Plan only.</p>
+            ${buildRowList(rows, 3)}
+            <p class="helper-text">Only available sessions matching the plan’s respawn mode are used.</p>
         </div>
     `;
 }
@@ -142,8 +136,6 @@ export function renderCharmPlan(container, planView) {
 
     container.className = "results-shell";
     container.innerHTML = `
-        <div id="charmPlanResult">${buildCharmPlanResultMarkup(planView)}</div>
-
         <div class="plan-controls">
             <div>
                 <label class="input-label" for="playTimeInput">Play Time Available</label>
@@ -176,5 +168,6 @@ export function renderCharmPlan(container, planView) {
         </div>
 
         ${buildConsideredSessions(planView)}
+        <div id="charmPlanResult">${buildCharmPlanResultMarkup(planView)}</div>
     `;
 }

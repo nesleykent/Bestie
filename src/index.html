@@ -96,7 +96,7 @@
                 </nav>
 
                 <section class="content-section session-input-section" id="inputSection" aria-label="Hunt Analyzer">
-                    <button class="session-summary" id="sessionToggle" type="button" aria-expanded="true" aria-controls="sessionEditor" hidden></button>
+                    <p class="session-context" id="sessionContext"></p>
                     <div id="sessionEditor">
                         <label class="input-label" for="sessionLog">Paste Hunt Analyzer text</label>
                         <textarea id="sessionLog" placeholder="Example:
@@ -137,14 +137,14 @@ Looted Items:" spellcheck="false"></textarea>
                 </section>
 
                 <footer class="site-disclaimer">
-                    <details>
-                        <summary>About this unofficial Tibia tool</summary>
+                    <section aria-labelledby="aboutBestieTitle">
+                        <h2 class="reference-title" id="aboutBestieTitle">About Bestie</h2>
                         <div class="disclaimer-copy">
                             <p>This site reads pasted hunting session logs and estimates Bestiary or task progress. It is not an official profile mirror and its projections can differ from in-game results.</p>
                             <p>Creature and achievement metadata comes from <a href="https://tibiadraptor.com/" target="_blank" rel="noreferrer">TibiaDraptor</a>; map areas from <a href="https://tibiopedia.pl/" target="_blank" rel="noreferrer">Tibiopedia.pl</a>. Tibia is property of <a href="https://www.cipsoft.com/" target="_blank" rel="noreferrer">CipSoft GmbH</a>.</p>
                             <p><a href="https://github.com/nesleykent/Bestie" target="_blank" rel="noreferrer">Source code and issue tracker</a></p>
                         </div>
-                    </details>
+                    </section>
                 </footer>
             </div>
         </main>

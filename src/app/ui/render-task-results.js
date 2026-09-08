@@ -36,7 +36,6 @@ function buildEstimate(estimate, respawnModeLabel, sessionDuration) {
         return `
             ${buildAnswer("Kill Rate", formatTaskRate(estimate.killRatePerHour),
                 `${creature}, ${formatNumber(estimate.alreadyKilled)} killed this session. Enter a task target for the time remaining.`)}
-            ${buildTargetBlock(estimate, respawnModeLabel)}
         `;
     }
 
@@ -50,7 +49,6 @@ function buildEstimate(estimate, respawnModeLabel, sessionDuration) {
             `${formatNumber(estimate.totalMonsterTypes)} creature types`,
             respawnModeLabel
         ])}
-        ${buildTargetBlock(estimate, respawnModeLabel)}
     `;
 }
 
@@ -66,8 +64,6 @@ export function renderTaskResults(container, monsters, estimate, sessionDuration
 
     container.className = "results-shell";
     container.innerHTML = `
-        ${buildEstimate(estimate, respawnModeLabel, sessionDuration)}
-
         <section class="results-section" aria-labelledby="taskSelectionTitle">
             <h3 class="subsection-title" id="taskSelectionTitle">Select Creature</h3>
             <div class="chip-grid" role="list">
@@ -80,5 +76,7 @@ export function renderTaskResults(container, monsters, estimate, sessionDuration
                 })).join("")}
             </div>
         </section>
+        ${buildTargetBlock(estimate, respawnModeLabel)}
+        ${buildEstimate(estimate, respawnModeLabel, sessionDuration)}
     `;
 }

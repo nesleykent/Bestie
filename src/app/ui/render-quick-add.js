@@ -207,10 +207,10 @@ export function openQuickAdd({ items, onSet, returnFocusSelector = "" }) {
         <div class="quick-panel" role="dialog" aria-modal="true" aria-labelledby="quickAddTitle" aria-describedby="quickAddDescription">
             <div class="quick-header">
                 <div>
-                    <h2 id="quickAddTitle">Record progress</h2>
-                    <p id="quickAddDescription">Search every tracker and change one value.</p>
+                    <h2 id="quickAddTitle">Search Bestie</h2>
+                    <p id="quickAddDescription">Find an item and record its progress.</p>
                 </div>
-                <button class="quick-close" id="quickAddClose" type="button" aria-label="Close record progress">
+                <button class="quick-close" id="quickAddClose" type="button" aria-label="Close search">
                     <span class="material-symbols-outlined" aria-hidden="true">close</span>
                 </button>
             </div>
