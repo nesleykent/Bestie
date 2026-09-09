@@ -25,11 +25,11 @@ function buildRow(session) {
                 ${buildPill(session.respawnModeLabel)}
             </th>
             <td class="task-session-creature" data-label="Creature">${estimate.selectedMonster.displayName}</td>
-            <td data-label="Session kills">${formatNumber(estimate.alreadyKilled)}</td>
-            <td data-label="Kill rate">${formatTaskRate(estimate.killRatePerHour)}</td>
-            <td data-label="Task target">${hasTarget ? formatNumber(estimate.taskTotalKills) : "&mdash;"}</td>
-            <td data-label="Kills remaining">${hasTarget ? formatNumber(estimate.remainingKills) : "&mdash;"}</td>
-            <td data-label="Time remaining">${hasTarget ? formatTimeDetailed(estimate.remainingTimeMinutes) : "&mdash;"}</td>
+            <td class="is-num" data-label="Session kills">${formatNumber(estimate.alreadyKilled)}</td>
+            <td class="is-num" data-label="Kill rate">${formatTaskRate(estimate.killRatePerHour)}</td>
+            <td class="is-num" data-label="Task target">${hasTarget ? formatNumber(estimate.taskTotalKills) : "&mdash;"}</td>
+            <td class="is-num" data-label="Kills remaining">${hasTarget ? formatNumber(estimate.remainingKills) : "&mdash;"}</td>
+            <td class="is-num" data-label="Time remaining">${hasTarget ? formatTimeDetailed(estimate.remainingTimeMinutes) : "&mdash;"}</td>
         </tr>
     `;
 }
@@ -56,11 +56,11 @@ export function renderTaskSessions(container, sessions) {
                         <tr>
                             <th>Session</th>
                             <th>Creature</th>
-                            <th>Session Kills</th>
-                            <th>Kill Rate</th>
-                            <th>Task Target</th>
-                            <th>Kills Remaining</th>
-                            <th>Time Remaining</th>
+                            <th class="is-num">Session kills</th>
+                            <th class="is-num">Kill rate</th>
+                            <th class="is-num">Task target</th>
+                            <th class="is-num">Kills remaining</th>
+                            <th class="is-num">Time remaining</th>
                         </tr>
                     </thead>
                     <tbody>

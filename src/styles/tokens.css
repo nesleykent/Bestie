@@ -59,6 +59,7 @@
     --caution-tint: #fbf1e3;
     --caution-line: #e6cba6;
 
+    --inspector-width: calc(var(--u24) * 3 + var(--u16));
     --sidebar-width: 264px;
     --sidebar-width-collapsed: 76px;
 
@@ -97,6 +98,7 @@
     --ease: cubic-bezier(0.2, 0, 0, 1);
 
     --control-height: 40px;
+    --compact-control-height: 32px;
     --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -134,5 +136,10 @@
 @media (max-width: 900px) {
     :root {
         --grid-margin: var(--u4);
+        --compact-control-height: 40px;
     }
+}
+
+@media (pointer: coarse) {
+    :root { --control-height: 44px; --compact-control-height: 44px; }
 }

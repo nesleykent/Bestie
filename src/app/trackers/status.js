@@ -1,15 +1,4 @@
-/**
- * One vocabulary for progress state, shared by all seven trackers.
- *
- * Before this, the same idea had six names — Missing, Not Started, Open,
- * Undiscovered, Locked, and a blank — so every tracker taught the player a new
- * word for "you don't have it". The terminal state keeps its domain verb, because
- * an achievement is Earned and a Bestiary entry is Complete, but everything
- * leading up to it reads the same everywhere.
- *
- * `unknown` is the state that did not exist at all: nothing recorded, as opposed to
- * recorded as nothing.
- */
+/** Shared state keys; labels retain the meaning of each tracker. */
 
 export const STATUS_LABELS = {
     unknown: "Not recorded",
@@ -26,14 +15,13 @@ export function doneLabel(word = "Done") {
 }
 
 /**
- * The status filter every tracker exposes, so the strip reads identically
- * everywhere. `doneWord` is the only thing a tracker changes.
+ * The shared filter preserves persisted keys while allowing domain-specific labels.
  */
-export function buildStatusFacet({ doneWord = "Done", startedWord = STATUS_LABELS.inProgress, hasInProgress = true } = {}) {
+export function buildStatusFacet({ doneWord = "Done", notStartedWord = STATUS_LABELS.notStarted, startedWord = STATUS_LABELS.inProgress, hasInProgress = true } = {}) {
     const options = [
         { value: "all", label: "All" },
         { value: "unknown", label: STATUS_LABELS.unknown },
-        { value: "notStarted", label: STATUS_LABELS.notStarted }
+        { value: "notStarted", label: notStartedWord }
     ];
 
     if (hasInProgress) {

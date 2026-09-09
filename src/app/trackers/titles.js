@@ -50,7 +50,7 @@ export const titlesTracker = {
 
     facets: [
         { key: "search", kind: "search", label: "Search", placeholder: "Title or requirement", matches: (row, value) => row.searchText.includes(value.trim().toLowerCase()) },
-        buildStatusFacet({ doneWord: "Earned", hasInProgress: false }),
+        buildStatusFacet({ doneWord: "Earned", notStartedWord: "Not earned", hasInProgress: false }),
         {
             key: "permanence",
             kind: "select",

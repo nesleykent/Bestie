@@ -6,9 +6,9 @@ function buildRow(row) {
     return `
         <tr class="${row.isBest ? "is-best" : ""}">
             <td>${escapeText(row.label)} ${row.isBest ? buildPill("Best", true) : ""}</td>
-            <td>${formatNumber(row.totalCharms)}</td>
-            <td>${formatTime(row.maxTimeRemainingMinutes)}</td>
-            <td>${formatCharmsPerHour(row.totalCharmsPerHour)}</td>
+            <td class="is-num">${formatNumber(row.totalCharms)}</td>
+            <td class="is-num">${formatTime(row.maxTimeRemainingMinutes)}</td>
+            <td class="is-num">${formatCharmsPerHour(row.totalCharmsPerHour)}</td>
         </tr>
     `;
 }
@@ -45,9 +45,9 @@ export function renderComparison(container, comparison) {
                     <thead>
                         <tr>
                             <th>Session</th>
-                            <th>Charm Points</th>
-                            <th>Longest Time Remaining</th>
-                            <th>Charm Rate</th>
+                            <th class="is-num">Charm points</th>
+                            <th class="is-num">Longest time remaining</th>
+                            <th class="is-num">Charm rate</th>
                         </tr>
                     </thead>
                     <tbody>

@@ -101,7 +101,7 @@ export const measuringTibiaTracker = {
             options: (items) => [...new Set(items.map((item) => item.area))].sort().map((area) => ({ value: area, label: area })),
             matches: (row, value) => row.area === value
         },
-        buildStatusFacet({ doneWord: "Discovered", hasInProgress: false }),
+        buildStatusFacet({ doneWord: "Discovered", notStartedWord: "Not discovered", hasInProgress: false }),
         { key: "bookmarkedOnly", kind: "check", label: "Bookmarked", matches: (row) => row.bookmark }
     ],
 

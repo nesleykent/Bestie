@@ -121,7 +121,7 @@ function buildConsideredSessions(planView) {
 
     return `
         <div class="plan-sessions-block">
-            <span class="input-label" id="planSessionsLabel">Sessions Considered</span>
+            <span class="input-label" id="planSessionsLabel">Sessions considered</span>
             ${buildRowList(rows, 3)}
             <p class="helper-text">Only available sessions matching the plan’s respawn mode are used.</p>
         </div>
@@ -138,7 +138,7 @@ export function renderCharmPlan(container, planView) {
     container.innerHTML = `
         <div class="plan-controls">
             <div>
-                <label class="input-label" for="playTimeInput">Play Time Available</label>
+                <label class="input-label" for="playTimeInput">Play time available</label>
                 <input
                     id="playTimeInput"
                     class="plan-time-input"
@@ -153,7 +153,7 @@ export function renderCharmPlan(container, planView) {
             </div>
 
             <div>
-                <span class="input-label" id="planRespawnModeLabel">Plan For Respawn Mode</span>
+                <span class="input-label" id="planRespawnModeLabel">Respawn mode</span>
                 <div class="segmented" role="group" aria-labelledby="planRespawnModeLabel">
                     ${modes.map((mode) => `
                         <button

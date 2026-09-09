@@ -93,9 +93,9 @@ function buildEstimateRow(entry) {
                 <a href="${monster.wikiLink}" target="_blank" rel="noreferrer">${monster.name}</a>
                 ${entry.huntLabel ? buildPill(entry.huntLabel) : ""}
             </td>
-            <td>${formatNumber(monster.charms)}</td>
-            <td>${formatNumber(monster.killsThisSession)}</td>
-            <td class="editable-cell">
+            <td class="is-num">${formatNumber(monster.charms)}</td>
+            <td class="is-num">${formatNumber(monster.killsThisSession)}</td>
+            <td class="editable-cell is-num">
                 <input
                     type="number"
                     class="kills-input"
@@ -108,15 +108,15 @@ function buildEstimateRow(entry) {
                     title="${monster.isKillFloor ? "From the tile you picked in the Bestiary — type the exact count if you have it" : ""}"
                 >
             </td>
-            <td>${formatNumber(monster.killsToUnlock)}</td>
-            <td>${formatKillRate(monster.killRate)}</td>
-            <td>${monster.isKillFloor
+            <td class="is-num">${formatNumber(monster.killsToUnlock)}</td>
+            <td class="is-num">${formatKillRate(monster.killRate)}</td>
+            <td class="is-num">${monster.isKillFloor
                 ? `at most ${formatNumber(monster.remainingKills)}`
                 : formatNumber(monster.remainingKills)}</td>
-            <td>${monster.isKillFloor
+            <td class="is-num">${monster.isKillFloor
                 ? `at most ${formatTime(monster.timeRemainingMinutes)}`
                 : formatTime(monster.timeRemainingMinutes)}</td>
-            <td>${formatCharmsPerHour(monster.charmsPerHour)}</td>
+            <td class="is-num">${formatCharmsPerHour(monster.charmsPerHour)}</td>
         </tr>
     `;
 }
@@ -129,14 +129,14 @@ export function buildEstimateTable(entries) {
                 <thead>
                     <tr>
                         <th>Creature</th>
-                        <th>Charm Points</th>
-                        <th>Session Kills</th>
-                        <th>Total Kills</th>
-                        <th>Unlock Target</th>
-                        <th>Kill Rate</th>
-                        <th>Kills Remaining</th>
-                        <th>Time Remaining</th>
-                        <th>Charm Rate</th>
+                        <th class="is-num">Charm points</th>
+                        <th class="is-num">Session kills</th>
+                        <th class="is-num">Total kills</th>
+                        <th class="is-num">Unlock target</th>
+                        <th class="is-num">Kill rate</th>
+                        <th class="is-num">Kills remaining</th>
+                        <th class="is-num">Time remaining</th>
+                        <th class="is-num">Charm rate</th>
                     </tr>
                 </thead>
                 <tbody>

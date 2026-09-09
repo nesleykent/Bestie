@@ -109,7 +109,7 @@ export const achievementsTracker = {
                 .map(([value, label]) => ({ value, label })),
             matches: (row, value) => row.category === value
         },
-        buildStatusFacet({ doneWord: "Earned", hasInProgress: false }),
+        buildStatusFacet({ doneWord: "Earned", notStartedWord: "Not earned", hasInProgress: false }),
         {
             key: "rarity",
             kind: "select",
