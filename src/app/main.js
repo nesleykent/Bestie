@@ -597,7 +597,9 @@ function setSidebarCollapsed(isCollapsed) {
     saveSidebarCollapsed(isCollapsed);
 }
 
-const mobileNavigation = window.matchMedia("(max-width: 900px)");
+// Keep the desktop workspace available in narrow side-by-side windows. A drawer
+// is reserved for genuinely mobile widths, where persistent navigation cannot fit.
+const mobileNavigation = window.matchMedia("(max-width: 400px)");
 
 function setSidebarOpen(isOpen) {
     const open = mobileNavigation.matches && isOpen;

@@ -85,6 +85,12 @@ h1 {
     line-height: var(--leading-tight);
 }
 
+/* Route changes focus this non-interactive heading for assistive technology.
+   Safari otherwise paints it like a focused control. */
+h1[tabindex="-1"]:focus {
+    outline: none;
+}
+
 h2,
 .subsection-title {
     font-size: var(--t-400);
@@ -184,6 +190,11 @@ h3 {
     background: var(--surface);
     color: var(--ink-900);
     transition: flex-basis var(--duration) var(--ease), width var(--duration) var(--ease);
+}
+
+@supports (height: 100dvh) {
+    .app-shell { min-height: 100dvh; }
+    .app-sidebar { height: 100dvh; }
 }
 
 .sidebar-character {
@@ -3318,7 +3329,36 @@ th.is-sorted .column-sort {
     }
 }
 
-@media (max-width: 900px) {
+/* Compact desktop keeps navigation persistent beside Tibia in narrow windows. */
+@media (min-width: 401px) and (max-width: 900px) {
+    .app-sidebar {
+        flex-basis: 220px;
+        width: 220px;
+        padding-inline: var(--u2);
+    }
+
+    .workspace-content {
+        padding: var(--u6) var(--u4) var(--u12);
+    }
+
+    .sidebar-link {
+        padding-inline: var(--u2);
+        gap: var(--u2);
+    }
+
+    .sidebar-character-switch {
+        padding-inline: var(--u1);
+    }
+
+    .mobile-bar,
+    .sidebar-menu-toggle,
+    .sidebar-scrim,
+    .sidebar-close {
+        display: none !important;
+    }
+}
+
+@media (max-width: 400px) and (min-width: 0px) {
     .app-sidebar {
         position: fixed;
         inset: 0 auto 0 0;
@@ -3422,6 +3462,10 @@ th.is-sorted .column-sort {
 
     h1 {
         font-size: var(--t-500);
+    }
+
+    h1[tabindex="-1"]:focus {
+        outline: none;
     }
 
     .landing-row {
@@ -3547,7 +3591,7 @@ th.is-sorted .column-sort {
     }
 }
 
-@media (max-width: 700px) {
+@media screen and (max-width: 400px) {
     .hunt-workspace {
         flex-wrap: wrap;
         gap: var(--u2);
@@ -3758,7 +3802,7 @@ th.is-sorted .column-sort {
     }
 }
 
-@media (max-width: 560px) {
+@media all and (max-width: 560px) {
     .quick-add {
         padding: var(--u4) var(--u2);
     }
