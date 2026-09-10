@@ -1418,11 +1418,8 @@ function formatDetailRecordedAt(trackerId, itemKey) {
 
 function inspectorContext(tracker, row) {
     return getEntityContext(tracker.id, row.key, Object.fromEntries(
-        TRACKERS.map(definition => [definition.id, getTrackerItems(definition).map(item =>
-            definition.id === tracker.id && definition.itemKey(item) === row.key && row.wikiLink
-                ? { ...item, wikiLink: row.wikiLink } : item
-        )])
-    ));
+        TRACKERS.map(definition => [definition.id, getTrackerItems(definition)])
+    ), row.wikiLink);
 }
 
 function buildInspectorSources(tracker, row) {

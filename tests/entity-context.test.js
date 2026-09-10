@@ -93,3 +93,15 @@ test("longer canonical achievement names prevent overlapping short-name reward m
     const items = { quests: [{ Name: "Trial", rewards: "The achievement Fire Walker" }], achievements: [{ Name: "Fire" }, { Name: "Fire Walker" }] };
     assert.deepEqual(getEntityContext("quests", "Trial", items).relations.map((relation) => relation.key), ["Fire Walker"]);
 });
+
+test("reward caching stays scoped to the loaded catalog and keeps canonical sources", () => {
+    const quest = { Name: "Example Quest", rewards: "achievement Fire Walker" };
+    const first = { quests: [quest], achievements: [{ Name: "Fire Walker" }] };
+    const replacement = { quests: [quest], achievements: [{ Name: "Water Walker" }] };
+    assert.equal(getEntityContext("quests", quest.Name, first).relations[0].key, "Fire Walker");
+    assert.deepEqual(getEntityContext("quests", quest.Name, replacement).relations, []);
+    assert.equal(getEntityContext("quests", quest.Name, first).relations[0].key, "Fire Walker");
+    const fallback = "https://example.com/quest";
+    assert.ok(getEntityContext("quests", quest.Name, first, fallback).sources.some(source => source.url === fallback));
+    assert.equal(quest.wikiLink, undefined);
+});

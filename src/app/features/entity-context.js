@@ -33,23 +33,31 @@ function sourceLinks(item) {
     return sources;
 }
 
+// Catalog arrays and their items are immutable after loading. Reuse compiled
+// matchers and parsed rewards across inspectors; progress is not cached here.
+const rewardCatalogs = new WeakMap();
+
 function namedRewards(quest, achievements) {
+    let catalog = rewardCatalogs.get(achievements);
+    if (!catalog) {
+        const names = [...achievements].sort((a, b) => b.Name.length - a.Name.length);
+        const alternatives = names.map(item => item.Name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") || "(?!)";
+        catalog = {
+            pattern: new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:(${alternatives})\\s+achievements?\\b|achievements?\\s+["“]?(${alternatives})(?=$|[^\\p{L}\\p{N}]))`, "giu"),
+            names: new Map(names.map(item => [item.Name.toLowerCase(), item.Name])),
+            rewards: new WeakMap()
+        };
+        rewardCatalogs.set(achievements, catalog);
+    }
+    if (catalog.rewards.has(quest)) return catalog.rewards.get(quest);
     const text = plainText(quest.rewards);
     const matched = new Set();
-    const spans = [];
     // Longer canonical names win over overlapping shorter names (e.g. an
     // explicit “achievement Fire Walker” must not also link an item “Fire”).
-    for (const achievement of [...achievements].sort((a, b) => b.Name.length - a.Name.length)) {
-        const name = achievement.Name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        const pattern = new RegExp(`(?:^|[^\\p{L}\\p{N}])(?:${name}\\s+achievements?\\b|achievements?\\s+["“]?${name}(?=$|[^\\p{L}\\p{N}]))`, "giu");
-        for (const match of text.matchAll(pattern)) {
-            const start = match.index;
-            const end = start + match[0].length;
-            if (spans.some((span) => start < span.end && end > span.start)) continue;
-            matched.add(achievement.Name);
-            spans.push({ start, end });
-        }
+    for (const match of text.matchAll(catalog.pattern)) {
+        matched.add(catalog.names.get((match[1] || match[2]).toLowerCase()));
     }
+    catalog.rewards.set(quest, matched);
     return matched;
 }
 
@@ -64,7 +72,7 @@ function linkedQuest(achievement, quest) {
 }
 
 /** Accepts already-loaded, normalized tracker items; does not fetch or mutate. */
-export function getEntityContext(trackerId, itemKey, itemsByTracker) {
+export function getEntityContext(trackerId, itemKey, itemsByTracker, wikiLink) {
     const items = (id) => itemsByTracker[id] ?? [];
     const item = items(trackerId).find((candidate) => candidate.Name === itemKey);
     if (!item) return { sources: [], relations: [] };
@@ -72,7 +80,7 @@ export function getEntityContext(trackerId, itemKey, itemsByTracker) {
     const sources = sourceLinks(item);
     const directUrl = safeUrl(item.sourceUrl);
     if (directUrl) sources.unshift({ label: "Open source", url: directUrl });
-    const wikiUrl = safeUrl(WIKI_LINKS[trackerId]?.[item.Name] || item.wikiLink);
+    const wikiUrl = safeUrl(WIKI_LINKS[trackerId]?.[item.Name] || wikiLink || item.wikiLink);
     if (wikiUrl) sources.unshift({ label: "Open Tibia Wiki", url: wikiUrl });
 
     const relations = [];
