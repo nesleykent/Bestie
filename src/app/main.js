@@ -1028,6 +1028,12 @@ function applySessionInput(hunt, creatureCount, duration = hunt.sessionDuration)
         : "";
     elements.sessionContext.hidden = !hunt.hasProcessedLog;
     elements.sessionEditor.hidden = false;
+    const disclosure = document.getElementById("sessionLogDisclosure");
+    const editorState = `${hunt.id}:${hunt.hasProcessedLog}`;
+    if (disclosure.dataset.session !== editorState) {
+        disclosure.open = !hunt.hasProcessedLog;
+        disclosure.dataset.session = editorState;
+    }
 }
 
 function renderHuntTabStrip() {
@@ -2390,6 +2396,12 @@ function applyWorkspaceChrome() {
     elements.workspaceMain.classList.toggle("is-trackers", state.mode === "trackers");
     elements.workspaceMain.classList.toggle("is-proficiency", state.mode === "proficiency");
     document.getElementById("proficiencyOverview").hidden = state.mode !== "proficiency";
+    const analysisNav = document.getElementById("sessionAnalysisNav");
+    analysisNav.hidden = !["bestiary", "tasks", "proficiency"].includes(state.mode) || getModeView() !== "session";
+    analysisNav.querySelectorAll("[data-session-analysis]").forEach(link => {
+        if (link.dataset.sessionAnalysis === state.mode) link.setAttribute("aria-current", "page");
+        else link.removeAttribute("aria-current");
+    });
 }
 
 function renderApp() {
@@ -3913,7 +3925,17 @@ function attachLibraryActions() {
     }
 
     elements.output.querySelectorAll("[data-library-open]").forEach((button) => {
-        button.addEventListener("click", () => selectHunt(button.dataset.libraryOpen));
+        button.addEventListener("click", () => {
+            state.activeHuntId = button.dataset.libraryOpen;
+            navigateWorkspace("bestiary", "session");
+        });
+    });
+
+    elements.output.querySelectorAll("[data-library-task]").forEach((button) => {
+        button.addEventListener("click", () => {
+            state.activeHuntId = button.dataset.libraryTask;
+            navigateWorkspace("tasks", "session");
+        });
     });
 
     elements.output.querySelectorAll("[data-library-delete]").forEach((button) => {
@@ -4040,7 +4062,12 @@ function processHuntLog(hunt, logText) {
         : "No creatures matched the Bestiary dataset.");
 
     if (bestiary.sessionDuration === 0) {
+        document.getElementById("sessionLogDisclosure").open = true;
         showAlert("No session duration found in the pasted text, so no time can be estimated.");
+    }
+    const disclosure = document.getElementById("sessionLogDisclosure");
+    if (!disclosure.open && elements.sessionEditor.contains(document.activeElement)) {
+        disclosure.querySelector("summary").focus({ preventScroll: true });
     }
 }
 
@@ -4052,6 +4079,7 @@ function processLog() {
     if (!logText) {
         renderApp();
         showAlert("Paste the Hunt Analyzer text before processing.");
+        document.getElementById("sessionLogDisclosure").open = true;
         elements.sessionLog.focus();
         return;
     }
@@ -4290,6 +4318,9 @@ elements.compareHuntsButton.addEventListener("click", showComparison);
 elements.sessionRegularButton.addEventListener("click", () => setSessionRespawnMode("regular"));
 elements.sessionRapidButton.addEventListener("click", () => setSessionRespawnMode("rapid"));
 elements.processLogButton.addEventListener("click", processLog);
+document.getElementById("sessionLogDisclosure").addEventListener("toggle", (event) => {
+    event.currentTarget.querySelector(".session-log-action").textContent = event.currentTarget.open ? "Hide log" : "Edit log";
+});
 elements.sessionLog.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && (event.ctrlKey || event.metaKey)
         && !event.isComposing && !event.repeat && !elements.processLogButton.disabled) {

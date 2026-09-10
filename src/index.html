@@ -95,10 +95,18 @@
                     </div>
                 </nav>
 
+                <nav class="session-analysis-nav" id="sessionAnalysisNav" aria-label="Analyze this session" hidden>
+                    <a href="#bestiary/session" data-session-analysis="bestiary">Bestiary</a>
+                    <a href="#tasks/session" data-session-analysis="tasks">Task estimate</a>
+                    <a href="#weapon-proficiency" data-session-analysis="proficiency">Weapon proficiency</a>
+                    <a href="#bestiary/library">Session history</a>
+                </nav>
+
                 <div id="proficiencyOverview" class="session-overview" aria-label="Session proficiency" hidden></div>
 
                 <section class="content-section session-input-section" id="inputSection" aria-label="Hunt Analyzer">
-                    <p class="session-context" id="sessionContext"></p>
+                    <details class="session-log-disclosure" id="sessionLogDisclosure" open>
+                    <summary><span>Hunt Analyzer <span class="session-context" id="sessionContext"></span></span><span class="session-log-action">Edit log</span></summary>
                     <div id="sessionEditor">
                         <label class="input-label" for="sessionLog">Paste Hunt Analyzer text <span class="session-keyboard-hint">· Ctrl/⌘ + Enter to process</span></label>
                         <textarea id="sessionLog" placeholder="Example:
@@ -122,6 +130,7 @@ Looted Items:" spellcheck="false"></textarea>
                             <button class="btn btn-tertiary" id="clearLogButton" type="button">Clear</button>
                         </div>
                     </div>
+                    </details>
                 </section>
 
                 <section class="content-section" id="analysisSection" aria-labelledby="resultsTitle">

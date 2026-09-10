@@ -2209,6 +2209,112 @@ and numbers are tabular and right-aligned so a column reads as a column.
     padding-top: var(--u2);
 }
 
+.session-analysis-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--u2) var(--u4);
+    margin-block: var(--u4);
+    border-bottom: var(--hairline);
+}
+
+.session-analysis-nav a {
+    padding: var(--u2) 0;
+    text-decoration: none;
+    color: var(--ink-500);
+    border-bottom: 2px solid transparent;
+    font-size: var(--t-100);
+}
+
+.session-analysis-nav a[aria-current="page"] {
+    color: var(--ink-900);
+    border-bottom-color: currentColor;
+    font-weight: var(--weight-bold);
+}
+
+.session-log-disclosure {
+    border-block: var(--hairline);
+    padding-block: var(--u2);
+}
+
+.session-log-disclosure > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--u4);
+    cursor: pointer;
+    list-style: none;
+    font-size: var(--t-100);
+    padding-block: var(--u2);
+}
+
+.session-log-disclosure > summary::-webkit-details-marker {
+    display: none;
+}
+
+.session-log-disclosure .session-context {
+    display: block;
+    margin: var(--u1) 0 0;
+    color: var(--ink-500);
+}
+
+.session-log-action {
+    flex-shrink: 0;
+    text-decoration: underline;
+}
+
+.plan-setup,
+.opportunity-columns,
+.opportunity-columns > div {
+    display: grid;
+    align-content: start;
+    gap: var(--u6);
+    min-width: 0;
+}
+
+.plan-setup {
+    gap: var(--u2);
+}
+
+.plan-setup .plan-controls,
+.plan-setup .plan-sessions-block {
+    margin: 0;
+    padding-block: var(--u3);
+}
+
+.opportunity-columns {
+    margin-top: var(--u6);
+}
+
+@media (min-width: 1200px) {
+    .charm-planner {
+        display: grid;
+        grid-template-columns: 340px minmax(0, 1fr);
+        align-items: start;
+        column-gap: var(--u8);
+    }
+
+    .plan-setup .plan-controls {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+}
+
+@media (min-width: 1320px) {
+    .opportunity-columns {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: var(--u8);
+    }
+
+    .opportunity-columns .row,
+    .opportunity-columns .section-copy {
+        font-size: var(--t-100);
+    }
+
+    .opportunity-columns .row {
+        padding-block: var(--u2);
+    }
+}
+
 .chip:hover {
     border-color: var(--ink-300);
 }

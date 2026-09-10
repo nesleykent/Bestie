@@ -172,9 +172,9 @@ export function renderOpportunities(container, analysis) {
             `${formatNumber(totals.measuredCreatures)} creatures measured by ${formatNumber(totals.sessionCount)} session${totals.sessionCount === 1 ? "" : "s"}`
         ])}
 
-        ${buildFinishable(analysis)}
-        ${buildQuickWins(analysis)}
-        ${buildLocations(analysis)}
-        ${buildBlindSpots(analysis)}
+        <div class="opportunity-columns">
+            <div>${buildFinishable(analysis)}${buildQuickWins(analysis)}${buildBlindSpots(analysis)}</div>
+            <div>${buildLocations(analysis)}</div>
+        </div>
     `;
 }

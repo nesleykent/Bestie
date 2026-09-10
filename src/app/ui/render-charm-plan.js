@@ -134,8 +134,9 @@ export function renderCharmPlan(container, planView) {
         { key: "rapid", label: "Rapid Respawn" }
     ];
 
-    container.className = "results-shell";
+    container.className = "results-shell charm-planner";
     container.innerHTML = `
+        <div class="plan-setup">
         <div class="plan-controls">
             <div>
                 <label class="input-label" for="playTimeInput">Play time available</label>
@@ -168,6 +169,7 @@ export function renderCharmPlan(container, planView) {
         </div>
 
         ${buildConsideredSessions(planView)}
+        </div>
         <div id="charmPlanResult">${buildCharmPlanResultMarkup(planView)}</div>
     `;
 }

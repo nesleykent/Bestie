@@ -24,7 +24,7 @@ function buildRow(session) {
         <div class="history-record-main">
             <div class="history-identity">
                 <label class="sr-only" for="sessionName-${id}">Session name</label>
-                <div class="history-identity-main"><input id="sessionName-${id}" class="history-name" type="text" data-library-name="${id}" value="${escapeAttribute(session.name)}" placeholder="${label}" aria-label="Name for ${label}" title="Rename ${label}"><button class="row-action" type="button" data-library-open="${id}" aria-label="Open ${label}">Open session</button></div>
+                <div class="history-identity-main"><input id="sessionName-${id}" class="history-name" type="text" data-library-name="${id}" value="${escapeAttribute(session.name)}" placeholder="${label}" aria-label="Name for ${label}" title="Rename ${label}"><button class="row-action" type="button" data-library-open="${id}" aria-label="Open ${label}">Bestiary analysis</button></div>
                 <p class="history-context">${session.duration > 0 ? formatTimeDetailed(session.duration) : "No duration"} · ${session.respawnModeLabel}</p>
             </div>
             <div class="history-metric"><span>Proficiency</span><strong>${session.hasProcessedLog ? value(session.proficiencyTotal) : "—"} <small>XP</small></strong><span>${session.hasProcessedLog ? value(session.proficiencyRate) : "—"} XP/h${session.proficiency?.isPartial ? " · Partial" : ""}</span></div>
@@ -36,6 +36,7 @@ function buildRow(session) {
             <label>Hunted on<input type="date" data-library-date="${id}" value="${escapeAttribute(session.huntedOn)}" aria-label="Date hunted for ${label}"></label>
             <label>Notes<input type="text" data-library-notes="${id}" value="${escapeAttribute(session.notes)}" placeholder="Route, team, boosts…" aria-label="Notes for ${label}"></label>
             <div class="history-actions">
+                <button class="text-action" type="button" data-library-task="${id}">Task estimate</button>
                 <button class="text-action" type="button" data-proficiency-open="${id}">View proficiency</button>
                 <button class="text-action is-danger" type="button" data-library-delete="${id}" ${session.canDelete ? "" : "disabled"}>Delete</button>
             </div>
