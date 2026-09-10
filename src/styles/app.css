@@ -3252,7 +3252,8 @@ th.is-sorted .column-sort {
     }
 }
 
-@media (min-width: 1101px) {
+/* Keep the editor beside its settings when the available workspace fits both. */
+@media (min-width: 1101px), (min-width: 760px) and (max-width: 900px) {
     .session-input-section #sessionEditor {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 310px;
@@ -3437,19 +3438,6 @@ th.is-sorted .column-sort {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .hunt-workspace {
-        flex-wrap: wrap;
-        gap: var(--u2);
-    }
-
-    .hunt-tab-strip {
-        flex-basis: 100%;
-    }
-
-    .hunt-workspace-actions {
-        margin-left: auto;
-    }
-
     .proficiency-metrics .answer:first-child .answer-value {
         font-size: var(--t-400);
     }
@@ -3511,7 +3499,6 @@ th.is-sorted .column-sort {
 
     .tracker-controls > .segmented .segmented-button {
         font-size: var(--t-100);
-        min-height: 44px;
         flex: 1 0 auto;
         padding-inline: var(--u1);
     }
@@ -3531,27 +3518,11 @@ th.is-sorted .column-sort {
 
     .filter-strip select {
         max-width: 172px;
-        min-height: 44px;
         padding-left: var(--u2);
-    }
-
-    .filter-toggle, .active-filter, .text-action {
-        min-height: 40px;
-    }
-
-    .active-filters {
-        min-height: 40px;
     }
 
     .dashboard-card {
         padding: var(--u4);
-    }
-
-    .detail-panel {
-        inset: 0;
-        width: 100%;
-        border-radius: 0;
-        padding: 0;
     }
 
     .detail-header-actions .icon-button, .detail-header-actions .bookmark-toggle {
@@ -3577,6 +3548,27 @@ th.is-sorted .column-sort {
 }
 
 @media (max-width: 700px) {
+    .hunt-workspace {
+        flex-wrap: wrap;
+        gap: var(--u2);
+    }
+
+    .hunt-tab-strip {
+        flex-basis: 100%;
+    }
+
+    .hunt-workspace-actions {
+        margin-left: auto;
+    }
+
+    .detail-panel {
+        inset: 0;
+        width: 100%;
+        border-radius: 0;
+        padding: 0;
+    }
+
+
     .history-record-main {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: var(--u3);
@@ -3798,6 +3790,17 @@ th.is-sorted .column-sort {
 }
 
 @media (pointer: coarse) {
+    .session-keyboard-hint {
+        display: none;
+    }
+
+    .tracker-controls > .segmented .segmented-button,
+    .filter-strip select,
+    .filter-toggle, .active-filter, .text-action {
+        min-height: 44px;
+    }
+
+
     .bookmark-toggle {
         min-width: 44px;
         min-height: 44px;

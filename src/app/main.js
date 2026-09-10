@@ -4291,6 +4291,13 @@ elements.compareHuntsButton.addEventListener("click", showComparison);
 elements.sessionRegularButton.addEventListener("click", () => setSessionRespawnMode("regular"));
 elements.sessionRapidButton.addEventListener("click", () => setSessionRespawnMode("rapid"));
 elements.processLogButton.addEventListener("click", processLog);
+elements.sessionLog.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)
+        && !event.isComposing && !event.repeat && !elements.processLogButton.disabled) {
+        event.preventDefault();
+        processLog();
+    }
+});
 elements.output.addEventListener("focusout", handleKillsCommit);
 elements.output.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && event.target.classList?.contains("kills-input")) {

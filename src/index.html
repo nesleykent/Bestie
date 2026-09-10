@@ -100,7 +100,7 @@
                 <section class="content-section session-input-section" id="inputSection" aria-label="Hunt Analyzer">
                     <p class="session-context" id="sessionContext"></p>
                     <div id="sessionEditor">
-                        <label class="input-label" for="sessionLog">Paste Hunt Analyzer text</label>
+                        <label class="input-label" for="sessionLog">Paste Hunt Analyzer text <span class="session-keyboard-hint">· Ctrl/⌘ + Enter to process</span></label>
                         <textarea id="sessionLog" placeholder="Example:
 Session: 1:30h
 Killed Monsters:
@@ -118,7 +118,7 @@ Looted Items:" spellcheck="false"></textarea>
 
                         <div class="toolbar" role="group" aria-label="Session actions">
                             <button class="btn btn-secondary" id="pasteLogButton" type="button">Paste log</button>
-                            <button class="btn" id="processLogButton" type="button">Process log</button>
+                            <button class="btn" id="processLogButton" type="button" aria-keyshortcuts="Control+Enter Meta+Enter" title="Process log (Ctrl+Enter or ⌘+Enter)">Process log</button>
                             <button class="btn btn-tertiary" id="clearLogButton" type="button">Clear</button>
                         </div>
                     </div>
