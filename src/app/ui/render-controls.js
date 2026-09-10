@@ -16,6 +16,12 @@ export function escapeText(value) {
     return escapeAttribute(value);
 }
 
+export function buildSortControl(id, options, sort, directionAttributes = {}) {
+    const description = sort.direction === "desc" ? "Descending; switch to ascending" : "Ascending; switch to descending";
+    const attributes = Object.entries(directionAttributes).map(([key, value]) => `${key}="${escapeAttribute(value)}"`).join(" ");
+    return `<div><label class="input-label" for="${id}">Sort by</label><div class="sort-control"><select id="${id}">${options.map(option => `<option value="${escapeAttribute(option.key)}"${sort.key === option.key ? " selected" : ""}>${escapeText(option.label)}</option>`).join("")}</select><button id="${id}Direction" class="icon-button" type="button" ${attributes} aria-label="${description}" title="${description}"><span class="material-symbols-outlined" aria-hidden="true">${sort.direction === "desc" ? "south" : "north"}</span></button></div></div>`;
+}
+
 const HTML_ENTITIES = {
     "&amp;": "&",
     "&lt;": "<",
@@ -102,10 +108,11 @@ export function tickControl(row, field, options = {}) {
                 type="button"
                 aria-pressed="${isYes ? "true" : "false"}"
                 aria-label="${escapeAttribute(actionLabel)}"
+                title="${escapeAttribute(actionLabel)}"
                 data-tracker-item="${escapeAttribute(row.key)}"
                 data-tracker-set="${escapeAttribute(field)}"
                 data-tracker-set-value="1"
-            >${escapeText(yesLabel)}</button>
+            >${escapeText(isYes ? yesLabel : `Mark ${yesLabel.toLowerCase()}`)}</button>
         </div>
     `;
 }

@@ -62,7 +62,7 @@ test("bosses render in the breakdown with their Bosstiary category and reward", 
     assert.match(container.innerHTML, /Rotten Golem<\/th><td[^>]*>Challenging<\/td>/);
     // Ascending by classification puts the Challenging creature ahead of Bane, then Nemesis.
     assert.match(container.innerHTML, /Rotten Golem[\s\S]*Annihilon[\s\S]*Ferumbras/);
-    assert.match(container.innerHTML, /Session total<\/th><td><\/td><td class="is-num">13<\/td><td><\/td><td class="is-num">18,400<\/td>/);
+    assert.match(container.innerHTML, /Session total<\/th><td><\/td><td class="is-num" data-label="kills">13<\/td><td><\/td><td class="is-num" data-label="XP">18,400<\/td>/);
     assert.match(container.innerHTML, /Nemesis: 15,000 XP\/kill/);
     assert.doesNotMatch(container.innerHTML, /Unclassified|NaN|undefined/);
 });

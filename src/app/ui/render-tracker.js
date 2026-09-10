@@ -1,6 +1,6 @@
 import { formatNumber } from "../utils/formatters.js";
 import { buildAnswer, buildEmptyState, buildMetricLine, escapeAttribute } from "./render-blocks.js";
-import { escapeText, plainText, selectControl } from "./render-controls.js";
+import { escapeText, plainText, selectControl, buildSortControl } from "./render-controls.js";
 
 /**
  * One card grid for every tracker.
@@ -83,7 +83,7 @@ function buildToolbar(tracker, filters, items, sort, options = {}) {
         ${status ? buildFacet(status, filters, items) : ""}
         <div class="tracker-search-row">
             ${search ? buildFacet(search, filters, items) : ""}
-            <div><label class="input-label" for="trackerSort">Sort by</label><select id="trackerSort">${(tracker.sortOptions ?? []).map((option) => `<option value="${escapeAttribute(option.key)}"${sort.key === option.key ? " selected" : ""}>${escapeText(option.label)}</option>`).join("")}</select></div>
+            ${buildSortControl("trackerSort", tracker.sortOptions ?? [], sort)}
 
         </div>
         ${facets.length || canSelect ? `<div class="filter-strip" role="group" aria-label="Filters">${facets.map((facet) => facet.kind === "check"

@@ -30,8 +30,7 @@ export function buildAnswer(label, value, note = "", progress = null) {
 
     return `
         <article class="answer">
-            ${label ? `<span class="summary-label">${label}</span>` : ""}
-            <strong class="answer-value">${value}</strong>
+            <div class="summary-reading"><strong class="answer-value">${value}</strong>${label ? `<span class="summary-label">${label}</span>` : ""}</div>
             ${normalizedProgress !== null ? `
                 <span class="answer-progress" aria-hidden="true">
                     <span style="width: ${Math.round(normalizedProgress * 100)}%"></span>

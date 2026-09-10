@@ -56,10 +56,11 @@ function normalizeAchievement(achievement) {
         categoryLabel: categoryLabel(category),
         // `secret` arrives as 0/1, not a boolean.
         isSecret: Boolean(Number(achievement.secret)),
-        // The spoiler is how you actually get it, which is the useful text; the
-        // description is flavour. Both may contain HTML and must be escaped.
-        spoiler: achievement.spoiler ?? "",
-        description: achievement.description ?? "",
+        // Keep the game's description separate from instructions for earning it.
+        // An absent description stays empty; spoiler text is never a substitute.
+        // Both source fields may contain HTML and must be escaped when rendered.
+        description: String(achievement.description ?? ""),
+        spoiler: String(achievement.spoiler ?? ""),
         rarity: stats?.rarity ?? "",
         rarityPercent: Number.isFinite(Number(stats?.percentage)) ? Number(stats.percentage) : null,
         // Achievements in the Removed category cannot be earned any more, so they

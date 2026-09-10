@@ -32,6 +32,7 @@ export function deriveAchievementRow(achievement, entry, context = {}) {
         category: achievement.category,
         categoryLabel: achievement.categoryLabel,
         isSecret: achievement.isSecret,
+        description: achievement.description,
         spoiler: achievement.spoiler,
         rarity: achievement.rarity,
         rarityLabel: RARITY_LABELS[achievement.rarity] ?? "",
@@ -42,7 +43,10 @@ export function deriveAchievementRow(achievement, entry, context = {}) {
         status: done ? "done" : "notStarted",
         pointsEarned: done ? achievement.points : 0,
         bookmark: entry.bookmark,
-        searchText: `${achievement.Name} ${achievement.spoiler.replace(/<[^>]*>/g, " ")}`.toLowerCase()
+        searchText: [achievement.Name, achievement.description, achievement.spoiler]
+            .map((text) => String(text ?? "").replace(/<[^>]*>/g, " "))
+            .join(" ")
+            .toLowerCase()
     };
 }
 
@@ -80,7 +84,7 @@ export const achievementsTracker = {
             ${row.rarityLabel ? `<span>${escapeText(row.rarityLabel)}</span>` : ""}
             <span class="achievement-grade" title="Grade ${row.grade}" aria-label="Grade ${row.grade}">Grade ${"\u2605".repeat(row.grade)}</span>
         `,
-        body: plainText(row.spoiler),
+        body: plainText(row.description),
         control: tickControl(row, "done", {
             yesLabel: "Earned",
             locked: row.isDerived,
@@ -96,7 +100,7 @@ export const achievementsTracker = {
             key: "search",
             kind: "search",
             label: "Search",
-            placeholder: "Name or how to earn it",
+            placeholder: "Name, description or how to earn",
             matches: (row, value) => row.searchText.includes(value.trim().toLowerCase())
         },
         {

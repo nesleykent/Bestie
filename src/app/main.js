@@ -1,3 +1,4 @@
+import { getEntityContext } from "./features/entity-context.js";
 import { parseHuntSession } from "./features/session-parser.js";
 import { getHuntProficiency } from "./features/weapon-proficiency.js";
 import { buildPageRoute, readPageRoute } from "./state/page-route.js";
@@ -1413,10 +1414,59 @@ function formatDetailRecordedAt(trackerId, itemKey) {
     }).format(recordedAt);
 }
 
+function inspectorContext(tracker, row) {
+    return getEntityContext(tracker.id, row.key, Object.fromEntries(
+        TRACKERS.map(definition => [definition.id, getTrackerItems(definition).map(item =>
+            definition.id === tracker.id && definition.itemKey(item) === row.key && row.wikiLink
+                ? { ...item, wikiLink: row.wikiLink } : item
+        )])
+    ));
+}
+
+function buildInspectorSources(tracker, row) {
+    const { sources } = inspectorContext(tracker, row);
+    return sources.length ? `<div class="detail-actions">${sources.map(source =>
+        `<a class="detail-action source-action" href="${escapeAttribute(source.url)}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span><span>${escapeText(source.label)}</span><span class="material-symbols-outlined detail-action-tail" aria-hidden="true">north_east</span></a>`
+    ).join("")}</div>` : "";
+}
+
+function buildInspectorRelations(tracker, row) {
+    const { relations } = inspectorContext(tracker, row);
+    const groups = new Map();
+    for (const relation of relations) {
+        const key = `${relation.trackerId}:${relation.kind}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(relation);
+    }
+    return [...groups.values()].map(group => {
+        const entity = getTracker(group[0].trackerId);
+        const sameReason = group.every(relation => relation.reason === group[0].reason);
+        const title = tracker.id === "measuringTibia" && entity.id === "bestiary" ? "Creatures in this subarea"
+            : tracker.id === "quests" && entity.id === "achievements" ? (group[0].kind === "reward" ? "Achievement rewards" : "Related achievements")
+            : tracker.id === "achievements" && entity.id === "measuringTibia" ? "Required subareas"
+            : entity.label;
+        return buildDetailGroupHtml(`${title} · ${group.length}`, `${sameReason ? `<p class="helper-text">${escapeText(group[0].reason)}</p>` : ""}<ul class="detail-entity-list">${group.map(relation => `<li><button class="detail-relation" type="button" data-detail-tracker="${escapeAttribute(relation.trackerId)}" data-detail-key="${escapeAttribute(relation.key)}"><span>${escapeText(relation.label)}</span><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></button>${!sameReason ? `<p class="helper-text">${escapeText(relation.reason)}</p>` : ""}</li>`).join("")}</ul>`);
+    }).join("");
+}
+
+function attachInspectorRelations() {
+    elements.detailPanelContent.querySelectorAll("[data-detail-tracker]").forEach(button => {
+        button.addEventListener("click", () => {
+            state.activeTrackerId = button.dataset.detailTracker;
+            state.selectedTrackerKey = button.dataset.detailKey;
+            renderApp();
+            persistState();
+            elements.detailCloseButton.focus({ preventScroll: true });
+        });
+    });
+}
+
 function renderBestiaryDetail(row) {
     const item = getTrackerItems(bestiaryTracker)
         .find((creature) => bestiaryTracker.itemKey(creature) === row.key);
     const locations = item?.Locations || "No locations listed";
+    const measuredLocations = inspectorContext(bestiaryTracker, row).relations
+        .filter(relation => relation.trackerId === "measuringTibia");
     const locationItems = locations.split(/,\s*/).filter(Boolean);
     const progressPercent = row.progress * 100;
     const progressLabel = `${progressPercent.toFixed(1)}%`;
@@ -1454,8 +1504,11 @@ function renderBestiaryDetail(row) {
 
         <section class="detail-group">
             <h3 class="detail-group-title">Locations</h3>
-            <ul class="detail-location-list">
-                ${locationItems.map((location) => `<li>${escapeText(location)}</li>`).join("")}
+            <ul class="detail-entity-list">
+                ${locationItems.map(location => {
+                    const relation = measuredLocations.find(candidate => candidate.key === location);
+                    return `<li>${relation ? `<button class="detail-relation" type="button" data-detail-tracker="measuringTibia" data-detail-key="${escapeAttribute(relation.key)}"><span>${escapeText(location)}</span><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></button>` : escapeText(location)}</li>`;
+                }).join("")}
             </ul>
         </section>
 
@@ -1470,12 +1523,14 @@ function renderBestiaryDetail(row) {
         <section class="detail-group">
             <div class="detail-actions">
                 <button class="btn btn-secondary detail-action" type="button" id="detailSessionsButton"><span class="material-symbols-outlined" aria-hidden="true">monitoring</span><span>View measured sessions</span></button>
-                <a class="detail-action source-action" href="${row.wikiLink}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span><span>Open Tibia Wiki</span><span class="material-symbols-outlined detail-action-tail" aria-hidden="true">north_east</span></a>
+
             </div>
+            ${buildInspectorSources(bestiaryTracker, row)}
             <p class="detail-last-recorded">Last recorded: ${escapeText(formatDetailRecordedAt(bestiaryTracker.id, row.key))}</p>
         </section>
     `;
 
+    attachInspectorRelations();
     const killsInput = elements.detailPanelContent.querySelector(".detail-kills-input");
     let killsDirty = false;
 
@@ -1664,6 +1719,12 @@ function buildDetailGroupHtml(title, innerHtml) {
     `;
 }
 
+function buildDetailFacts(facts) {
+    return `<dl class="detail-facts">${facts.filter(([, value]) => value).map(([label, value]) =>
+        `<div><dt>${escapeText(label)}</dt><dd>${value}</dd></div>`
+    ).join("")}</dl>`;
+}
+
 /**
  * The one or two groups particular to this tracker, beyond the shared shell.
  * Every stage/points/completion figure here is read straight off the row
@@ -1707,10 +1768,13 @@ function buildDetailInfoGroups(tracker, row) {
             : "";
 
         return [
-            buildDetailInfoGroup("Description", plainText(row.spoiler)),
-            buildDetailInfoGroup("Points", `${formatNumber(row.points)}${row.isSecret ? ' <span class="pill">Secret</span>' : ""}`),
-            buildDetailInfoGroup("Rarity", rarityMeta),
-            buildDetailInfoGroup("Grade", row.grade ? "★".repeat(row.grade) : "")
+            buildDetailInfoGroup("Description", plainText(row.description)),
+            buildDetailInfoGroup("How to obtain · Spoiler", plainText(row.spoiler)),
+            buildDetailFacts([
+                ["Points", `${formatNumber(row.points)}${row.isSecret ? ' <span class="pill">Secret</span>' : ""}`],
+                ["Grade", row.grade ? `<span aria-label="Grade ${row.grade}">${"★".repeat(row.grade)}</span>` : ""],
+                ["Rarity", rarityMeta]
+            ])
         ];
     }
 
@@ -1738,11 +1802,7 @@ function buildDetailInfoGroups(tracker, row) {
 
         return [
             buildDetailInfoGroup("Area progress", `${formatNumber(areaDiscovered)} <span class="row-aside">of ${formatNumber(row.areaSubareaCount)} subareas in ${escapeText(row.area)} discovered</span>`),
-            buildDetailInfoGroup("Area achievement", escapeText(row.areaAchievement)),
-            buildDetailGroupHtml("Creatures in this subarea", (() => {
-                const creatures = getTrackerItems(bestiaryTracker).filter((creature) => creature.locationList?.includes(row.name));
-                return creatures.length ? `<p class="helper-text">${formatNumber(creatures.length)} Bestiary creatures</p><ul class="detail-entity-list">${creatures.map((creature) => `<li><button type="button" class="text-action" data-detail-creature="${escapeAttribute(bestiaryTracker.itemKey(creature))}">${escapeText(creature.Name)}</button></li>`).join("")}</ul>` : "";
-            })())
+
         ];
     }
 
@@ -1788,13 +1848,10 @@ function renderGenericTrackerDetail(tracker, row) {
         </section>
 
         ${infoGroups}
+        ${buildInspectorRelations(tracker, row)}
 
         <section class="detail-group">
-            ${row.wikiLink ? `
-                <div class="detail-actions">
-                    <a class="detail-action source-action" href="${escapeAttribute(row.wikiLink)}" target="_blank" rel="noreferrer"><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span><span>Open Tibia Wiki</span><span class="material-symbols-outlined detail-action-tail" aria-hidden="true">north_east</span></a>
-                </div>
-            ` : ""}
+            ${buildInspectorSources(tracker, row)}
             <p class="detail-last-recorded">Last recorded: ${escapeText(formatDetailRecordedAt(tracker.id, row.key))}</p>
         </section>
     `;
@@ -1809,15 +1866,7 @@ function renderGenericTrackerDetail(tracker, row) {
  * those functions have no reason to know about.
  */
 function attachGenericDetailActions(tracker, itemKey) {
-    elements.detailPanelContent.querySelectorAll("[data-detail-creature]").forEach((button) => {
-        button.addEventListener("click", () => {
-            state.activeTrackerId = bestiaryTracker.id;
-            state.selectedTrackerKey = button.dataset.detailCreature;
-            renderApp();
-            persistState();
-            elements.detailCloseButton.focus();
-        });
-    });
+    attachInspectorRelations();
     const refresh = () => {
         const updated = buildTrackerRows(tracker).find((candidate) => candidate.key === itemKey);
 
@@ -2341,6 +2390,7 @@ function applyWorkspaceChrome() {
     elements.newSessionButton.hidden = state.mode === "trackers" || state.mode === "dashboard";
     elements.workspaceMain.classList.toggle("is-trackers", state.mode === "trackers");
     elements.workspaceMain.classList.toggle("is-proficiency", state.mode === "proficiency");
+    document.getElementById("proficiencyOverview").hidden = state.mode !== "proficiency";
 }
 
 function renderApp() {
@@ -3126,6 +3176,14 @@ function bindTrackerDelegation() {
             return;
         }
 
+        if (target.closest("#trackerSortDirection")) {
+            const sort = getTrackerSort(tracker);
+            sort.direction = sort.direction === "asc" ? "desc" : "asc";
+            renderTrackerView();
+            document.getElementById("trackerSortDirection")?.focus({ preventScroll: true });
+            return;
+        }
+
         const removeFilter = target.closest("[data-tracker-remove-filter]");
         if (removeFilter) {
             const key = removeFilter.dataset.trackerRemoveFilter;
@@ -3268,8 +3326,10 @@ function bindTrackerDelegation() {
         }
 
         if (target.id === "trackerSort") {
-            state.trackerSort[tracker.id] = { key: target.value, direction: "asc" };
+            const option = tracker.sortOptions.find(option => option.key === target.value);
+            state.trackerSort[tracker.id] = { key: target.value, direction: option?.descending ? "desc" : "asc" };
             renderTrackerView();
+            document.getElementById("trackerSort")?.focus({ preventScroll: true });
             return;
         }
 
@@ -4079,6 +4139,7 @@ function renderProficiencyView() {
     showSectionHeading(getHuntLabelById(hunt.id), "");
     renderProficiency(elements.output, session, {
         processed: hunt.hasProcessedLog, sort: state.proficiencySort,
+        overviewContainer: document.getElementById("proficiencyOverview"),
         plans: state.weaponPlans, activeId: state.activeWeaponPlanId, projectionCreature: state.projectionCreature
     });
     elements.output.querySelectorAll("[data-proficiency-sort]").forEach((button) => {

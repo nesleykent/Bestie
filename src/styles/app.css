@@ -539,9 +539,9 @@ gets the app's strongest available treatment — filled, not outlined. */
     color: var(--ink-900);
 }
 
-input[type="text"],
-input[type="number"],
-input[type="date"],
+:where(input[type="text"]),
+:where(input[type="number"]),
+:where(input[type="date"]),
 select,
 textarea,
 .library-search,
@@ -560,9 +560,9 @@ textarea,
     appearance: none;
 }
 
-input[type="text"],
-input[type="number"],
-input[type="date"],
+:where(input[type="text"]),
+:where(input[type="number"]),
+:where(input[type="date"]),
 select,
 .library-search,
 .plan-time-input,
@@ -2155,7 +2155,6 @@ and numbers are tabular and right-aligned so a column reads as a column.
 
 /* --- the session itself ---------------------------------------------- */
 
-
 .session-input-section .input-label {
     margin-bottom: var(--u2);
 }
@@ -2215,7 +2214,6 @@ and numbers are tabular and right-aligned so a column reads as a column.
     background: var(--accent-tint);
 }
 
-
 .table-container td.editable-cell,
 .table-container th.editable-cell {
     text-align: right;
@@ -2245,7 +2243,6 @@ and numbers are tabular and right-aligned so a column reads as a column.
 }
 
 /* --- plan and library controls -------------------------------------- */
-
 
 .plan-sessions-block .row-list,
 .library-controls .row-list {
@@ -2503,33 +2500,21 @@ th.is-sorted .column-sort {
 }
 
 .answer {
-    display: flex;
-    gap: var(--u1) var(--u3);
+    display: grid;
+    gap: var(--u1);
     margin: 0;
     padding: 0;
-    border: 0;
-    border-bottom: 0;
-    border-radius: 0;
-    background: none;
-    align-content: start;
-    flex-wrap: wrap;
-    align-items: baseline;
-}
-
-.answer .answer-value {
-    order: -1;
+    min-width: 0;
 }
 
 .answer .summary-label {
-    order: 0;
     font-size: var(--t-200);
 }
 
 .answer-note {
-    max-width: 66ch;
+    max-width: 76ch;
     font-size: var(--t-100);
     color: var(--ink-500);
-    flex-basis: 100%;
 }
 
 .stat-item {
@@ -2553,7 +2538,7 @@ th.is-sorted .column-sort {
     flex-wrap: wrap;
 }
 
-.tracker-search-row {
+.tracker-search-row, .history-search-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(120px, 180px);
     gap: var(--u3);
@@ -2561,7 +2546,7 @@ th.is-sorted .column-sort {
     padding-top: var(--u3);
 }
 
-.tracker-search-row input, .tracker-search-row select {
+.tracker-search-row input, .tracker-search-row select, .history-search input, .history-search-row select {
     width: 100%;
     min-width: 0;
 }
@@ -2601,8 +2586,8 @@ th.is-sorted .column-sort {
 .filter-strip select {
     max-width: 190px;
     min-width: 0;
-    border-color: transparent;
-    background-color: transparent;
+    min-height: var(--compact-control-height);
+    background-color: var(--surface);
     font-size: var(--t-100);
 }
 
@@ -2622,7 +2607,10 @@ th.is-sorted .column-sort {
 
 .filter-toggle {
     white-space: nowrap;
+    border: 1px solid var(--ink-300);
     border-radius: var(--radius-control);
+    min-height: var(--compact-control-height);
+    background: var(--surface);
 }
 
 .filter-toggle[aria-pressed="true"] {
@@ -2819,14 +2807,11 @@ th.is-sorted .column-sort {
 
 .detail-entity-list {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
     gap: 0 var(--u2);
 }
 
-.detail-entity-list button {
-    text-align: left;
-    padding-left: 0;
-}
+
 
 .source-action {
     display: flex;
@@ -2864,33 +2849,23 @@ th.is-sorted .column-sort {
 }
 
 .proficiency-metrics {
-    margin-bottom: var(--u4);
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--u4);
-    padding: var(--u3) 0 var(--u4);
-    border-bottom: var(--hairline);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--u2) var(--u8);
+    padding: var(--u3) 0;
 }
 
 .proficiency-metrics .answer {
+    flex: 0 1 auto;
     min-width: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    border-radius: var(--radius-surface);
-    display: grid;
-    gap: var(--u1);
-    background: none;
 }
 
 .proficiency-metrics .answer .summary-label {
-    order: -1;
+    grid-row: 1;
     font-size: var(--t-100);
 }
 
-.proficiency-metrics .answer .answer-value {
-    order: 0;
-}
+
 
 .proficiency-metrics .answer:nth-child(-n+2) .answer-value {
     font-size: var(--t-500);
@@ -2912,18 +2887,31 @@ th.is-sorted .column-sort {
     text-align: left;
 }
 
-/* History uses directly editable metadata and the same control rhythm as trackers. */
-.history-search-row {
-    display: grid;
-    grid-template-columns: minmax(180px, 1fr) 170px auto auto;
-    gap: var(--u3);
-    align-items: end;
-    padding-top: var(--u3);
+.detail-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--u3) var(--u6);
+    padding-block: var(--u3);
+    font-size: var(--t-100);
 }
 
-.history-search input, .history-search-row select {
-    width: 100%;
-    min-width: 0;
+.detail-facts dt {
+    margin-bottom: var(--u1);
+    color: var(--ink-500);
+    font-weight: var(--weight-bold);
+}
+
+.detail-facts dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.history-results-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--u3);
+    padding-block: var(--u2);
 }
 
 .history-count {
@@ -2954,7 +2942,7 @@ th.is-sorted .column-sort {
     opacity: 1;
 }
 
-.history-search-row > .btn {
+.history-results-row > .btn {
     white-space: nowrap;
     font-size: var(--t-100);
 }
@@ -2962,6 +2950,11 @@ th.is-sorted .column-sort {
 .history-name {
     width: 100%;
     min-width: 0;
+    min-height: var(--compact-control-height);
+    padding-inline: 0;
+    border-color: transparent;
+    border-radius: 0;
+    background: none;
     font-weight: var(--weight-bold);
 }
 
@@ -3145,6 +3138,83 @@ th.is-sorted .column-sort {
     font-size: var(--t-100);
 }
 
+/* Summary and sort composition shared across data views. */
+.summary-reading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--u1) var(--u2);
+}
+
+.sort-control {
+    display: flex;
+    gap: var(--u1);
+    min-width: 0;
+}
+
+.sort-control .icon-button {
+    flex: 0 0 var(--control-height);
+    height: var(--control-height);
+    border: 1px solid var(--ink-300);
+    color: var(--ink-700);
+}
+
+.proficiency-metrics .summary-reading {
+    display: grid;
+    gap: var(--u1);
+}
+
+.proficiency-metrics .stat-line {
+    flex-basis: 100%;
+    padding-top: 0;
+}
+
+.session-overview {
+    border-bottom: var(--hairline);
+}
+
+.history-identity-main {
+    display: flex;
+    align-items: center;
+    gap: var(--u3);
+}
+
+.history-identity-main .row-action {
+    flex: 0 0 auto;
+}
+
+.history-name:hover, .history-name:focus {
+    border-bottom-color: var(--ink-300);
+}
+
+.detail-relation {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--u1);
+    min-height: var(--compact-control-height);
+    padding: var(--u1) 0;
+    border: 0;
+    border-bottom: var(--hairline);
+    background: none;
+    color: var(--ink-700);
+    font: inherit;
+    font-size: var(--t-100);
+    text-align: left;
+    cursor: pointer;
+}
+
+.detail-relation:hover {
+    color: var(--ink-900);
+    background: var(--accent-tint);
+}
+
+.detail-relation .material-symbols-outlined {
+    flex: 0 0 auto;
+    font-size: var(--t-200);
+}
+
 /* Responsive variants: wide screens first, then progressively narrower layouts. */
 
 @media (min-width: 901px) {
@@ -3238,18 +3308,6 @@ th.is-sorted .column-sort {
 }
 
 @media (max-width: 1100px) {
-    .history-search-row {
-        grid-template-columns: minmax(0, 1fr) 150px;
-    }
-
-    .history-search-row > button {
-        justify-self: start;
-    }
-
-    .history-search-row > button:last-child {
-        justify-self: end;
-    }
-
     .history-edit-fields {
         grid-template-columns: 145px minmax(0, 1fr);
     }
@@ -3458,8 +3516,8 @@ th.is-sorted .column-sort {
         padding-inline: var(--u1);
     }
 
-    .tracker-search-row {
-        grid-template-columns: minmax(0, 1fr) minmax(110px, .65fr);
+    .tracker-search-row, .history-search-row {
+        grid-template-columns: minmax(0, 1fr) 160px;
         gap: var(--u2);
     }
 
@@ -3505,8 +3563,8 @@ th.is-sorted .column-sort {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .proficiency-metrics {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .proficiency-metrics .answer {
+        flex: 1 1 0;
     }
 
     .proficiency-metrics .answer:nth-child(-n+2) .answer-value {
@@ -3519,11 +3577,6 @@ th.is-sorted .column-sort {
 }
 
 @media (max-width: 700px) {
-    .history-search-row {
-        grid-template-columns: minmax(0, 1fr) 135px;
-        gap: var(--u2);
-    }
-
     .history-record-main {
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: var(--u3);
@@ -3623,6 +3676,12 @@ th.is-sorted .column-sort {
     .proficiency-table tfoot th, .proficiency-table tfoot td {
         border: 0;
         padding: 0;
+    }
+
+    .proficiency-table tfoot td[data-label]::after {
+        content: " " attr(data-label);
+        color: var(--ink-500);
+        font-size: var(--t-100);
     }
 
     .proficiency-table tfoot td:empty {

@@ -1,3 +1,4 @@
+import { buildSortControl } from "./render-controls.js";
 import { PROFICIENCY_BY_BOSS_CATEGORY, PROFICIENCY_BY_DIFFICULTY, PROFICIENCY_ORDER, calculateWeaponProjection } from "../features/weapon-proficiency.js";
 import { formatNumber, formatTime, formatTimeDetailed } from "../utils/formatters.js";
 import { buildAnswer, buildEmptyState, buildPill, buildMetricLine, escapeAttribute } from "./render-blocks.js";
@@ -45,7 +46,7 @@ function buildPlanner(session, plans, activeId, projectionCreature) {
     </section>`;
 }
 
-export function renderProficiency(container, session, { processed, sort, plans, activeId, projectionCreature }) {
+export function renderProficiency(container, session, { processed, sort, plans, activeId, projectionCreature, overviewContainer }) {
     const factor = sort.direction === "asc" ? 1 : -1;
     const rows = [...session.rows].sort((a, b) => {
         const leftMissing = a[sort.key] === null || (sort.key === "classification" && !a.classification);
@@ -59,23 +60,24 @@ export function renderProficiency(container, session, { processed, sort, plans, 
         return (typeof left === "string" ? left.localeCompare(right) : left - right) * factor || a.name.localeCompare(b.name);
     });
     container.className = "results-shell proficiency-page";
+    const overview = processed ? `<div class="proficiency-metrics">
+        ${buildAnswer(`${session.isPartial ? "Known " : ""}Proficiency XP/h`, number(session.perHour), session.duration === null ? "Duration unavailable; no hourly estimate." : session.perHour === null ? "Rate unavailable; see data issues." : "")}
+        ${buildAnswer(`${session.isPartial ? "Known " : ""}Proficiency XP`, number(session.total), session.isPartial ? "Partial result — see issues below" : "")}
+        ${buildMetricLine([`${session.duration === null ? "—" : formatTime(session.duration)} session`, `${number(session.kills)} kills`])}
+    </div>` : "";
+    if (overviewContainer) { overviewContainer.innerHTML = overview; overviewContainer.hidden = !processed; }
     container.innerHTML = `
-        ${processed ? `<div class="proficiency-metrics">
-            ${buildAnswer(`${session.isPartial ? "Known " : ""}Proficiency XP/h`, number(session.perHour), session.duration === null ? "Duration unavailable; no hourly estimate." : session.perHour === null ? "Rate unavailable; see data issues." : "Measured hunt rate")}
-            ${buildAnswer(`${session.isPartial ? "Known " : ""}Proficiency XP`, number(session.total), session.isPartial ? "Partial result — see issues below" : "Total across all creatures")}
-            ${buildAnswer("Session duration", session.duration === null ? "—" : formatTime(session.duration))}
-            ${buildAnswer("Kills", number(session.kills))}
-        </div>` : buildEmptyState("No session analyzed yet.", "Paste a Hunt Analyzer above or open a stored session. Bestiary and Weapon Proficiency share the same sessions.")}
+        ${overviewContainer ? "" : overview}
+        ${!processed ? buildEmptyState("No session analyzed yet.", "Paste a Hunt Analyzer above or open a stored session. Bestiary and Weapon Proficiency share the same sessions.") : ""}
         ${session.isPartial ? `<section class="proficiency-warning" aria-label="Data issues"><h3 class="reference-title">Partial result · ${number(session.warnings.length)} data issues</h3><ul>${session.warnings.map((issue) => `<li>${escapeText(issue)}</li>`).join("")}</ul><p>Unclassified or invalid rows are excluded from known XP; contributions use the known subtotal.</p></section>` : ""}
         <section class="results-section" aria-labelledby="proficiencyBreakdownTitle">
             <h3 class="subsection-title" id="proficiencyBreakdownTitle">Creature and boss breakdown</h3>
             ${rows.length ? `<div class="mobile-table-sort">
-                <div><label class="input-label" for="proficiencySort">Sort by</label><select id="proficiencySort">${COLUMNS.map(([key, label]) => `<option value="${key}"${sort.key === key ? " selected" : ""}>${label}</option>`).join("")}</select></div>
-                <button class="text-action" id="proficiencySortDirection" type="button" data-proficiency-sort="${sort.key}" aria-label="Reverse contribution sort direction">${sort.direction === "asc" ? "Ascending ↑" : "Descending ↓"}</button>
+                ${buildSortControl("proficiencySort", COLUMNS.map(([key, label]) => ({ key, label })), sort, { "data-proficiency-sort": sort.key })}
             </div><div class="table-container proficiency-table" tabindex="0" role="region" aria-label="Creature and boss proficiency breakdown">
                 <table><caption class="sr-only">Proficiency XP by creature and boss. Contributions are percentages of classified XP.</caption><thead><tr>${COLUMNS.map(([key, label]) => `<th scope="col" class="${["name", "classification"].includes(key) ? "" : "is-num"}" aria-sort="${sort.key === key ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}"><button class="column-sort" type="button" data-proficiency-sort="${key}">${label}<span class="sort-mark">${sort.key === key ? (sort.direction === "asc" ? "▲" : "▼") : ""}</span></button></th>`).join("")}</tr></thead>
                 <tbody>${rows.map((row) => `<tr><th scope="row">${escapeText(row.name)}${row.issue ? `<span class="row-aside">${escapeText(row.issue)}</span>` : ""}</th><td data-label="Classification">${classificationLabel(row.classification)}${sourceNote(row.source)}</td><td class="is-num" data-label="Kills">${number(row.kills)}</td><td class="is-num" data-label="XP / kill">${number(row.perKill)}</td><td class="is-num" data-label="Proficiency XP">${number(row.total)}</td><td class="is-num" data-label="Contribution">${row.contribution === null ? "—" : `${row.contribution.toFixed(1)}%`}${row.contribution === null ? "" : `<span class="contribution-bar" aria-hidden="true"><span style="width:${Math.max(0, Math.min(100, row.contribution))}%"></span></span>`}</td></tr>`).join("")}</tbody>
-                <tfoot><tr><th scope="row">${session.isPartial ? "Known subtotal" : "Session total"}</th><td></td><td class="is-num">${number(session.kills)}</td><td></td><td class="is-num">${number(session.total)}</td><td class="is-num">${session.total === null ? "—" : session.total > 0 ? "100.0%" : "0.0%"}</td></tr></tfoot></table></div>
+                <tfoot><tr><th scope="row">${session.isPartial ? "Known subtotal" : "Session total"}</th><td></td><td class="is-num" data-label="kills">${number(session.kills)}</td><td></td><td class="is-num" data-label="XP">${number(session.total)}</td><td class="is-num">${session.total === null ? "—" : session.total > 0 ? "100.0%" : "0.0%"}</td></tr></tfoot></table></div>
 ` : buildEmptyState("No kills to calculate.", processed ? "Check the Killed Monsters section in the Hunt Analyzer." : "Process or reopen a session to see its creatures.")}
         </section>
         ${buildPlanner(session, plans, activeId, projectionCreature)}
