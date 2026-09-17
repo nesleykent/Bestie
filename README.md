@@ -477,7 +477,7 @@ Implemented in **Hunt Analysis**, using the shared session archive. Supported me
 
 #### Hunt Planner
 
-Combine character information, Hunt Grounds data, and measured hunting performance to compare future hunts according to a selected objective.
+Implemented in **Tools → Hunt Planner**. Filter by level, vocation, party and hunting context, then compare raw XP/h or profit/h. Reference observations and explicitly linked local sessions are ranked separately; measured rates are weighted by duration and separated by respawn mode.
 
 Hunt Grounds performance should remain separate from Bestiary and Task calculations: hunting-place XP/h is not a substitute for the measured creature kill rates those estimates require.
 
@@ -496,7 +496,7 @@ This information can be presented through charts, tables, timelines, and summary
 
 #### Hunt Grounds
 
-Maintain a curated reference dataset of Tibia hunting locations merged from relevant sources. XP/h can be a primary performance measure alongside Level, Vocation, Loot, access, location, and other useful hunting context.
+The bundled Hunt Grounds snapshot includes 880 current TibiaPal vocation/hunt entries with source level minima, combat context, raw XP/h, market-based profit and available video links. Missing rates and unspecified team composition remain explicit. [Source/import contract](docs/hunt-grounds-sources.md).
 
 Hunt Grounds can support Hunt Planner while remaining independent from Bestiary progress and Task kill-rate estimates.
 

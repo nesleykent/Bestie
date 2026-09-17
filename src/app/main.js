@@ -2438,7 +2438,7 @@ function renderApp() {
         elements.analysisSection.hidden = false;
         elements.comparisonSection.hidden = true;
         elements.sectionHeading.hidden = true;
-        renderTools(elements.output, { view: state.toolView, inputs: state.toolInputs, creatures: state.bestiaryData,
+        renderTools(elements.output, { view: state.toolView, inputs: state.toolInputs, creatures: state.bestiaryData, hunts: state.hunts,
             onChange: values => { Object.assign(state.toolInputs, values); persistState(); } });
         return;
     }
