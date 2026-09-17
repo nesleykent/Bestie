@@ -314,7 +314,7 @@ The application is static and requires no account or backend. Data is stored in 
 
 Whole-workspace JSON export includes every character. Restore validates the file, previews record counts, and downloads a recovery backup before replacement. Unsupported backup versions and malformed files are rejected. Storage failures are reported, and corrupt saved JSON is preserved rather than overwritten.
 
-Individual trackers support CSV export and reviewed CSV import. Bestiary and Bosstiary also accept TibiaDraptor JSON progress imports. Hunt sessions and planning state persist automatically in the current browser profile.
+Individual trackers support CSV export and reviewed CSV import. Exports preserve confirmed zero/no answers with a Reviewed column; older CSV files remain importable. Malformed counts, boolean values, duplicate entries, and broken quoting are rejected before review. Bestiary and Bosstiary also accept TibiaDraptor JSON progress imports. Hunt sessions and planning state persist automatically in the current browser profile.
 
 The application does not request Tibia credentials or connect to a Tibia account.
 

@@ -1,3 +1,4 @@
+import { parseCount } from "../state/tracker-transfer.js";
 import { loadCharmsData } from "../services/charms-repository.js";
 import { formatNumber } from "../utils/formatters.js";
 import { bookmarkControl, escapeText, plainText, stageControl } from "../ui/render-controls.js";
@@ -219,7 +220,7 @@ export const charmsTracker = {
         writeRow: (row) => [row.name, row.type, row.currencyLabel, row.stage, row.spent, row.totalCost, row.bookmark ? "Yes" : "No"],
         readRow: (cell) => ({
             // Clamped on the way in as well, so a bad file cannot store nonsense.
-            stage: Math.min(Number.parseInt(String(cell("Stage") ?? "").replace(/[,\s]/g, ""), 10) || 0, MAX_STAGE),
+            stage: Math.min(parseCount(cell("Stage")), MAX_STAGE),
             bookmark: /^(yes|true|1|y)$/i.test(String(cell("Bookmark") ?? "").trim())
         })
     }
