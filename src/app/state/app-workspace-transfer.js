@@ -1,7 +1,7 @@
+import { isRecord, validateBackupEnvelope, validateWorkspaceBackup } from "./backup-validation.js";
 import { parseWorkspaceFile } from "./workspace-transfer.js";
 
 const EXPORT_APP_ID = "bestie";
-const LEGACY_EXPORT_APP_ID = "bestiary-session-analyzer";
 const EXPORT_VERSION = 2;
 
 export function serializeAppState(appState, exportedAt) {
@@ -30,11 +30,25 @@ export function parseAppWorkspaceFile(rawText) {
         throw new Error("That file is not valid JSON.");
     }
 
-    if (payload?.app && ![EXPORT_APP_ID, LEGACY_EXPORT_APP_ID].includes(payload.app)) {
-        throw new Error("That file was exported by a different application.");
-    }
+    validateBackupEnvelope(payload, EXPORT_VERSION);
 
-    if (Array.isArray(payload?.characters) && payload.characters.length) {
+    if (payload.characters !== undefined) {
+        if (!Array.isArray(payload.characters) || !payload.characters.length) {
+            throw new Error("That file has no characters to import.");
+        }
+        const ids = new Set();
+        payload.characters.forEach((character, index) => {
+            if (!isRecord(character) || (character.name !== undefined && typeof character.name !== "string")) {
+                throw new Error(`Invalid character at position ${index + 1}. Your current data has not been changed.`);
+            }
+            if (character.id !== undefined) {
+                if (typeof character.id !== "string" || !character.id.trim() || ids.has(character.id.trim())) {
+                    throw new Error("Backup character IDs must be unique, non-empty text.");
+                }
+                ids.add(character.id.trim());
+            }
+            validateWorkspaceBackup(character.workspace, `characters[${index}].workspace`);
+        });
         return {
             characters: payload.characters,
             activeCharacterId: payload.activeCharacterId

@@ -63,8 +63,9 @@ export function analyzeSession(logText, bestiaryData, session = parseHuntSession
 export function recalculateProgress(monsters, bestiaryData, sessionDuration, totalKillsByName) {
     return monsters.map((monster) => {
         const bestiaryEntry = bestiaryData.find((entry) => entry.Name === monster.name);
+        if (!bestiaryEntry) return null; // Removed metadata cannot crash a saved workspace.
         const totalKills = Number(totalKillsByName[monster.name] || 0);
 
         return buildMonsterProgress(bestiaryEntry, monster.killsThisSession, sessionDuration, totalKills);
-    });
+    }).filter(Boolean);
 }

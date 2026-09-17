@@ -127,7 +127,15 @@ function adoptSavedHuntId(savedId, generatedId, adoptedIds) {
 }
 
 function normalizeHunt(savedHunt, adoptedIds) {
-    const matchedMonsters = Array.isArray(savedHunt?.matchedMonsters) ? savedHunt.matchedMonsters : [];
+    const validRow = (row) => row && typeof row.name === "string" && row.name.trim()
+        && Number.isSafeInteger(Number(row.killsThisSession)) && Number(row.killsThisSession) >= 0;
+    const sourceMatched = Array.isArray(savedHunt?.matchedMonsters) ? savedHunt.matchedMonsters : [];
+    const sourceTasks = Array.isArray(savedHunt?.taskMonsters) ? savedHunt.taskMonsters : [];
+    const normalizeRows = (rows) => rows.filter(validRow).map((row) => ({ ...row, killsThisSession: Number(row.killsThisSession) }));
+    const matchedMonsters = normalizeRows(sourceMatched);
+    const taskMonsters = normalizeRows(sourceTasks);
+    const issues = Array.isArray(savedHunt?.parseIssues) ? savedHunt.parseIssues.filter((issue) => typeof issue === "string") : null;
+    const damagedRows = sourceMatched.length !== matchedMonsters.length || sourceTasks.length !== taskMonsters.length;
     const hunt = createHunt();
 
     return {
@@ -138,15 +146,15 @@ function normalizeHunt(savedHunt, adoptedIds) {
         notes: typeof savedHunt?.notes === "string" ? savedHunt.notes : "",
         respawnMode: normalizeRespawnMode(savedHunt?.respawnMode),
         sessionLog: typeof savedHunt?.sessionLog === "string" ? savedHunt.sessionLog : "",
-        sessionDuration: Number(savedHunt?.sessionDuration) || 0,
+        sessionDuration: Number.isSafeInteger(Number(savedHunt?.sessionDuration)) && Number(savedHunt?.sessionDuration) >= 0 ? Number(savedHunt.sessionDuration) : 0,
         hasProcessedLog: Boolean(savedHunt?.hasProcessedLog),
         matchedMonsters,
         selectedBestiaryMonsterNames: Array.isArray(savedHunt?.selectedBestiaryMonsterNames)
-            ? savedHunt.selectedBestiaryMonsterNames
+            ? savedHunt.selectedBestiaryMonsterNames.filter((name) => typeof name === "string")
             : matchedMonsters.map((monster) => monster.name),
-        parseIssues: Array.isArray(savedHunt?.parseIssues) ? savedHunt.parseIssues.filter((issue) => typeof issue === "string") : null,
-        taskMonsters: Array.isArray(savedHunt?.taskMonsters) ? savedHunt.taskMonsters : [],
-        selectedTaskMonsterName: savedHunt?.selectedTaskMonsterName || "",
+        parseIssues: damagedRows ? [...(issues ?? []), "Invalid stored kill rows were omitted. Reprocess the original log to recover them."] : issues,
+        taskMonsters,
+        selectedTaskMonsterName: typeof savedHunt?.selectedTaskMonsterName === "string" ? savedHunt.selectedTaskMonsterName : "",
         taskTargetKills: savedHunt?.taskTargetKills ?? ""
     };
 }

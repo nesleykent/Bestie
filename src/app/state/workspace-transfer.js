@@ -1,5 +1,6 @@
+import { validateBackupEnvelope, validateWorkspaceBackup } from "./backup-validation.js";
+
 const EXPORT_APP_ID = "bestie";
-const LEGACY_EXPORT_APP_ID = "bestiary-session-analyzer";
 const EXPORT_VERSION = 1;
 
 export function serializeWorkspace(workspace, exportedAt) {
@@ -20,9 +21,7 @@ export function parseWorkspaceFile(rawText) {
         throw new Error("That file is not valid JSON.");
     }
 
-    if (payload?.app && ![EXPORT_APP_ID, LEGACY_EXPORT_APP_ID].includes(payload.app)) {
-        throw new Error("That file was exported by a different application.");
-    }
+    validateBackupEnvelope(payload, EXPORT_VERSION);
 
     const workspace = payload?.workspace && typeof payload.workspace === "object"
         ? payload.workspace
@@ -32,7 +31,7 @@ export function parseWorkspaceFile(rawText) {
         throw new Error("That file does not contain any exported sessions.");
     }
 
-    return workspace;
+    return validateWorkspaceBackup(workspace);
 }
 
 export function buildExportFileName(exportedAt) {

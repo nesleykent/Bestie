@@ -1,3 +1,4 @@
+import { summarizeAppBackup } from "./state/backup-validation.js";
 import { getEntityContext } from "./features/entity-context.js";
 import { parseHuntSession } from "./features/session-parser.js";
 import { getHuntProficiency } from "./features/weapon-proficiency.js";
@@ -40,6 +41,7 @@ import {
 } from "./state/app-workspace-transfer.js";
 import {
     clearAllStoredState,
+    getStorageProblem,
     loadAppState,
     loadSidebarCollapsed,
     loadWorkspaceState,
@@ -373,7 +375,7 @@ function persistState() {
     }
 
     snapshotActiveCharacterWorkspace();
-    saveAppState(getAppSnapshot());
+    if (!saveAppState(getAppSnapshot())) showAlert(getStorageProblem());
 }
 
 /* --------------------------------------------------------------------------
@@ -530,7 +532,7 @@ function applyImportedAppState(resolved) {
 
     leaveCharacterForWorkspace(active.workspace);
     renderApp();
-    persistState();
+    if (!saveAppState(getAppSnapshot(), { allowReplacement: true })) showAlert(getStorageProblem());
     announce("Import complete.");
 }
 
@@ -547,10 +549,6 @@ function importAppData(file) {
             return;
         }
 
-        if (!window.confirm("Importing replaces every character currently saved in this browser. Continue?")) {
-            return;
-        }
-
         const resolved = restoreAppWorkspace(parsed);
 
         if (!resolved) {
@@ -558,6 +556,9 @@ function importAppData(file) {
             return;
         }
 
+        const summary = summarizeAppBackup(resolved);
+        if (!window.confirm(`Restore ${summary.characters} characters, ${summary.sessions} sessions and ${summary.records} tracker records? This replaces the current roster. A backup of the current workspace will download first.`)) return;
+        exportAppData();
         applyImportedAppState(resolved);
     };
 
@@ -570,7 +571,10 @@ function clearAllDataFlow() {
         return;
     }
 
-    clearAllStoredState();
+    if (!clearAllStoredState()) {
+        showAlert(getStorageProblem());
+        return;
+    }
 
     const character = createDefaultCharacter();
 
@@ -4292,6 +4296,7 @@ async function initializeApp() {
         applyPageRoute();
         routeReady = true;
         renderApp();
+        if (getStorageProblem()) showAlert(getStorageProblem());
 
         if (hasRestoredContent) {
             return;

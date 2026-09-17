@@ -3,136 +3,88 @@ const APP_STORAGE_KEY = "bestie-app-v1";
 const LEGACY_STORAGE_KEY = "bestiary-session-analyzer-v6";
 const LEGACY_SESSION_KEY = "bestiary-session-analyzer-v5";
 const LEGACY_APP_STORAGE_KEY = "bestiary-session-analyzer-app-v1";
+const SIDEBAR_COLLAPSED_KEY = "bestie-sidebar-collapsed";
+let storageProblem = "";
+const corruptKeys = new Set();
 
-/**
- * Workspace persistence.
- *
- * This deliberately uses localStorage rather than sessionStorage: the workspace
- * now holds a Bestiary progress record and a session archive, and losing either
- * one because a tab was closed would make the app useless as a manager.
- *
- * Every access is guarded. Storage throws rather than returning null when it is
- * disabled (Safari private browsing) or full, and a corrupt value must degrade
- * to "no saved workspace" instead of breaking the whole app on boot.
- */
+export function getStorageProblem() { return storageProblem; }
 
-function readRaw(storage, key) {
+// Accessing window.localStorage itself can throw, before getItem is reached.
+function readRaw(storageName, key) {
+    try { return globalThis[storageName].getItem(key); }
+    catch { storageProblem = "Browser storage is unavailable. Changes are kept only in this tab; export a backup before closing it."; return null; }
+}
+
+function readState(storageName, key) {
+    const raw = readRaw(storageName, key);
+    if (raw === null) return null;
     try {
-        return storage.getItem(key);
-    } catch (error) {
+        const value = JSON.parse(raw);
+        if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid state");
+        return value;
+    } catch {
+        corruptKeys.add(key);
+        storageProblem = "Saved browser data could not be read. The original is preserved; automatic saving is paused. Restore a valid backup or explicitly clear data to resume saving.";
         return null;
     }
 }
 
-function migrateLegacyState() {
-    const legacyRaw = readRaw(localStorage, LEGACY_STORAGE_KEY)
-        ?? readRaw(sessionStorage, LEGACY_SESSION_KEY);
-
-    if (!legacyRaw) {
-        return null;
-    }
-
+function saveState(key, state, { allowReplacement = false } = {}) {
+    if (corruptKeys.size && !allowReplacement) return false;
     try {
-        localStorage.setItem(STORAGE_KEY, legacyRaw);
-    } catch (error) {
-        // Migration is best effort; the parsed value below is still returned.
-    }
-
-    return legacyRaw;
-}
-
-export function saveWorkspaceState(state) {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        globalThis.localStorage.setItem(key, JSON.stringify(state));
+        if (allowReplacement) corruptKeys.clear();
+        storageProblem = "";
         return true;
-    } catch (error) {
+    } catch {
+        storageProblem = "Changes could not be saved in this browser. Export a backup before closing the tab, then check available storage.";
         return false;
     }
 }
+
+export function saveWorkspaceState(state) { return saveState(STORAGE_KEY, state); }
+export function saveAppState(state, options) { return saveState(APP_STORAGE_KEY, state, options); }
 
 export function loadWorkspaceState() {
-    const rawState = readRaw(localStorage, STORAGE_KEY) ?? migrateLegacyState();
-
-    if (!rawState) {
-        return null;
+    for (const [storage, key] of [["localStorage", STORAGE_KEY], ["localStorage", LEGACY_STORAGE_KEY], ["sessionStorage", LEGACY_SESSION_KEY]]) {
+        const value = readState(storage, key);
+        if (value) {
+            if (key !== STORAGE_KEY) saveWorkspaceState(value);
+            return value;
+        }
+        if (corruptKeys.has(key)) return null;
     }
-
-    try {
-        return JSON.parse(rawState);
-    } catch (error) {
-        return null;
-    }
-}
-
-/**
- * The Bestie application workspace (every character). It has a separate key
- * from the single-character workspace and migrates the previous application's
- * multi-character key the first time Bestie loads it.
- */
-export function saveAppState(state) {
-    try {
-        localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(state));
-        return true;
-    } catch (error) {
-        return false;
-    }
+    return null;
 }
 
 export function loadAppState() {
-    const currentRaw = readRaw(localStorage, APP_STORAGE_KEY);
-    const legacyRaw = currentRaw ? null : readRaw(localStorage, LEGACY_APP_STORAGE_KEY);
-    const rawState = currentRaw ?? legacyRaw;
+    const current = readState("localStorage", APP_STORAGE_KEY);
+    if (current || corruptKeys.has(APP_STORAGE_KEY)) return current;
+    const legacy = readState("localStorage", LEGACY_APP_STORAGE_KEY);
+    if (legacy) saveAppState(legacy);
+    return legacy;
+}
 
-    if (!rawState) {
-        return null;
-    }
+export function loadSidebarCollapsed() {
+    return readRaw("localStorage", SIDEBAR_COLLAPSED_KEY) === "1";
+}
+export function saveSidebarCollapsed(isCollapsed) {
+    try { globalThis.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, isCollapsed ? "1" : "0"); }
+    catch { /* A view preference must not block data operations. */ }
+}
 
-    if (!currentRaw && legacyRaw) {
-        try {
-            localStorage.setItem(APP_STORAGE_KEY, legacyRaw);
-        } catch (error) {
-            // Migration is best effort; the parsed legacy value is still used.
+/** Remove only Bestie's keys; attempt every key even when one removal fails. */
+export function clearAllStoredState() {
+    let success = true;
+    for (const [storage, keys] of [
+        ["localStorage", [APP_STORAGE_KEY, STORAGE_KEY, LEGACY_APP_STORAGE_KEY, LEGACY_STORAGE_KEY, SIDEBAR_COLLAPSED_KEY]],
+        ["sessionStorage", [LEGACY_SESSION_KEY]]
+    ]) {
+        for (const key of keys) {
+            try { globalThis[storage].removeItem(key); corruptKeys.delete(key); }
+            catch { success = false; }
         }
     }
-
-    try {
-        return JSON.parse(rawState);
-    } catch (error) {
-        return null;
-    }
-}
-
-/**
- * Erases every trace this app has left in the browser — the current app
- * state, the pre-multi-character save it may have migrated from, and the
- * legacy session-storage key that save itself could still be waiting to
- * migrate from. A page reload after this boots as if the app were never
- * used, which is the whole point of the action.
- */
-const SIDEBAR_COLLAPSED_KEY = "bestie-sidebar-collapsed";
-
-/** A pure UI preference, so it lives outside the app/workspace save data. */
-export function loadSidebarCollapsed() {
-    return readRaw(localStorage, SIDEBAR_COLLAPSED_KEY) === "1";
-}
-
-export function saveSidebarCollapsed(isCollapsed) {
-    try {
-        localStorage.setItem(SIDEBAR_COLLAPSED_KEY, isCollapsed ? "1" : "0");
-    } catch (error) {
-        // Best effort; the sidebar simply reopens expanded next load.
-    }
-}
-
-export function clearAllStoredState() {
-    try {
-        localStorage.removeItem(APP_STORAGE_KEY);
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(LEGACY_APP_STORAGE_KEY);
-        localStorage.removeItem(LEGACY_STORAGE_KEY);
-        sessionStorage.removeItem(LEGACY_SESSION_KEY);
-        return true;
-    } catch (error) {
-        return false;
-    }
+    storageProblem = success ? "" : "Some browser data could not be cleared. Your open workspace is unchanged; check browser storage access before trying again.";
+    return success;
 }
