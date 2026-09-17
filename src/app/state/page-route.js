@@ -10,6 +10,7 @@ const VIEWS = {
 export function readPageRoute(hash) {
     const [path, query = ""] = String(hash).replace(/^#\/?/, "").split("?");
     const sessionId = new URLSearchParams(query).get("session");
+    if (path === "hunt-analysis") return { mode: "analysis", view: "session", sessionId };
     if (path === "weapon-proficiency") return { mode: "proficiency", view: "session", sessionId };
     const [mode, view] = path.split("/");
     if (VIEWS[mode]?.includes(view)) return { mode, view, sessionId };
@@ -17,7 +18,7 @@ export function readPageRoute(hash) {
 }
 
 export function buildPageRoute(mode, view, sessionId) {
-    const path = mode === "proficiency" ? "weapon-proficiency" : mode === "dashboard" ? "dashboard" : `${mode}/${view}`;
+    const path = mode === "analysis" ? "hunt-analysis" : mode === "proficiency" ? "weapon-proficiency" : mode === "dashboard" ? "dashboard" : `${mode}/${view}`;
     const query = view === "session" && sessionId ? `?${new URLSearchParams({ session: sessionId })}` : "";
     return `#${path}${query}`;
 }

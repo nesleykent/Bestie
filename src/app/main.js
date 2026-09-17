@@ -1,3 +1,4 @@
+import { renderHuntAnalysis } from "./ui/render-hunt-analysis.js";
 import { summarizeAppBackup } from "./state/backup-validation.js";
 import { getEntityContext } from "./features/entity-context.js";
 import { parseHuntSession } from "./features/session-parser.js";
@@ -188,6 +189,7 @@ const VIEW_CONTENT = {
 };
 
 const FIXED_VIEWS = {
+    analysis: ["library"],
     proficiency: ["library"],
     bestiary: ["allSessions", "charmPlan", "opportunities", "library"],
     // In Trackers mode the fixed tabs ARE the trackers.
@@ -208,6 +210,7 @@ const RESPAWN_MODE_SHORT_LABELS = {
 const state = {
     weaponPlans: [createWeaponPlan()],
     activeWeaponPlanId: "weapon-1",
+    huntMetric: "xpPerHour",
     proficiencySort: { key: "total", direction: "desc" },
     projectionCreature: "",
     mode: "dashboard",
@@ -254,7 +257,7 @@ const state = {
 };
 
 function getModeView() {
-    if (state.mode === "proficiency") return "session";
+    if (["proficiency", "analysis"].includes(state.mode)) return "session";
     if (state.mode === "trackers") {
         return state.activeTrackerId;
     }
@@ -267,7 +270,7 @@ function getModeView() {
 }
 
 function setModeView(view) {
-    if (state.mode === "proficiency") {
+    if (["proficiency", "analysis"].includes(state.mode)) {
         if (view === "library") { state.mode = "bestiary"; state.bestiaryView = "library"; }
         return;
     }
@@ -2283,7 +2286,7 @@ function applyPrimaryMode() {
 
     elements.sidebarPlanningList.querySelectorAll("[data-nav-planning]").forEach((link) => {
         const key = link.dataset.navPlanning;
-        const isActive = key === "proficiency" ? state.mode === "proficiency" : key === "taskSessions"
+        const isActive = ["proficiency", "analysis"].includes(key) ? state.mode === key : key === "taskSessions"
             ? state.mode === "tasks" && view === "allSessions"
             : state.mode === "bestiary" && view === key;
 
@@ -2322,6 +2325,7 @@ function renderSidebarCharacter() {
 
 function getPageContent() {
     const view = getModeView();
+    if (state.mode === "analysis") return { eyebrow: "Analysis", title: "Hunt Analysis", description: "Experience, profit, combat and drops from your shared session evidence." };
     if (state.mode === "proficiency") return {
         eyebrow: "Planning & Sessions", title: "Weapon Proficiency",
         description: "Measure proficiency from your Hunt Analyzer and plan progress for a specific weapon."
@@ -2401,7 +2405,7 @@ function applyWorkspaceChrome() {
     elements.workspaceMain.classList.toggle("is-proficiency", state.mode === "proficiency");
     document.getElementById("proficiencyOverview").hidden = state.mode !== "proficiency";
     const analysisNav = document.getElementById("sessionAnalysisNav");
-    analysisNav.hidden = !["bestiary", "tasks", "proficiency"].includes(state.mode) || getModeView() !== "session";
+    analysisNav.hidden = !["bestiary", "tasks", "proficiency", "analysis"].includes(state.mode) || getModeView() !== "session";
     analysisNav.querySelectorAll("[data-session-analysis]").forEach(link => {
         if (link.dataset.sessionAnalysis === state.mode) link.setAttribute("aria-current", "page");
         else link.removeAttribute("aria-current");
@@ -2446,6 +2450,23 @@ function renderApp() {
     elements.huntWorkspace.hidden = false;
     renderHuntTabStrip();
     elements.huntWorkspace.hidden = view !== "session" || (state.hunts.length < 2 && state.mode !== "bestiary");
+
+    if (state.mode === "analysis") {
+        const hunt = getActiveHunt();
+        elements.inputSection.hidden = false;
+        elements.analysisSection.hidden = false;
+        elements.comparisonSection.hidden = true;
+        applySessionInput(hunt, hunt.taskMonsters.length);
+        showSectionHeading(getHuntLabelById(hunt.id), "");
+        renderHuntAnalysis(elements.output, hunt, state.hunts, state.huntMetric);
+        document.getElementById("huntMetric")?.addEventListener("change", (event) => {
+            state.huntMetric = event.target.value;
+            renderApp();
+            document.getElementById("huntMetric")?.focus();
+        });
+        elements.output.querySelectorAll("[data-analysis-session]").forEach((button) => button.addEventListener("click", () => selectHunt(button.dataset.analysisSession)));
+        return;
+    }
 
     if (state.mode === "proficiency") {
         renderProficiencyView();
@@ -4032,6 +4053,14 @@ function attachTaskActions() {
 
 function processHuntLog(hunt, logText) {
     const session = parseHuntSession(logText);
+    if (session.sessionDuration <= 0 || session.issues.length) {
+        renderApp();
+        document.getElementById("sessionLogDisclosure").open = true;
+        showAlert([session.sessionDuration <= 0 ? "Enter a valid positive Session: HH:MMh duration." : "", ...session.issues, "Previous processed evidence is unchanged."].filter(Boolean).join(" "));
+        persistState();
+        return;
+    }
+    hunt.processedLog = logText;
     const bestiary = analyzeSession(logText, state.bestiaryData, session);
     const tasks = analyzeTaskSession(logText, session);
     hunt.parseIssues = session.issues;
@@ -4089,8 +4118,8 @@ function processLog() {
     }
 
     setBusyState(true);
-    processHuntLog(getActiveHunt(), logText);
-    setBusyState(false);
+    try { processHuntLog(getActiveHunt(), logText); }
+    finally { setBusyState(false); }
 }
 
 function applyWorkspace(workspace) {
@@ -4314,6 +4343,7 @@ elements.sessionLog.addEventListener("input", () => {
 
     if (hunt) {
         hunt.sessionLog = elements.sessionLog.value;
+        persistState();
     }
 });
 elements.sessionLog.addEventListener("change", persistState);
@@ -4530,7 +4560,7 @@ elements.detailBookmark.addEventListener("click", (event) => {
     elements.detailBookmark.querySelector("button")?.focus({ preventScroll: true });
 });
 elements.newSessionButton.addEventListener("click", () => {
-    if (state.mode !== "bestiary" && state.mode !== "proficiency") {
+    if (!["bestiary", "proficiency", "analysis"].includes(state.mode)) {
         captureVisibleInputs();
         state.mode = "bestiary";
     }
@@ -4576,8 +4606,8 @@ elements.sidebarPlanningList.addEventListener("click", (event) => {
         return;
     }
 
-    if (button.dataset.navPlanning === "proficiency") {
-        navigateWorkspace("proficiency", "session");
+    if (["proficiency", "analysis"].includes(button.dataset.navPlanning)) {
+        navigateWorkspace(button.dataset.navPlanning, "session");
     } else if (button.dataset.navPlanning === "taskSessions") {
         navigateWorkspace("tasks", "allSessions");
     } else {

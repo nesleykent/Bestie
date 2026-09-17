@@ -1,0 +1,21 @@
+Session data: From 2026-09-10, 20:00:00 to 2026-09-10, 22:30:00
+Session: 02:30h
+Raw XP Gain: 12,345,678
+XP Gain: 11,000,000
+Raw XP/h: 4,938,271
+XP/h: 4,400,000
+Loot: 250,000
+Supplies: 40,000
+Balance: 210,000
+Damage: 900,000
+Damage/h: 360,000
+Healing: 300,000
+Healing/h: 120,000
+Killed Monsters:
+    300x Makara
+    150x Makara
+    75x Rotten Golem
+Looted Items:
+    500x Gold Coin
+    250x Gold Coin
+    3x Small Amethyst

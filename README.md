@@ -150,6 +150,12 @@ The detailed manual-entry contract is documented in [Tracker Data Entry UX](docs
 
 ## Bestiary planning and Hunt Analyzer sessions
 
+### Hunt Analysis
+
+**Hunt Analysis** reads experience, raw experience, hourly rates, loot, supplies, profit/loss, damage, healing, creature kills and looted items from the shared Hunt Analyzer archive. Missing measurements remain unavailable. Rates and balance are calculated only from valid source totals and identified as calculated. Performance comparisons use the same respawn mode.
+
+Results use the last successfully processed text. Editing a draft, navigating or reloading does not change that evidence; invalid reprocessing keeps the previous result. Older saved sessions need one explicit reprocess to add full measurements.
+
 ### Bestiary Session
 
 **Purpose:** Converts one copied Hunt Analyzer into a Bestiary completion estimate using the active character's actual progress.
@@ -185,7 +191,7 @@ The plan accepts time such as `90 min`, `1.5 h`, `2h 30min`, or `2:30`. It then:
 - treats time spent in one session as progress for all selected creatures in that session;
 - treats time across different sessions as sequential;
 - awards charm points in the plan only when a Bestiary entry reaches completion;
-- searches the feasible session allocations for the most charm points within the time budget;
+- searches the feasible session allocations for the most charm points within the time budget, counting each creature reward once even when sessions overlap;
 - prefers the plan that uses less time when equal rewards are possible;
 - returns the entries that fit and an ordered recommended route.
 
@@ -305,6 +311,8 @@ All projections assume the measured rate can be sustained. Competition, route ch
 | Sort, search, filters, paging, open panels | View state | Intentionally temporary |
 
 The application is static and requires no account or backend. Data is stored in browser `localStorage`, so it survives tab closure and browser restarts but remains local to that browser profile.
+
+Whole-workspace JSON export includes every character. Restore validates the file, previews record counts, and downloads a recovery backup before replacement. Unsupported backup versions and malformed files are rejected. Storage failures are reported, and corrupt saved JSON is preserved rather than overwritten.
 
 Individual trackers support CSV export and reviewed CSV import. Bestiary and Bosstiary also accept TibiaDraptor JSON progress imports. Hunt sessions and planning state persist automatically in the current browser profile.
 
@@ -459,7 +467,7 @@ Use current Charms, available Charm Points, Bestiary progression, creature infor
 
 #### Full Hunt Analysis
 
-Expand the current creature-kill and duration parser to support other Hunt Analyzer measurements when present, including:
+Implemented in **Hunt Analysis**, using the shared session archive. Supported measurements when present include:
 
 - Experience and XP/h;
 - Loot, Supplies, and Profit;

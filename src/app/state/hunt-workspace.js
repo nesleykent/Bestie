@@ -8,7 +8,7 @@ let huntSequence = 0;
 const BESTIARY_VIEWS = ["session", "allSessions", "charmPlan", "comparison", "library", "opportunities"];
 const TASKS_VIEWS = ["session", "allSessions", "library"];
 const RESPAWN_MODES = ["regular", "rapid"];
-const MODES = ["bestiary", "trackers", "tasks", "dashboard", "proficiency"];
+const MODES = ["bestiary", "trackers", "tasks", "dashboard", "proficiency", "analysis"];
 
 function normalizeRespawnMode(value) {
     return RESPAWN_MODES.includes(value) ? value : "regular";
@@ -29,6 +29,7 @@ export function createHunt() {
         notes: "",
         respawnMode: "regular",
         sessionLog: "",
+        processedLog: null,
         sessionDuration: 0,
         hasProcessedLog: false,
         matchedMonsters: [],
@@ -146,6 +147,7 @@ function normalizeHunt(savedHunt, adoptedIds) {
         notes: typeof savedHunt?.notes === "string" ? savedHunt.notes : "",
         respawnMode: normalizeRespawnMode(savedHunt?.respawnMode),
         sessionLog: typeof savedHunt?.sessionLog === "string" ? savedHunt.sessionLog : "",
+        processedLog: typeof savedHunt?.processedLog === "string" ? savedHunt.processedLog : null,
         sessionDuration: Number.isSafeInteger(Number(savedHunt?.sessionDuration)) && Number(savedHunt?.sessionDuration) >= 0 ? Number(savedHunt.sessionDuration) : 0,
         hasProcessedLog: Boolean(savedHunt?.hasProcessedLog),
         matchedMonsters,
