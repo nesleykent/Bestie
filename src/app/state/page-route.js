@@ -1,7 +1,9 @@
+import { TOOL_VIEWS } from "./tool-workspace.js";
 import { getTrackerIds } from "../trackers/registry.js";
 
 // URL adapter for the existing mode/view navigation, using static-host-safe hashes.
 const VIEWS = {
+    tools: TOOL_VIEWS,
     bestiary: ["session", "allSessions", "charmPlan", "opportunities", "library", "comparison"],
     tasks: ["session", "allSessions", "library"],
     trackers: [...getTrackerIds(), "changes"]

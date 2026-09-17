@@ -1,3 +1,4 @@
+import { renderTools, TOOL_LABELS } from "./ui/render-tools.js";
 import { renderHuntAnalysis } from "./ui/render-hunt-analysis.js";
 import { summarizeAppBackup } from "./state/backup-validation.js";
 import { getEntityContext } from "./features/entity-context.js";
@@ -257,6 +258,7 @@ const state = {
 };
 
 function getModeView() {
+    if (state.mode === "tools") return state.toolView;
     if (["proficiency", "analysis"].includes(state.mode)) return "session";
     if (state.mode === "trackers") {
         return state.activeTrackerId;
@@ -270,6 +272,7 @@ function getModeView() {
 }
 
 function setModeView(view) {
+    if (state.mode === "tools") { state.toolView = Object.hasOwn(TOOL_LABELS, view) ? view : "experience"; return; }
     if (["proficiency", "analysis"].includes(state.mode)) {
         if (view === "library") { state.mode = "bestiary"; state.bestiaryView = "library"; }
         return;
@@ -324,6 +327,8 @@ function getComparableHunts() {
 
 function getWorkspaceSnapshot() {
     return {
+        toolInputs: state.toolInputs,
+        toolView: state.toolView,
         weaponPlans: state.weaponPlans,
         activeWeaponPlanId: state.activeWeaponPlanId,
         mode: state.mode,
@@ -2275,6 +2280,10 @@ function renderTaskSessionsView() {
  * renderApp(), so the sidebar can never disagree with the page it points at.
  */
 function applyPrimaryMode() {
+    const toolsLink = document.getElementById("sidebarToolsLink");
+    toolsLink.classList.toggle("is-active", state.mode === "tools");
+    if (state.mode === "tools") toolsLink.setAttribute("aria-current", "page");
+    else toolsLink.removeAttribute("aria-current");
     const view = getModeView();
     const isDashboard = state.mode === "dashboard";
     const isTrackers = state.mode === "trackers";
@@ -2325,6 +2334,7 @@ function renderSidebarCharacter() {
 
 function getPageContent() {
     const view = getModeView();
+    if (state.mode === "tools") return { eyebrow: "Tools", title: TOOL_LABELS[state.toolView], description: "Local calculations with explicit inputs and source-backed rules." };
     if (state.mode === "analysis") return { eyebrow: "Analysis", title: "Hunt Analysis", description: "Experience, profit, combat and drops from your shared session evidence." };
     if (state.mode === "proficiency") return {
         eyebrow: "Planning & Sessions", title: "Weapon Proficiency",
@@ -2400,7 +2410,7 @@ function applyWorkspaceChrome() {
     document.title = `${content.title} · Bestie`;
     elements.pageDescription.textContent = content.description;
     // Trackers and the Dashboard have nothing "New session" would do.
-    elements.newSessionButton.hidden = state.mode === "trackers" || state.mode === "dashboard";
+    elements.newSessionButton.hidden = ["trackers", "dashboard", "tools"].includes(state.mode);
     elements.workspaceMain.classList.toggle("is-trackers", state.mode === "trackers");
     elements.workspaceMain.classList.toggle("is-proficiency", state.mode === "proficiency");
     document.getElementById("proficiencyOverview").hidden = state.mode !== "proficiency";
@@ -2420,6 +2430,18 @@ function renderApp() {
     applyPrimaryMode();
     applyWorkspaceChrome();
     syncPageRoute();
+
+    if (state.mode === "tools") {
+        closeDetailPanel();
+        elements.huntWorkspace.hidden = true;
+        elements.inputSection.hidden = true;
+        elements.analysisSection.hidden = false;
+        elements.comparisonSection.hidden = true;
+        elements.sectionHeading.hidden = true;
+        renderTools(elements.output, { view: state.toolView, inputs: state.toolInputs, creatures: state.bestiaryData,
+            onChange: values => { Object.assign(state.toolInputs, values); persistState(); } });
+        return;
+    }
 
     if (state.mode === "dashboard") {
         elements.huntWorkspace.hidden = true;
@@ -4123,6 +4145,8 @@ function processLog() {
 }
 
 function applyWorkspace(workspace) {
+    state.toolInputs = workspace.toolInputs ?? {};
+    state.toolView = workspace.toolView ?? "experience";
     state.weaponPlans = workspace.weaponPlans;
     state.activeWeaponPlanId = workspace.activeWeaponPlanId;
     state.projectionCreature = "";
@@ -4616,6 +4640,7 @@ elements.sidebarPlanningList.addEventListener("click", (event) => {
 
     setSidebarOpen(false);
 });
+document.getElementById("sidebarToolsLink").addEventListener("click", () => { navigateWorkspace("tools", state.toolView); setSidebarOpen(false); });
 elements.sidebarExportButton.addEventListener("click", exportAppData);
 elements.sidebarImportButton.addEventListener("click", () => elements.sidebarImportInput.click());
 elements.sidebarImportInput.addEventListener("change", () => {

@@ -3974,3 +3974,30 @@ th.is-sorted .column-sort {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Compact local tools share the existing form controls and result tables. */
+.tool-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--u3);
+    margin-bottom: var(--u3);
+}
+.tool-field {
+    display: grid;
+    gap: var(--u1);
+    min-width: 0;
+}
+.tool-field input {
+    width: 100%;
+    min-width: 0;
+}
+.tool-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: var(--u3);
+    margin-block: var(--u4);
+}
+.tool-results dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}

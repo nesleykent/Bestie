@@ -17,6 +17,13 @@ function normalizeCreature(creature) {
 
     return {
         ID: creature.id,
+        combat: {
+            hitpoints: Number.isFinite(creature.hitpoints) ? creature.hitpoints : null,
+            experience: Number.isFinite(creature.experience) ? creature.experience : null,
+            resistances: Object.fromEntries((Array.isArray(creature.resistances) ? creature.resistances : [])
+                .filter(row => typeof row.type === "string" && Number.isFinite(row.value) && row.value >= 0)
+                .map(row => [row.type.toLowerCase(), row.value]))
+        },
         Name: String(creature.name ?? "").trim(),
         Class: creature.class?.name ?? "",
         Difficulty: creature.difficulty ?? "",

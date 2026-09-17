@@ -508,11 +508,11 @@ Allow players to select Tibia Market items to monitor for the configured charact
 
 The implemented Session History remains the browser-local evidence archive for pasted or imported Hunt Analyzer sessions. Future analysis features should consume that same history rather than introducing separate session stores.
 
-### Planned tools
+### Tools (implementation status)
 
 #### Elemental Damage
 
-Calculate elemental damage interactions using creature weaknesses, resistances, and relevant combat information.
+Implemented in **Tools → Elemental Damage**. Calculates mixed attack components using bundled creature HP and damage-received percentages. Missing resistances stay unknown; armor, mitigation and other combat mechanics are explicitly excluded.
 
 #### Imbuements
 
@@ -534,11 +534,11 @@ Parse text copied from Tibia's World Board and Guide NPC dialogues to resolve cu
 
 #### Stamina
 
-Calculate Stamina usage, regeneration, remaining hunting time, and relevant thresholds.
+Implemented in **Tools → Stamina**. Projects usage, remaining hunting time, the 39:00/42:00 recovery thresholds, and a ready time after a planned hunt with an explicit remaining logout delay.
 
 #### XP & Level
 
-Calculate Experience and Level progression, target requirements, remaining Experience, XP/h projections, and estimated hunting time.
+Implemented in **Tools → XP & Level**. Supports exact current XP or a level-start approximation, target requirements, partial level progress, and time from an observed XP/h rate. Tool inputs stay with the current character and are included in backups. Formula and source contracts are in [calculator-sources.md](docs/calculator-sources.md).
 
 ### Data Management expansion
 
