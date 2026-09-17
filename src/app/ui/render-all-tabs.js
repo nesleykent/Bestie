@@ -4,7 +4,8 @@ import {
     buildCreatureChip,
     buildEmptyState,
     buildEstimateTable,
-    buildStatLine
+    buildStatLine,
+    escapeAttribute
 } from "./render-blocks.js";
 
 export function renderAllTabs(container, analysis, summary) {
@@ -37,7 +38,7 @@ export function renderAllTabs(container, analysis, summary) {
                     value: entry.key,
                     isSelected: entry.isSelected,
                     name: entry.monster.name,
-                    meta: `${entry.huntLabel} &middot; ${formatNumber(entry.monster.killsThisSession)}x`
+                    meta: `${escapeAttribute(entry.huntLabel)} &middot; ${formatNumber(entry.monster.killsThisSession)}x`
                 })).join("")}
             </div>
         </section>

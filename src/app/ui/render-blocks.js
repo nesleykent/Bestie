@@ -62,7 +62,7 @@ export function buildPill(text, isBrand = false) {
 export function buildLinkButton(text, attribute, value, extraClass = "") {
     return `
         <button class="link-button${extraClass ? ` ${extraClass}` : ""}" type="button" ${attribute}="${escapeAttribute(value)}">
-            ${text}
+            ${escapeAttribute(text)}
         </button>
     `;
 }
@@ -90,7 +90,7 @@ function buildEstimateRow(entry) {
         <tr>
             <td>
                 <a href="${monster.wikiLink}" target="_blank" rel="noreferrer">${monster.name}</a>
-                ${entry.huntLabel ? buildPill(entry.huntLabel) : ""}
+                ${entry.huntLabel ? buildPill(escapeAttribute(entry.huntLabel)) : ""}
             </td>
             <td class="is-num">${formatNumber(monster.charms)}</td>
             <td class="is-num">${formatNumber(monster.killsThisSession)}</td>
@@ -154,7 +154,7 @@ export function buildCreatureChip(options) {
             ${options.attribute}="${escapeAttribute(options.value)}"
             aria-pressed="${options.isSelected ? "true" : "false"}"
         >
-            <span class="chip-name">${options.name}</span>
+            <span class="chip-name">${escapeAttribute(options.name)}</span>
             <span class="chip-meta">${options.meta}</span>
         </button>
     `;

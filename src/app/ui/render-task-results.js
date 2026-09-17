@@ -1,3 +1,4 @@
+import { escapeText } from "./render-controls.js";
 import { formatNumber, formatTaskRate, formatTimeDetailed } from "../utils/formatters.js";
 import { buildAnswer, buildCreatureChip, buildStatLine } from "./render-blocks.js";
 
@@ -30,7 +31,7 @@ function buildEstimate(estimate, respawnModeLabel, sessionDuration) {
         return buildAnswer("Time Remaining", "&mdash;", "Select a creature from this session.");
     }
 
-    const creature = estimate.selectedMonster.displayName;
+    const creature = escapeText(estimate.selectedMonster.displayName);
 
     if (!(estimate.taskTotalKills > 0)) {
         return `
@@ -39,6 +40,9 @@ function buildEstimate(estimate, respawnModeLabel, sessionDuration) {
         `;
     }
 
+    if (estimate.remainingTimeMinutes === null) {
+        return buildAnswer("Time Remaining", "&mdash;", "A positive measured kill rate and valid session duration are required.");
+    }
     return `
         ${buildAnswer("Time Remaining", formatTimeDetailed(estimate.remainingTimeMinutes),
             `${formatNumber(estimate.remainingKills)} more ${creature} at ${formatTaskRate(estimate.killRatePerHour)}.`)}

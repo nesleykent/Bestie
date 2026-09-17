@@ -9,41 +9,15 @@ export function parsePlayTimeMinutes(rawValue) {
         return null;
     }
 
-    const clockMatch = value.match(/^(\d+):([0-5]?\d)$/);
-    if (clockMatch) {
-        const clockMinutes = (Number(clockMatch[1]) * 60) + Number(clockMatch[2]);
-        return clockMinutes > 0 ? clockMinutes : null;
-    }
-
-    const hourAndMinuteMatch = value.match(/^(\d+(?:\.\d+)?)\s*(?:hours|hour|hrs|hr|h)\s*(\d+(?:\.\d+)?)$/);
-    if (hourAndMinuteMatch) {
-        const totalMinutes = (Number(hourAndMinuteMatch[1]) * 60) + Number(hourAndMinuteMatch[2]);
-        return totalMinutes > 0 ? totalMinutes : null;
-    }
-
-    const hourMatch = value.match(/(\d+(?:\.\d+)?)\s*(?:hours|hour|hrs|hr|h)\b/);
-    const minuteMatch = value.match(/(\d+(?:\.\d+)?)\s*(?:minutes|minute|mins|min|m)\b/);
-    let minutes = 0;
-
-    if (hourMatch) {
-        minutes += Number(hourMatch[1]) * 60;
-    }
-
-    if (minuteMatch) {
-        minutes += Number(minuteMatch[1]);
-    }
-
-    if (!hourMatch && !minuteMatch) {
-        const bareMatch = value.match(/^(\d+(?:\.\d+)?)$/);
-
-        if (!bareMatch) {
-            return null;
-        }
-
-        minutes = Number(bareMatch[1]) * 60;
-    }
-
-    return minutes > 0 ? minutes : null;
+    let minutes;
+    const clock = value.match(/^(\d+):([0-5]\d)$/);
+    const hours = value.match(/^(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h)(?:\s*(\d+(?:\.\d+)?)\s*(?:minutes?|mins?|m)?)?$/);
+    const mins = value.match(/^(\d+(?:\.\d+)?)\s*(?:minutes?|mins?|m)$/);
+    if (clock) minutes = Number(clock[1]) * 60 + Number(clock[2]);
+    else if (hours) minutes = Number(hours[1]) * 60 + Number(hours[2] ?? 0);
+    else if (mins) minutes = Number(mins[1]);
+    else if (/^\d+(?:\.\d+)?$/.test(value)) minutes = Number(value) * 60;
+    return Number.isFinite(minutes) && minutes > 0 && minutes <= Number.MAX_SAFE_INTEGER ? minutes : null;
 }
 
 function buildHuntOptions(monsters) {
@@ -74,6 +48,18 @@ function buildHuntOptions(monsters) {
 }
 
 function keepBestStates(states) {
+    // Only states with the same already-rewarded overlapping objectives can
+    // dominate one another. Otherwise a future spawn can change their ranking.
+    const buckets = new Map();
+    for (const state of states) {
+        const key = [...state.rewarded].sort().join("\u0000");
+        if (!buckets.has(key)) buckets.set(key, []);
+        buckets.get(key).push(state);
+    }
+    return [...buckets.values()].flatMap(keepBestBucket);
+}
+
+function keepBestBucket(states) {
     const sortedStates = [...states]
         .sort((left, right) => left.minutes - right.minutes || right.charms - left.charms);
     const bestStates = [];
@@ -122,13 +108,19 @@ function buildRoute(picks) {
 }
 
 export function planCharmTime(huntGroups, availableMinutes) {
+    if (!Number.isFinite(availableMinutes) || availableMinutes < 0) {
+        throw new RangeError("Available time must be a finite, non-negative number of minutes.");
+    }
+    const occurrences = new Map();
+    huntGroups.forEach((group) => new Set(group.monsters.map((monster) => monster.name)).forEach((name) => occurrences.set(name, (occurrences.get(name) ?? 0) + 1)));
+    const overlaps = new Set([...occurrences].filter(([, count]) => count > 1).map(([name]) => name));
     const groups = huntGroups.map((huntGroup) => ({
         id: huntGroup.id,
         label: huntGroup.label,
         options: buildHuntOptions(huntGroup.monsters)
     }));
 
-    let states = [{ minutes: 0, charms: 0, picks: [] }];
+    let states = [{ minutes: 0, charms: 0, picks: [], rewarded: new Set() }];
 
     groups.forEach((group) => {
         const nextStates = [];
@@ -141,10 +133,13 @@ export function planCharmTime(huntGroups, availableMinutes) {
                     return;
                 }
 
+                const monsters = option.monsters.filter((monster) => !state.rewarded.has(monster.name));
+                const charms = monsters.reduce((sum, monster) => sum + monster.charms, 0);
+                const rewarded = new Set(state.rewarded);
+                monsters.filter((monster) => overlaps.has(monster.name)).forEach((monster) => rewarded.add(monster.name));
                 nextStates.push({
-                    minutes,
-                    charms: state.charms + option.charms,
-                    picks: [...state.picks, { group, option }]
+                    minutes, charms: state.charms + charms, rewarded,
+                    picks: [...state.picks, { group, option: { ...option, charms, monsters } }]
                 });
             });
         });
@@ -152,7 +147,8 @@ export function planCharmTime(huntGroups, availableMinutes) {
         states = keepBestStates(nextStates);
     });
 
-    const bestState = states[states.length - 1];
+    const bestState = states.reduce((best, candidate) => candidate.charms > best.charms
+        || (candidate.charms === best.charms && candidate.minutes < best.minutes) ? candidate : best);
     const entries = bestState.picks
         .flatMap(({ group, option }) => option.monsters.map((monster) => ({
             huntId: group.id,

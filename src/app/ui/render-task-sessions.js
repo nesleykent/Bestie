@@ -1,3 +1,4 @@
+import { escapeText } from "./render-controls.js";
 import { formatNumber, formatTaskRate, formatTimeDetailed } from "../utils/formatters.js";
 import { buildEmptyState, buildLinkButton, buildPill } from "./render-blocks.js";
 
@@ -24,12 +25,12 @@ function buildRow(session) {
                 ${buildLinkButton(session.label, "data-task-session", session.id)}
                 ${buildPill(session.respawnModeLabel)}
             </th>
-            <td class="task-session-creature" data-label="Creature">${estimate.selectedMonster.displayName}</td>
+            <td class="task-session-creature" data-label="Creature">${escapeText(estimate.selectedMonster.displayName)}</td>
             <td class="is-num" data-label="Session kills">${formatNumber(estimate.alreadyKilled)}</td>
             <td class="is-num" data-label="Kill rate">${formatTaskRate(estimate.killRatePerHour)}</td>
             <td class="is-num" data-label="Task target">${hasTarget ? formatNumber(estimate.taskTotalKills) : "&mdash;"}</td>
             <td class="is-num" data-label="Kills remaining">${hasTarget ? formatNumber(estimate.remainingKills) : "&mdash;"}</td>
-            <td class="is-num" data-label="Time remaining">${hasTarget ? formatTimeDetailed(estimate.remainingTimeMinutes) : "&mdash;"}</td>
+            <td class="is-num" data-label="Time remaining">${hasTarget && estimate.remainingTimeMinutes !== null ? formatTimeDetailed(estimate.remainingTimeMinutes) : "&mdash;"}</td>
         </tr>
     `;
 }

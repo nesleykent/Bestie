@@ -63,7 +63,7 @@ function buildFinishable(analysis) {
         '<span class="row-charm">Charm Rate</span>'
     ], "is-head");
     const rows = analysis.finishable.map((entry) => buildRow([
-        `<span class="row-name is-verbatim">${buildCreatureAction(entry.name)}${buildLinkButton(escapeAttribute(entry.sessionLabel), "data-opportunity-session", entry.sessionId, "is-pill")}</span>`,
+        `<span class="row-name is-verbatim">${buildCreatureAction(entry.name)}${buildLinkButton(entry.sessionLabel, "data-opportunity-session", entry.sessionId, "is-pill")}</span>`,
         `<span class="row-num">${formatNumber(entry.killsLeft)}</span>`,
         `<span class="row-num">${formatTime(entry.timeRemainingMinutes)}</span>`,
         `<span class="row-charm">${formatCharmsPerHour(entry.charmsPerHour)}</span>`
