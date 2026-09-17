@@ -1,0 +1,988 @@
+{
+  "provenance": {
+    "importedAt": "2026-09-17",
+    "repository": "https://github.com/nesleykent/morning-tibia",
+    "revision": "54728ed4cd06d76392e9f982c12cb297bd551bb0",
+    "sourceFiles": [
+      "lib/parser/guideMessages.ts",
+      "lib/parser/boardMessages.ts",
+      "lib/defaults/worldChanges.ts",
+      "lib/defaults/miniWorldChanges.ts"
+    ],
+    "dataLicense": "CC-BY-SA; upstream attributes TibiaWiki community transcripts. Game text belongs to CipSoft. See docs/morning-tibia-sources.md.",
+    "codeLicense": "MIT; see third-party/morning-tibia-LICENSE.txt",
+    "freshness": "Snapshot of the inspected repository revision; not a fresh verification of every wiki page or live game reply."
+  },
+  "boardPreamble": "This board will notify you of currently active mini world changes all over Tibia.",
+  "worldChanges": [
+    {
+      "id": "horestis",
+      "name": "The Mummy's Curse",
+      "guideKeyword": "Horestis",
+      "states": [
+        {
+          "id": "slumbering",
+          "label": "Slumbering in his tomb",
+          "quiet": true
+        },
+        {
+          "id": "risen",
+          "label": "Risen, killable"
+        },
+        {
+          "id": "desecrated",
+          "label": "Desecrated, curse over Ankrahmun"
+        },
+        {
+          "id": "curse-ended",
+          "label": "Curse ended, minions recovering"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "Horestis near Ankrahmun is slumbering in his tomb.",
+          "stateId": "slumbering"
+        },
+        {
+          "text": "The great Pharaoh Horestis near Ankrahmun has risen from his slumber to crush all intruders.",
+          "stateId": "risen"
+        },
+        {
+          "text": "Horestis's body has been desecrated. His curse now hangs over Ankrahmun like the shadow of the vulture and his tomb is almost empty.",
+          "stateId": "desecrated"
+        },
+        {
+          "text": "Horestis's body has been desecrated. By now, his curse has ended though. His minions are recovering slowly.",
+          "stateId": "curse-ended"
+        }
+      ]
+    },
+    {
+      "id": "mage-tower",
+      "name": "The Mage's Tower",
+      "guideKeyword": "Mage Tower",
+      "states": [
+        {
+          "id": "portal-open",
+          "label": "Mage at his tower, portal open"
+        },
+        {
+          "id": "mage-slain",
+          "label": "Mage slain, portal closing",
+          "quiet": true
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The raging mage is currently in his tower in Zao and experimenting with the portal into another dimension.",
+          "stateId": "portal-open"
+        },
+        {
+          "text": "The raging mage in Zao has been slain and the portal into another dimension will close.",
+          "stateId": "mage-slain",
+          "unverifiedWording": true
+        }
+      ]
+    },
+    {
+      "id": "masters-voice",
+      "name": "Their Master's Voice",
+      "guideKeyword": "Master's Voice",
+      "states": [
+        {
+          "id": "passable",
+          "label": "Covered in slime, passable"
+        },
+        {
+          "id": "impassable",
+          "label": "Severe slime outbreak, impassable",
+          "quiet": true
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The strange tower with the servants on Edron is covered in slime.",
+          "stateId": "passable"
+        },
+        {
+          "text": "The strange tower with the servants on Edron currently seems to be completely impassable because of a severe slime outbreak.",
+          "stateId": "impassable",
+          "unverifiedWording": true
+        }
+      ]
+    },
+    {
+      "id": "swamp-fever",
+      "name": "Swamp Fever",
+      "guideKeyword": "Swamp Fever",
+      "states": [
+        {
+          "id": "under-control",
+          "label": "Under control, medicine for everyone",
+          "quiet": true
+        },
+        {
+          "id": "medicine-needed",
+          "label": "Under control, medicine running short"
+        },
+        {
+          "id": "outbreak",
+          "label": "Broken out, feverish citizens in the streets"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The swamp fever in Venore is currently under control and there is enough medicine for everyone.",
+          "stateId": "under-control"
+        },
+        {
+          "text": "The swamp fever in Venore is currently under control, but medicine is direly needed to prevent the next outbreak.",
+          "stateId": "medicine-needed"
+        },
+        {
+          "text": "The swamp fever has broken out in Venore and feverish citizens are roaming the streets.",
+          "stateId": "outbreak"
+        }
+      ]
+    },
+    {
+      "id": "thornfire",
+      "name": "Thornfire",
+      "guideKeyword": "Thornfire",
+      "states": [
+        {
+          "id": "guarded",
+          "label": "Firestarters safely guarded",
+          "quiet": true
+        },
+        {
+          "id": "breaking-out",
+          "label": "Guards slain, breaking out"
+        },
+        {
+          "id": "burning",
+          "label": "Shadowthorn burns"
+        },
+        {
+          "id": "being-fought",
+          "label": "Burning, but the fire is being fought back"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "Countless firestarters are in their cells below Shadowthorn, but right now they are safely guarded.",
+          "alsoMatches": [
+            "Countless firestarters are in their cells bellow Shadowthorn, but right now they are safely guarded."
+          ],
+          "stateId": "guarded"
+        },
+        {
+          "text": "Most guards and elves preventing the firestarters from breaking out have been slain. Shadowthorn is in danger of being set ablaze.",
+          "stateId": "breaking-out",
+          "unverifiedWording": true
+        },
+        {
+          "text": "Shadowthorn burns, and the followers of the bog with it!",
+          "stateId": "burning"
+        },
+        {
+          "text": "Shadowthorn burns, but the Tibians have been successfully fighting the fire as well as the firefighters.",
+          "stateId": "being-fought",
+          "unverifiedWording": true
+        }
+      ]
+    },
+    {
+      "id": "twisted-waters",
+      "name": "Twisted Waters",
+      "guideKeyword": "Twisted Waters",
+      "states": [
+        {
+          "id": "clean",
+          "label": "Clean",
+          "quiet": true
+        },
+        {
+          "id": "turning",
+          "label": "Corpses piling up, about to turn dirty"
+        },
+        {
+          "id": "dirty-swimmers",
+          "label": "Dirty, shimmer swimmers present"
+        },
+        {
+          "id": "dirty-exhausted",
+          "label": "Dirty, no shimmer swimmers left"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The great lake near Port Hope is clean.",
+          "stateId": "clean"
+        },
+        {
+          "text": "Corpses are piling up in the great lake near Port Hope and the water is about to become dirty",
+          "stateId": "turning"
+        },
+        {
+          "text": "The great lake near Port Hope is dirty. Shimmer swimmers can be seen under the surface.",
+          "stateId": "dirty-swimmers"
+        },
+        {
+          "text": "The great lake near Port Hope is dirty. No shimmer swimmers have been seen under the surface for quite some time now.",
+          "stateId": "dirty-exhausted"
+        }
+      ]
+    },
+    {
+      "id": "awash",
+      "name": "Awash",
+      "guideKeyword": "Awash",
+      "states": [
+        {
+          "id": "flooded",
+          "label": "Flooded, coal needed",
+          "quiet": true
+        },
+        {
+          "id": "flooded-coal-delivered",
+          "label": "Flooded, coal delivered, pumps running"
+        },
+        {
+          "id": "drained-quota-met",
+          "label": "Drained, today's deepling quota met"
+        },
+        {
+          "id": "drained-quota-open",
+          "label": "Drained, deeplings trying to reflood"
+        },
+        {
+          "id": "overrun",
+          "label": "Overrun, the tunnels will flood"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The mine tunnels under Kazordoon are currently flooded. Coal is needed to get the waterpumps running.",
+          "stateId": "flooded"
+        },
+        {
+          "text": "The mine tunnels under Kazordoon are currently flooded, but enough coal has been delivered to keep the waterpumps running.",
+          "stateId": "flooded-coal-delivered"
+        },
+        {
+          "text": "The water in the mine tunnels under Kazordoon is drained and enough deeplings have been killed today to ensure it remains that way.",
+          "stateId": "drained-quota-met"
+        },
+        {
+          "text": "The water in the mine tunnels under Kazordoon is drained, but deeplings are trying to flood the mines again.",
+          "stateId": "drained-quota-open"
+        },
+        {
+          "text": "Too many deeplings survived during the last five days, they will flood the tunnels and nothing can stop them.",
+          "stateId": "overrun"
+        }
+      ]
+    },
+    {
+      "id": "steamship",
+      "name": "Steamship",
+      "guideKeyword": "Steamship",
+      "states": [
+        {
+          "id": "not-running",
+          "label": "Not running, coal needed",
+          "quiet": true
+        },
+        {
+          "id": "coal-delivered",
+          "label": "Coal delivered, starts tomorrow"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The steamship from Thais to Kazordoon is currently not running - coal is needed to activate the service once again.",
+          "stateId": "not-running"
+        },
+        {
+          "text": "The steamship from Thais to Kazordoon is currently not running, but enough coal has been delivered to start the working week tomorrow.",
+          "stateId": "coal-delivered"
+        }
+      ]
+    },
+    {
+      "id": "horse-station",
+      "name": "Horse Station",
+      "guideKeyword": "Horses",
+      "states": [
+        {
+          "id": "normal",
+          "label": "Service running normally",
+          "quiet": true
+        },
+        {
+          "id": "escaped",
+          "label": "Horses on the loose, service on hold"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The horse services near Thais and Venore are working normally.",
+          "stateId": "normal",
+          "unverifiedWording": true
+        },
+        {
+          "text": "Horses are on the loose near Thais! As long as there haven't been enough horses chased back into the pen, the service is on hold.",
+          "stateId": "escaped"
+        }
+      ]
+    },
+    {
+      "id": "overhunting",
+      "name": "Overhunting",
+      "guideKeyword": "Overhunting",
+      "states": [
+        {
+          "id": "stable",
+          "label": "White deer roaming, population stable"
+        },
+        {
+          "id": "dwindling",
+          "label": "Population dwindling"
+        },
+        {
+          "id": "leaving",
+          "label": "Overhunted, deer leaving the region"
+        },
+        {
+          "id": "wolves",
+          "label": "Starving wolves, no deer will return"
+        },
+        {
+          "id": "wolves-receding",
+          "label": "Wolves driven away, deer returning"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "There are white deer roaming the region near Ab'Dendriel. Don't slay too many of them, or they will leave the region.",
+          "stateId": "stable"
+        },
+        {
+          "text": "The number of white deer near Ab'Dendriel seems to be dwindling. If that continues, we will have to watch out for some starving wolves.",
+          "stateId": "dwindling"
+        },
+        {
+          "text": "Too many white deer have already been slain near Ab'Dendriel. Their population will leave the region soon.",
+          "stateId": "leaving"
+        },
+        {
+          "text": "Starving wolves are roaming the region near Ab'Dendriel. As long as they are there, no white deer will return.",
+          "stateId": "wolves"
+        },
+        {
+          "text": "Starving wolves are roaming the region near Ab'Dendriel, but enough have been driven away and the deer population will return soon.",
+          "stateId": "wolves-receding"
+        }
+      ]
+    },
+    {
+      "id": "demon-war",
+      "name": "Demon Wars",
+      "guideKeyword": "Demon War",
+      "states": [
+        {
+          "id": "stalemate",
+          "label": "Stalemate",
+          "quiet": true
+        },
+        {
+          "id": "shaburak-advantage",
+          "label": "Shaburak in advantage"
+        },
+        {
+          "id": "shaburak-dominant",
+          "label": "Shaburak dominate the complex"
+        },
+        {
+          "id": "askarak-advantage",
+          "label": "Askarak in advantage"
+        },
+        {
+          "id": "askarak-dominant",
+          "label": "Askarak dominate the complex"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The demon war is in a stalemate once again.",
+          "stateId": "stalemate"
+        },
+        {
+          "text": "The Shaburak demons are in advantage right now.",
+          "alsoMatches": [
+            "The Shaburak are in advantage right now."
+          ],
+          "stateId": "shaburak-advantage"
+        },
+        {
+          "text": "The Shaburak have summoned their leaders and dominate the complex.",
+          "stateId": "shaburak-dominant"
+        },
+        {
+          "text": "The Askarak demons are in advantage right now.",
+          "stateId": "askarak-advantage"
+        },
+        {
+          "text": "The Askarak are in advantage right now.",
+          "stateId": "askarak-advantage"
+        },
+        {
+          "text": "The Askarak have summoned their leaders and dominate the complex.",
+          "stateId": "askarak-dominant"
+        }
+      ]
+    },
+    {
+      "id": "sea-serpent",
+      "name": "The Fire-Feathered Serpent",
+      "guideKeyword": "Sea Serpent",
+      "states": [
+        {
+          "id": "asleep",
+          "label": "Fast asleep",
+          "quiet": true
+        },
+        {
+          "id": "dreaming",
+          "label": "Dreaming, the earth bleeds lava"
+        },
+        {
+          "id": "awake",
+          "label": "Awake, Renegade Quara control sunken Oramond"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The Fire-Feathered Serpent is fast asleep.",
+          "stateId": "asleep"
+        },
+        {
+          "text": "The Fire-Feathered Serpent dreams and the earth is bleeding lava.",
+          "stateId": "dreaming"
+        },
+        {
+          "text": "The Fire-Feathered Serpent is awake. Renegade Quara control the sunken regions of Oramond.",
+          "stateId": "awake"
+        }
+      ]
+    },
+    {
+      "id": "deeplings",
+      "name": "Deeplings",
+      "guideKeyword": "Deepling",
+      "states": [
+        {
+          "id": "hiding",
+          "label": "Creatures of the deep hiding",
+          "quiet": true
+        },
+        {
+          "id": "floodgates-open",
+          "label": "Floodgates to the Drowned Library open"
+        },
+        {
+          "id": "arcanum-breached",
+          "label": "Inner arcanum breached"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The creatures of the deep are currently hiding in the black waters beneath.",
+          "stateId": "hiding"
+        },
+        {
+          "text": "God-king Qjell seems to be pleased, the floodgates to the Drowned Library have opened.",
+          "stateId": "floodgates-open"
+        },
+        {
+          "text": "The inner arcanum of the deep has been breached.",
+          "stateId": "arcanum-breached"
+        }
+      ]
+    },
+    {
+      "id": "hive-born",
+      "name": "Hive Born",
+      "guideKeyword": "Hive",
+      "states": [
+        {
+          "id": "defended",
+          "label": "Hive well defended",
+          "quiet": true
+        },
+        {
+          "id": "breached",
+          "label": "Defences breached, east structure open"
+        },
+        {
+          "id": "fallen",
+          "label": "Defences fallen, all structures open"
+        }
+      ],
+      "guideMessages": [
+        {
+          "text": "The hive is well defended and prepared for war.",
+          "stateId": "defended"
+        },
+        {
+          "text": "The defences of the hive are breached. The hive structure to the east is open.",
+          "stateId": "breached"
+        },
+        {
+          "text": "The hives defences have fallen. Its armies are confused and in shambles. All structures are open for invaders.",
+          "stateId": "fallen"
+        }
+      ]
+    }
+  ],
+  "miniWorldChanges": [
+    {
+      "id": "fury-gates",
+      "name": "Fury Gates",
+      "detection": "announced",
+      "variants": [
+        {
+          "id": "abdendriel",
+          "label": "Ab'Dendriel"
+        },
+        {
+          "id": "ankrahmun",
+          "label": "Ankrahmun"
+        },
+        {
+          "id": "carlin",
+          "label": "Carlin"
+        },
+        {
+          "id": "darashia",
+          "label": "Darashia"
+        },
+        {
+          "id": "edron",
+          "label": "Edron"
+        },
+        {
+          "id": "kazordoon",
+          "label": "Kazordoon"
+        },
+        {
+          "id": "liberty-bay",
+          "label": "Liberty Bay"
+        },
+        {
+          "id": "port-hope",
+          "label": "Port Hope"
+        },
+        {
+          "id": "thais",
+          "label": "Thais"
+        },
+        {
+          "id": "venore",
+          "label": "Venore"
+        }
+      ],
+      "boardMessages": [
+        {
+          "text": "A fiery fury gate has opened near one of the major cities somewhere in Tibia."
+        }
+      ]
+    },
+    {
+      "id": "hive-outpost",
+      "name": "Hive Outpost",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "A hive infestation has been sighted south-west of Liberty Bay! An unnerving humming and buzzing is filling the air."
+        }
+      ]
+    },
+    {
+      "id": "warpath",
+      "name": "Warpath",
+      "detection": "announced",
+      "variants": [
+        {
+          "id": "north-of-the-jakundaf-desert",
+          "label": "North of the Jakundaf Desert"
+        },
+        {
+          "id": "north-of-carlin",
+          "label": "North of Carlin"
+        },
+        {
+          "id": "east-of-the-femor-hills",
+          "label": "East of the Femor Hills"
+        }
+      ],
+      "boardMessages": [
+        {
+          "text": "Bibby Bloodbath and her crew are roaming the lands, destroying everything in their path."
+        }
+      ]
+    },
+    {
+      "id": "devovorgas-essence",
+      "name": "Devovorga's Essence",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "In case you have some spare tentacle pieces, you can now use Devovorga's very essence to enter a boss lair!"
+        }
+      ]
+    },
+    {
+      "id": "chakoya-iceberg",
+      "name": "Chakoya Iceberg",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "A big iceberg has been washed up at the coast north of Port Hope. It seems to be inhabited by strange white furballs."
+        }
+      ]
+    },
+    {
+      "id": "spirit-grounds",
+      "name": "Spirit Grounds",
+      "detection": "announced",
+      "variants": [
+        {
+          "id": "darama",
+          "label": "Darama"
+        },
+        {
+          "id": "ghostlands",
+          "label": "Ghostlands"
+        },
+        {
+          "id": "vengoth",
+          "label": "Vengoth"
+        }
+      ],
+      "boardMessages": [
+        {
+          "text": "Adventurers have told of a Spirit Gate in the Daramian mountains. Fight the restless undead!",
+          "variantId": "darama"
+        },
+        {
+          "text": "Adventurers have told of a Spirit Gate in the Ghostlands. Fight the restless undead!",
+          "variantId": "ghostlands"
+        },
+        {
+          "text": "Adventurers have told of a Spirit Gate in Vengoth. Fight the restless undead!",
+          "variantId": "vengoth"
+        }
+      ]
+    },
+    {
+      "id": "nightmare-isles",
+      "name": "Nightmare Isles",
+      "detection": "announced",
+      "variants": [
+        {
+          "id": "daramas-northernmost-coast",
+          "label": "Darama's northernmost coast"
+        },
+        {
+          "id": "the-river-near-drefia",
+          "label": "The river near Drefia"
+        },
+        {
+          "id": "the-ankrahmun-tar-pits",
+          "label": "The Ankrahmun tar pits"
+        }
+      ],
+      "boardMessages": [
+        {
+          "text": "A sandstorm travels through Darama, leading to isles full of deadly creatures inside a nightmare. Avoid the northernmost coast!",
+          "variantId": "daramas-northernmost-coast"
+        },
+        {
+          "text": "A sandstorm travels through Darama, leading to isles full of deadly creatures inside a nightmare. Avoid the river near Drefia!",
+          "variantId": "the-river-near-drefia"
+        },
+        {
+          "text": "A sandstorm travels through Darama, leading to isles full of deadly creatures inside a nightmare. Avoid the Ankrahmun tar pits!",
+          "variantId": "the-ankrahmun-tar-pits"
+        }
+      ]
+    },
+    {
+      "id": "fire-from-the-earth",
+      "name": "Fire from the Earth",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "The volcano on Goroma sends its fiery message into the sky. A lot of creatures are flooding the lands together with its lava."
+        }
+      ]
+    },
+    {
+      "id": "nomads",
+      "name": "Nomads",
+      "detection": "announced",
+      "variants": [
+        {
+          "id": "northeast-of-the-shadow-tomb",
+          "label": "Northeast of the Shadow Tomb"
+        },
+        {
+          "id": "south-of-the-tarpit-tomb",
+          "label": "South of the Tarpit Tomb"
+        },
+        {
+          "id": "south-of-the-ancient-ruins-tomb",
+          "label": "South of the Ancient Ruins Tomb"
+        },
+        {
+          "id": "northeast-of-the-ancient-ruins-tomb",
+          "label": "Northeast of the Ancient Ruins Tomb"
+        }
+      ],
+      "boardMessages": [
+        {
+          "text": "Nomads travel the eternal sands of Ankrahmun's desert. There must be a camp somewhere."
+        }
+      ]
+    },
+    {
+      "id": "bored",
+      "name": "Bored",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "Sharpen your sword! The witch Wyda seems to be bored so pay her a visit!"
+        }
+      ]
+    },
+    {
+      "id": "noodles-is-gone",
+      "name": "Noodles is Gone",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "Not again! Noodles has taken some royal freedom and left the castle, after him in the name of the king!"
+        }
+      ]
+    },
+    {
+      "id": "kingsday",
+      "name": "Kingsday",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "Hail to the King! It's Kingsday in Thais, join the celebration!"
+        }
+      ]
+    },
+    {
+      "id": "thawing",
+      "name": "Thawing",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "Judging by the unnerved mammoths in Svargrond, enough snow has melted away to reveal some very special flora."
+        }
+      ]
+    },
+    {
+      "id": "spider-nest",
+      "name": "Spider Nest",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "A whole nest of spiders needs to be exterminated as Mamma Longlegs is on the loose."
+        }
+      ]
+    },
+    {
+      "id": "poacher-caves",
+      "name": "Poacher Caves",
+      "detection": "announced",
+      "variants": [
+        {
+          "id": "game",
+          "label": "Wild animals dominate"
+        },
+        {
+          "id": "poachers",
+          "label": "Poachers dominate"
+        },
+        {
+          "id": "ghost-wolves",
+          "label": "Vengeful ghost wolves dominate"
+        }
+      ],
+      "boardMessages": [
+        {
+          "text": "The wild animals north of the Green Claw Swamp clearly dominate the area. But poachers come here to hunt them.",
+          "variantId": "game"
+        },
+        {
+          "text": "Poachers are ravaging the wildlife north of the Green Claw Swamp. But the animals seem to fight back!",
+          "variantId": "poachers"
+        },
+        {
+          "text": "Poachers have slaughtered nearly all wild animals north of the Green Claw Swamp. But vengeful spirits show up there now!",
+          "variantId": "ghost-wolves"
+        }
+      ]
+    },
+    {
+      "id": "jungle-camp",
+      "name": "Jungle Camp",
+      "detection": "announced",
+      "variants": [
+        {
+          "id": "hunters",
+          "label": "Hunters dominate"
+        },
+        {
+          "id": "dworcs",
+          "label": "Dworcs dominate"
+        }
+      ],
+      "boardMessages": [
+        {
+          "text": "Strange sounds echo through Trapwood as hunters and dworcs fight over the holy grounds and the game that roams there."
+        }
+      ]
+    },
+    {
+      "id": "grimvale",
+      "name": "Grimvale",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "The full moon has a strange impact on the island of Grimvale. The small forest there seems darker, filled with nightly howls."
+        }
+      ]
+    },
+    {
+      "id": "stampede",
+      "name": "Stampede",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "Stampede! The Ape God has stirred up Tiquanda's elephants again!"
+        }
+      ]
+    },
+    {
+      "id": "bank-robbery",
+      "name": "Bank Robbery",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "Several banks in major coastal towns are being robbed! The thieves are still on the loose!"
+        }
+      ]
+    },
+    {
+      "id": "river-runs-deep",
+      "name": "River Runs Deep",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "The river in Zao Steppe runs deep, there may be more fish than usual!"
+        }
+      ]
+    },
+    {
+      "id": "lumberjack",
+      "name": "Lumberjack",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "Looks like the Queen's own royal trees are being cut down! The lumberjacks responsible shall be put to justice."
+        }
+      ]
+    },
+    {
+      "id": "down-the-drain",
+      "name": "Down the Drain",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "The river south of the outlaw camp is flooding. A small island there should now be reachable safely."
+        }
+      ]
+    },
+    {
+      "id": "beaver-breakout",
+      "name": "Beaver Breakout",
+      "detection": "silent",
+      "variants": [],
+      "boardMessages": []
+    },
+    {
+      "id": "shipwrecked",
+      "name": "Shipwrecked",
+      "detection": "silent",
+      "variants": [],
+      "boardMessages": []
+    },
+    {
+      "id": "forsaken",
+      "name": "Forsaken",
+      "detection": "always-active",
+      "variants": [
+        {
+          "id": "rorcs",
+          "label": "Rorcs"
+        },
+        {
+          "id": "leaf-golems",
+          "label": "Leaf Golems & Forest Furies"
+        },
+        {
+          "id": "cyclopes",
+          "label": "Cyclopes"
+        },
+        {
+          "id": "lost-dwarves",
+          "label": "Drillworms & Lost Dwarves"
+        }
+      ],
+      "boardMessages": []
+    },
+    {
+      "id": "chyllfroest",
+      "name": "Chyllfroest",
+      "detection": "announced",
+      "variants": [],
+      "boardMessages": [
+        {
+          "text": "An ice bridge now connects Svargrond to a frosty island, where monsters and a strange frozen creature have been sighted."
+        }
+      ]
+    }
+  ]
+}

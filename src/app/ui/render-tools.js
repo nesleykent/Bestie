@@ -1,8 +1,10 @@
+import { renderMorningTool } from "./render-morning-tool.js";
+import { renderMarkerTool } from "./render-marker-tool.js";
 import { ELEMENTS, experienceForLevel, projectExperience, parseStamina, staminaRecovery, staminaUsage, elementalDamage } from "../features/calculators.js";
 import { escapeAttribute as escape } from "./render-blocks.js";
 import { formatNumber, formatTimeDetailed } from "../utils/formatters.js";
 
-export const TOOL_LABELS = { experience: "XP & Level", stamina: "Stamina", elemental: "Elemental Damage" };
+export const TOOL_LABELS = { experience: "XP & Level", stamina: "Stamina", elemental: "Elemental Damage", markers: "Minimap Markers", morning: "Morning Tibia" };
 const field = (id, label, value, options = {}) => `<label class="tool-field" for="${id}"><span class="input-label">${label}</span><input id="${id}" name="${id}" type="${options.type ?? "text"}" ${options.numeric ? 'inputmode="decimal"' : ""} value="${escape(value)}" ${options.placeholder ? `placeholder="${escape(options.placeholder)}"` : ""}></label>`;
 const metrics = rows => `<dl class="tool-results">${rows.map(([label, value]) => `<div><dt class="input-label">${label}</dt><dd>${escape(value)}</dd></div>`).join("")}</dl>`;
 const numeric = (value, label) => {
@@ -14,6 +16,16 @@ const numeric = (value, label) => {
 
 export function renderTools(container, { view, inputs, creatures, onChange }) {
     container.className = "results-shell";
+    if (view === "morning") {
+        container.innerHTML = toolNavigation(view);
+        renderMorningTool(container, inputs, onChange);
+        return;
+    }
+    if (view === "markers") {
+        container.innerHTML = toolNavigation(view);
+        renderMarkerTool(container);
+        return;
+    }
     const value = (key, fallback = "") => inputs[key] ?? fallback;
     let form = "";
     let help = "";
@@ -34,7 +46,7 @@ export function renderTools(container, { view, inputs, creatures, onChange }) {
             + ELEMENTS.map(element => field(`damage_${element}`, `${element[0].toUpperCase() + element.slice(1)} base damage`, value(`damage_${element}`, "0"), { numeric: true })).join("");
         help = "Enter pre-resistance damage for each component of an attack. Dataset percentages describe damage received: 100% is neutral. Results apply elemental modifiers only; armor, shielding, mitigation, charms, critical hits and rounding are not simulated.";
     }
-    container.innerHTML = `<nav class="session-analysis-nav" aria-label="Tools">${Object.entries(TOOL_LABELS).map(([key, label]) => `<a href="#tools/${key}" ${key === view ? 'aria-current="page"' : ""}>${label}</a>`).join("")}</nav>
+    container.innerHTML = `${toolNavigation(view)}
         <form id="toolForm"><div class="tool-fields">${form}</div><p class="helper-text">${help}</p><button class="btn btn-primary" type="submit">Calculate</button></form>
         <div id="toolResult" role="status" aria-live="polite"></div>`;
     const formElement = container.querySelector("form");
@@ -63,4 +75,8 @@ export function renderTools(container, { view, inputs, creatures, onChange }) {
     formElement.addEventListener("input", () => onChange(Object.fromEntries(new FormData(formElement))));
     formElement.addEventListener("submit", event => { event.preventDefault(); calculate(); });
     if (view !== "elemental" || value("damageCreature")) calculate();
+}
+
+function toolNavigation(view) {
+    return `<nav class="session-analysis-nav" aria-label="Tools">${Object.entries(TOOL_LABELS).map(([key,label]) => `<a href="#tools/${key}" ${key === view ? 'aria-current="page"' : ""}>${label}</a>`).join("")}</nav>`;
 }

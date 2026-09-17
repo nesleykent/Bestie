@@ -4001,3 +4001,9 @@ th.is-sorted .column-sort {
     margin: 0;
     font-variant-numeric: tabular-nums;
 }
+
+#morningLog {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--u3);
+}

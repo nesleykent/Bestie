@@ -520,7 +520,7 @@ Calculate material requirements, costs, duration, and value. Monitored Market da
 
 #### Minimap Markers
 
-Manage Tibia minimap marker files locally, including:
+Implemented in **Tools → Minimap Markers**. Manage marker files locally, including:
 
 - merging personal `minimapmarkers.bin` data with community markers;
 - matching markers by map coordinates;
@@ -530,7 +530,7 @@ Manage Tibia minimap marker files locally, including:
 
 #### Morning Tibia
 
-Parse text copied from Tibia's World Board and Guide NPC dialogues to resolve current Mini World Changes and World Changes for the configured World.
+Implemented in **Tools → Morning Tibia**. Parse copied World Board and Guide dialogue for an explicitly observed World and date. Partial evidence remains unknown, unverified wording stays tentative, and manual corrections remain labelled. Invalid drafts preserve the previous processed observation. All text stays in the current character’s browser-local workspace.
 
 #### Stamina
 
