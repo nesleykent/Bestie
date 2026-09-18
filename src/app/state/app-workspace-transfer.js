@@ -1,4 +1,4 @@
-import { isRecord, validateBackupEnvelope, validateWorkspaceBackup } from "./backup-validation.js";
+import { isRecord, isSafeKey, validateBackupEnvelope, validateWorkspaceBackup } from "./backup-validation.js";
 import { parseWorkspaceFile } from "./workspace-transfer.js";
 
 const EXPORT_APP_ID = "bestie";
@@ -42,7 +42,7 @@ export function parseAppWorkspaceFile(rawText) {
                 throw new Error(`Invalid character at position ${index + 1}. Your current data has not been changed.`);
             }
             if (character.id !== undefined) {
-                if (typeof character.id !== "string" || !character.id.trim() || ids.has(character.id.trim())) {
+                if (!isSafeKey(character.id) || ids.has(character.id.trim())) {
                     throw new Error("Backup character IDs must be unique, non-empty text.");
                 }
                 ids.add(character.id.trim());

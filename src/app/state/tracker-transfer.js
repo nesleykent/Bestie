@@ -109,6 +109,19 @@ function buildKeyIndex(items, tracker) {
     }));
 }
 
+/** Read explicit boolean encodings without treating the string "false" as true. */
+function toBoolean(value) {
+    if (value === undefined || value === null || value === "") return false;
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number" && (value === 0 || value === 1)) return value === 1;
+    if (typeof value === "string") {
+        const text = value.trim().toLowerCase();
+        if (["true", "yes", "1", "y"].includes(text)) return true;
+        if (["false", "no", "0", "n", ""].includes(text)) return false;
+    }
+    throw new Error("Invalid boolean progress value. Use true or false.");
+}
+
 function collect(tracker, pairs) {
     const record = {};
     let matched = 0;
@@ -121,7 +134,7 @@ function collect(tracker, pairs) {
 
         const entry = Object.entries(tracker.entryDefaults).reduce((next, [field, fallback]) => {
             const value = raw[field];
-            next[field] = typeof fallback === "number" ? parseCount(value) : Boolean(value);
+            next[field] = typeof fallback === "number" ? parseCount(value) : toBoolean(value);
             return next;
         }, {});
 

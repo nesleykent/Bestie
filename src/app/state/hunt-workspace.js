@@ -217,7 +217,7 @@ export function restoreWorkspace(savedState) {
             getTrackerEntryDefaults(),
             savedState?.bestiaryProgress
         ),
-        changeLog: restoreChangeLog(savedState?.changeLog, getTrackerIds()),
+        changeLog: restoreChangeLog(savedState?.changeLog, getTrackerIds(), getTrackerEntryDefaults()),
         hunts,
         activeHuntId: hunts[savedActiveIndex === -1 ? 0 : savedActiveIndex].id,
         bestiaryView: normalizeView(savedState?.bestiaryView, BESTIARY_VIEWS),

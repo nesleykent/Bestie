@@ -1,3 +1,5 @@
+import { normalizeEntry } from "./tracker-progress.js";
+
 /**
  * One undo trail for every write to tracker data.
  *
@@ -101,7 +103,7 @@ export function applyUndo(change, progress, units) {
 }
 
 /** A saved log is data from disk: keep only well-formed entries. */
-export function restoreChangeLog(saved, trackerIds) {
+export function restoreChangeLog(saved, trackerIds, trackerDefaults = {}) {
     if (!Array.isArray(saved)) {
         return createChangeLog();
     }
@@ -122,7 +124,10 @@ export function restoreChangeLog(saved, trackerIds) {
             kind: typeof change.kind === "string" ? change.kind : "entry",
             trackerId: change.trackerId,
             label: change.label,
-            entries: change.entries,
+            entries: Object.fromEntries(Object.entries(change.entries).map(([key, entry]) => [key,
+                entry === null ? null : trackerDefaults[change.trackerId]
+                    ? normalizeEntry(trackerDefaults[change.trackerId], entry) : { ...entry }
+            ])),
             units: change.units && typeof change.units === "object" ? change.units : {}
         }));
 }

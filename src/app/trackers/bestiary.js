@@ -340,8 +340,8 @@ export const bestiaryTracker = {
         readJsonRow: (item) => ({
             kills: item?.user_data?.kills,
             stage: STAGE_UNSET,
-            echoWarden: Boolean(item?.user_data?.echo_warden),
-            animusMastery: Boolean(item?.user_data?.animus_mastery)
+            echoWarden: item?.user_data?.echo_warden,
+            animusMastery: item?.user_data?.animus_mastery
         })
     }
 };
