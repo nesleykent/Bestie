@@ -122,7 +122,7 @@ Since Tibia's 2026 discovery update, subareas are active automatically and fully
 
 **Purpose:** Tracks quest completion states for the character and keeps questlog group and reward information searchable.
 
-The current dataset contains 237 quests across 94 questlogs. The tracker records whether each quest is completed, not completed, or not yet reviewed, plus bookmarks. It also shows the related questlog and reward information.
+The current dataset contains 237 quests, with 93 named questlogs and 104 ungrouped quests. The tracker records whether each quest is completed, not completed, or not yet reviewed, plus bookmarks. It also shows the related questlog and reward information.
 
 **Current boundary:** Tibia's Quest Log can expose individual missions inside a questline, but this application currently tracks completion at the quest level; it does not yet model arbitrary mission-by-mission progress.
 
@@ -395,7 +395,7 @@ See [Repository Structure](docs/repository-structure.md), [Product Journey](docs
 | Bosstiary | 316 bosses | [TibiaDraptor](https://tibiadraptor.com/) |
 | Charms | 25 Major and Minor charms | [TibiaDraptor](https://tibiadraptor.com/) |
 | Measuring Tibia | 20 areas and 171 subareas | [Tibiopedia.pl](https://tibiopedia.pl/quests/Measuring_Tibia_Quest) |
-| Quests | 237 quests across 94 questlogs | [TibiaDraptor](https://tibiadraptor.com/) |
+| Quests | 237 quests, with 93 named questlogs and 104 ungrouped quests | [TibiaDraptor](https://tibiadraptor.com/) |
 | Titles | 113 titles | [TibiaDraptor](https://tibiadraptor.com/) |
 
 Imported progress never replaces canonical thresholds, rewards, costs, categories, or other bundled game metadata.

@@ -1,0 +1,6 @@
+[
+  { "time": 1700000600, "is_full_data": true, "sell_offer": 4200, "buy_offer": 4000, "day_lowest_sell": 4100, "day_average_sell": 4150 },
+  { "time": 1700000200, "is_full_data": true, "sell_offer": 4000, "buy_offer": 3900, "day_lowest_sell": 3950, "day_average_sell": 3975 },
+  { "time": 1700000800, "is_full_data": false, "sell_offer": null, "buy_offer": null, "day_lowest_sell": 4300, "day_average_sell": 4325.6 },
+  { "time": 1700000400, "is_full_data": true, "sell_offer": 4100, "buy_offer": 3950, "day_lowest_sell": 4050, "day_average_sell": 4075 }
+]

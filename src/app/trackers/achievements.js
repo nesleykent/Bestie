@@ -38,6 +38,7 @@ export function deriveAchievementRow(achievement, entry, context = {}) {
         rarityLabel: RARITY_LABELS[achievement.rarity] ?? "",
         rarityRank: RARITY_ORDER.indexOf(achievement.rarity),
         rarityPercent: achievement.rarityPercent,
+        rarityObservedAt: achievement.rarityObservedAt,
         isObtainable: achievement.isObtainable,
         done,
         status: done ? "done" : "notStarted",

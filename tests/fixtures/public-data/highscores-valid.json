@@ -1,0 +1,12 @@
+{
+  "highscores": {
+    "world": "Antica",
+    "highscore_list": [
+      { "rank": 12, "name": "Someone Else", "level": 300, "value": 900000000 },
+      { "rank": 45, "name": "Gnihttik", "level": 250, "value": 150000000 }
+    ],
+    "highscore_page": { "current_page": 1, "total_pages": 3 },
+    "highscore_age": 12
+  },
+  "information": { "api_version": 4 }
+}

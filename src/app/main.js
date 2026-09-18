@@ -1808,7 +1808,8 @@ function buildDetailInfoGroups(tracker, row) {
             buildDetailFacts([
                 ["Points", `${formatNumber(row.points)}${row.isSecret ? ' <span class="pill">Secret</span>' : ""}`],
                 ["Grade", row.grade ? `<span aria-label="Grade ${row.grade}">${"★".repeat(row.grade)}</span>` : ""],
-                ["Rarity", rarityMeta]
+                ["Rarity", rarityMeta],
+                ["Rarity observed", row.rarityObservedAt ? escapeText(row.rarityObservedAt) : "Not dated by source"]
             ])
         ];
     }

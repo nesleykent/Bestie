@@ -1,0 +1,263 @@
+{
+  "schemaVersion": 1,
+  "importedAt": "2026-09-17",
+  "activeDurationHours": 20,
+  "tierFees": { "basic": 7500, "intricate": 60000, "powerful": 250000 },
+  "tierTokenCost": { "basic": 2, "intricate": 4, "powerful": 6 },
+  "source": {
+    "note": "Facts consolidated from six independently inspected references below. No third-party source code is reproduced in this file or in src/app/features/imbuements.js; item names, quantities, tier bonus text and fee/token amounts are game facts, not the expression copied from any single reference. Full narrative in docs/imbuements-sources.md.",
+    "references": [
+      {
+        "url": "https://www.tibia.com/news/?id=8396&subtopic=newsarchive",
+        "publisher": "CipSoft (official Tibia news)",
+        "date": "2025-06-12",
+        "role": "primary and authoritative source that the success-chance boost mechanic was removed: every imbuement tier is now 100% success, at fixed per-tier fees of 7500gp (Basic), 60000gp (Intricate) and 250000gp (Powerful), and that the current catalog has 24 imbuement types. This supersedes tierFees and both community-repo fee figures below, which predate this patch; it also confirms TibiaPal's 60000gp Intricate figure was correct all along, not exiva-xp's pre-patch 55000gp."
+      },
+      {
+        "url": "https://tibia.fandom.com/wiki/Punch",
+        "publisher": "TibiaWiki (Fandom)",
+        "role": "primary for the newly added Punch imbuement (Fist Fighting): Basic +1 Fist Fighting (25 Tarantula Egg), Intricate +2 (adds 20 Mantassin Tail), Powerful +4 (adds 15 Gold-Brocaded Cloth), and that Punch does not support gold-token exchange."
+      },
+      {
+        "url": "https://tibia.fandom.com/wiki/Imbuing",
+        "publisher": "TibiaWiki (Fandom)",
+        "role": "corroborates the current 24-imbuement-type catalog (including Punch) and general imbuing mechanics; used to cross-check the type list against exiva-xp's 23-type snapshot."
+      },
+      {
+        "url": "https://tibia.fandom.com/wiki/Powerful_Strike",
+        "publisher": "TibiaWiki (Fandom)",
+        "date": "2025-07-21",
+        "role": "resolves this dataset's earlier Strike disagreement: the page's own revision history shows its Powerful Strike effect figures were corrected on 2025-07-21 from 10% chance / 50% damage to 5% chance / 40% damage, matching exiva-xp's '+40% damage (5% chance)' figure. The tibiawiki-sql fixture below captured the page's pre-2025-07-21, now-outdated numbers; the 'uncertain' flag this dataset previously carried on imbuements[strike].tiers.powerful is removed."
+      },
+      {
+        "repository": "https://github.com/nesleykent/exiva-xp",
+        "revision": "1d65728c7f3a720972d5b8c6be7085c6ca32c9bf",
+        "file": "assets/js/engine/imbuements.js",
+        "role": "primary for the pre-existing 23 imbuements' item lists, quantities, tier bonus text and the gold-token-support flag. That file's own header states it was checked against each tier's TibiaWiki `{{Infobox Imbuement}}` template on 2026-07-06, after an earlier pass sourced from a third-party guide produced wrong items for some imbuements. Treated here as evidence of game facts only; no code from it is reused. Its fee figures predate the 2025-06-12 patch above and are no longer used."
+      },
+      {
+        "repository": "https://github.com/PawelKusnierek/TibiaPal",
+        "revision": "899d3720e46c36e0eb9e35c6147bf4191ccc69cd",
+        "file": "scripts/imbue.js",
+        "license": "MIT",
+        "notice": "third-party/TibiaPal-LICENSE.txt",
+        "role": "corroborates Vampirism/Strike/Void item names and quantities and the 2/4/6 gold-token counts per tier. Also the source of the 20-hour active-duration assumption: its per-hour figures divide each tier's total cost by 20. Its 60000gp Intricate fee figure, once flagged here as an unresolved disagreement with exiva-xp, is now confirmed by the 2025-06-12 official patch note above."
+      },
+      {
+        "repository": "https://github.com/Galarzaa90/tibiawiki-sql",
+        "revision": "e46b2d346303af0e7a0deb892a88ad707735171b",
+        "files": [
+          "tibiawikisql/models/imbuement.py",
+          "tibiawikisql/schema.py",
+          "tests/resources/content_imbuement.txt"
+        ],
+        "role": "schema-only corroboration that an imbuement's materials are discrete item/amount pairs. Its single bundled fixture (a Powerful Strike infobox, captured before TibiaWiki's 2025-07-21 correction) was used as an independent cross-check and originally surfaced the now-resolved Strike bonus-text discrepancy; code and schema were inspected for structure only, nothing was copied."
+      }
+    ],
+    "uncertainties": [
+      "Neither the official 2025-06-12 patch note nor the TibiaWiki Imbuing/Punch pages restate the 2/4/6 gold-token quantities per tier; those figures are retained from the pre-patch exiva-xp/TibiaPal community sources and have not been independently reverified against the current game version.",
+      "Gold-token exchange support (confirmed only for Vampirism, Void and Strike, and explicitly absent for Punch) is likewise carried over from the pre-patch community sources and not reconfirmed by the 2025-06-12 official note, which addresses fees and success chance only, not token exchange."
+    ],
+    "resolvedUncertainties": [
+      "Intricate guaranteed-success fee (previously flagged: exiva-xp's 55000gp vs TibiaPal's 60000gp): resolved 2025-06-12 by official Tibia news — TibiaPal's 60000gp was correct; both are now superseded anyway by the same patch's fee restructure (Basic dropped to 7500gp, Intricate confirmed at 60000gp, Powerful unchanged at 250000gp).",
+      "Powerful Strike bonus (previously flagged: exiva-xp's +40%/5% vs the tibiawiki-sql fixture's implied +50%/10%): resolved by TibiaWiki's own 2025-07-21 correction of the Powerful Strike page to +40% damage / 5% chance, matching exiva-xp; the fixture had simply captured a stale, pre-correction revision."
+    ]
+  },
+  "imbuements": [
+    {
+      "id": "vampirism", "name": "Vampirism", "effect": "Life Leech", "category": "leech", "supportsGoldTokenExchange": true,
+      "tiers": {
+        "basic": { "bonus": "+5% Life Leech", "addedMaterials": [{ "itemId": "vampire-teeth", "name": "Vampire Teeth", "quantity": 25 }] },
+        "intricate": { "bonus": "+10% Life Leech", "addedMaterials": [{ "itemId": "bloody-pincers", "name": "Bloody Pincers", "quantity": 15 }] },
+        "powerful": { "bonus": "+25% Life Leech", "addedMaterials": [{ "itemId": "piece-of-dead-brain", "name": "Piece of Dead Brain", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "void", "name": "Void", "effect": "Mana Leech", "category": "leech", "supportsGoldTokenExchange": true,
+      "tiers": {
+        "basic": { "bonus": "+3% Mana Leech", "addedMaterials": [{ "itemId": "rope-belt", "name": "Rope Belt", "quantity": 25 }] },
+        "intricate": { "bonus": "+5% Mana Leech", "addedMaterials": [{ "itemId": "silencer-claws", "name": "Silencer Claws", "quantity": 25 }] },
+        "powerful": { "bonus": "+8% Mana Leech", "addedMaterials": [{ "itemId": "grimeleech-wings", "name": "Some Grimeleech Wings", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "strike", "name": "Strike", "effect": "Critical Hit Damage", "category": "critical", "supportsGoldTokenExchange": true,
+      "tiers": {
+        "basic": { "bonus": "+5% damage (5% chance)", "addedMaterials": [{ "itemId": "protective-charm", "name": "Protective Charm", "quantity": 20 }] },
+        "intricate": { "bonus": "+15% damage (5% chance)", "addedMaterials": [{ "itemId": "sabretooth", "name": "Sabretooth", "quantity": 25 }] },
+        "powerful": {
+          "bonus": "+40% damage (5% chance)",
+          "addedMaterials": [{ "itemId": "vexclaw-talon", "name": "Vexclaw Talon", "quantity": 5 }]
+        }
+      }
+    },
+    {
+      "id": "swiftness", "name": "Swiftness", "effect": "Speed Boost", "category": "utility", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+10 speed", "addedMaterials": [{ "itemId": "damselfly-wing", "name": "Damselfly Wing", "quantity": 15 }] },
+        "intricate": { "bonus": "+15 speed", "addedMaterials": [{ "itemId": "compass", "name": "Compass", "quantity": 25 }] },
+        "powerful": { "bonus": "+30 speed", "addedMaterials": [{ "itemId": "waspoid-wing", "name": "Waspoid Wing", "quantity": 20 }] }
+      }
+    },
+    {
+      "id": "featherweight", "name": "Featherweight", "effect": "Capacity Increase", "category": "utility", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+3% total capacity", "addedMaterials": [{ "itemId": "fairy-wings", "name": "Fairy Wings", "quantity": 20 }] },
+        "intricate": { "bonus": "+8% total capacity", "addedMaterials": [{ "itemId": "little-bowl-of-myrrh", "name": "Little Bowl of Myrrh", "quantity": 10 }] },
+        "powerful": { "bonus": "+15% total capacity", "addedMaterials": [{ "itemId": "goosebump-leather", "name": "Goosebump Leather", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "vibrancy", "name": "Vibrancy", "effect": "Paralysis Deflection", "category": "utility", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "15% deflect chance", "addedMaterials": [{ "itemId": "wereboar-hooves", "name": "Wereboar Hooves", "quantity": 20 }] },
+        "intricate": { "bonus": "25% deflect chance", "addedMaterials": [{ "itemId": "crystallized-anger", "name": "Crystallized Anger", "quantity": 15 }] },
+        "powerful": { "bonus": "50% deflect chance", "addedMaterials": [{ "itemId": "quill", "name": "Quill", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "lich-shroud", "name": "Lich Shroud", "effect": "Death Protection", "category": "protection", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+2% Death Protection", "addedMaterials": [{ "itemId": "flask-of-embalming-fluid", "name": "Flask of Embalming Fluid", "quantity": 25 }] },
+        "intricate": { "bonus": "+5% Death Protection", "addedMaterials": [{ "itemId": "gloom-wolf-fur", "name": "Gloom Wolf Fur", "quantity": 20 }] },
+        "powerful": { "bonus": "+10% Death Protection", "addedMaterials": [{ "itemId": "mystical-hourglass", "name": "Mystical Hourglass", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "snake-skin", "name": "Snake Skin", "effect": "Earth Protection", "category": "protection", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+3% Earth Protection", "addedMaterials": [{ "itemId": "piece-of-swampling-wood", "name": "Piece of Swampling Wood", "quantity": 25 }] },
+        "intricate": { "bonus": "+8% Earth Protection", "addedMaterials": [{ "itemId": "snake-skin-item", "name": "Snake Skin", "quantity": 20 }] },
+        "powerful": { "bonus": "+15% Earth Protection", "addedMaterials": [{ "itemId": "brimstone-fangs", "name": "Brimstone Fangs", "quantity": 10 }] }
+      }
+    },
+    {
+      "id": "dragon-hide", "name": "Dragon Hide", "effect": "Fire Protection", "category": "protection", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+3% Fire Protection", "addedMaterials": [{ "itemId": "green-dragon-leather", "name": "Green Dragon Leather", "quantity": 20 }] },
+        "intricate": { "bonus": "+8% Fire Protection", "addedMaterials": [{ "itemId": "blazing-bone", "name": "Blazing Bone", "quantity": 10 }] },
+        "powerful": { "bonus": "+15% Fire Protection", "addedMaterials": [{ "itemId": "draken-sulphur", "name": "Draken Sulphur", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "quara-scale", "name": "Quara Scale", "effect": "Ice Protection", "category": "protection", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+3% Ice Protection", "addedMaterials": [{ "itemId": "winter-wolf-fur", "name": "Winter Wolf Fur", "quantity": 25 }] },
+        "intricate": { "bonus": "+8% Ice Protection", "addedMaterials": [{ "itemId": "thick-fur", "name": "Thick Fur", "quantity": 15 }] },
+        "powerful": { "bonus": "+15% Ice Protection", "addedMaterials": [{ "itemId": "deepling-warts", "name": "Deepling Warts", "quantity": 10 }] }
+      }
+    },
+    {
+      "id": "cloud-fabric", "name": "Cloud Fabric", "effect": "Energy Protection", "category": "protection", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+3% Energy Protection", "addedMaterials": [{ "itemId": "wyvern-talisman", "name": "Wyvern Talisman", "quantity": 20 }] },
+        "intricate": { "bonus": "+8% Energy Protection", "addedMaterials": [{ "itemId": "crawler-head-plating", "name": "Crawler Head Plating", "quantity": 15 }] },
+        "powerful": { "bonus": "+15% Energy Protection", "addedMaterials": [{ "itemId": "wyrm-scale", "name": "Wyrm Scale", "quantity": 10 }] }
+      }
+    },
+    {
+      "id": "demon-presence", "name": "Demon Presence", "effect": "Holy Protection", "category": "protection", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+3% Holy Protection", "addedMaterials": [{ "itemId": "cultish-robe", "name": "Cultish Robe", "quantity": 25 }] },
+        "intricate": { "bonus": "+8% Holy Protection", "addedMaterials": [{ "itemId": "cultish-mask", "name": "Cultish Mask", "quantity": 25 }] },
+        "powerful": { "bonus": "+15% Holy Protection", "addedMaterials": [{ "itemId": "hellspawn-tail", "name": "Hellspawn Tail", "quantity": 20 }] }
+      }
+    },
+    {
+      "id": "precision", "name": "Precision", "effect": "Distance Fighting", "category": "skill", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+1 Distance Fighting", "addedMaterials": [{ "itemId": "elven-scouting-glass", "name": "Elven Scouting Glass", "quantity": 25 }] },
+        "intricate": { "bonus": "+2 Distance Fighting", "addedMaterials": [{ "itemId": "elven-hoof", "name": "Elven Hoof", "quantity": 20 }] },
+        "powerful": { "bonus": "+4 Distance Fighting", "addedMaterials": [{ "itemId": "metal-spike", "name": "Metal Spike", "quantity": 10 }] }
+      }
+    },
+    {
+      "id": "epiphany", "name": "Epiphany", "effect": "Magic Level", "category": "skill", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+1 Magic Level", "addedMaterials": [{ "itemId": "elvish-talisman", "name": "Elvish Talisman", "quantity": 25 }] },
+        "intricate": { "bonus": "+2 Magic Level", "addedMaterials": [{ "itemId": "broken-shamanic-staff", "name": "Broken Shamanic Staff", "quantity": 15 }] },
+        "powerful": { "bonus": "+4 Magic Level", "addedMaterials": [{ "itemId": "strand-of-medusa-hair", "name": "Strand of Medusa Hair", "quantity": 15 }] }
+      }
+    },
+    {
+      "id": "scorch", "name": "Scorch", "effect": "Fire Damage", "category": "damage", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+10% Fire Damage", "addedMaterials": [{ "itemId": "fiery-heart", "name": "Fiery Heart", "quantity": 25 }] },
+        "intricate": { "bonus": "+25% Fire Damage", "addedMaterials": [{ "itemId": "green-dragon-scale", "name": "Green Dragon Scale", "quantity": 5 }] },
+        "powerful": { "bonus": "+50% Fire Damage", "addedMaterials": [{ "itemId": "demon-horn", "name": "Demon Horn", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "venom", "name": "Venom", "effect": "Earth Damage", "category": "damage", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+10% Earth Damage", "addedMaterials": [{ "itemId": "swamp-grass", "name": "Swamp Grass", "quantity": 25 }] },
+        "intricate": { "bonus": "+25% Earth Damage", "addedMaterials": [{ "itemId": "poisonous-slime", "name": "Poisonous Slime", "quantity": 20 }] },
+        "powerful": { "bonus": "+50% Earth Damage", "addedMaterials": [{ "itemId": "slime-heart", "name": "Slime Heart", "quantity": 2 }] }
+      }
+    },
+    {
+      "id": "frost", "name": "Frost", "effect": "Ice Damage", "category": "damage", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+10% Ice Damage", "addedMaterials": [{ "itemId": "frosty-heart", "name": "Frosty Heart", "quantity": 25 }] },
+        "intricate": { "bonus": "+25% Ice Damage", "addedMaterials": [{ "itemId": "seacrest-hair", "name": "Seacrest Hair", "quantity": 10 }] },
+        "powerful": { "bonus": "+50% Ice Damage", "addedMaterials": [{ "itemId": "polar-bear-paw", "name": "Polar Bear Paw", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "electrify", "name": "Electrify", "effect": "Energy Damage", "category": "damage", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+10% Energy Damage", "addedMaterials": [{ "itemId": "rorc-feather", "name": "Rorc Feather", "quantity": 25 }] },
+        "intricate": { "bonus": "+25% Energy Damage", "addedMaterials": [{ "itemId": "peacock-feather-fan", "name": "Peacock Feather Fan", "quantity": 5 }] },
+        "powerful": { "bonus": "+50% Energy Damage", "addedMaterials": [{ "itemId": "energy-vein", "name": "Energy Vein", "quantity": 1 }] }
+      }
+    },
+    {
+      "id": "reap", "name": "Reap", "effect": "Death Damage", "category": "damage", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+10% Death Damage", "addedMaterials": [{ "itemId": "pile-of-grave-earth", "name": "Pile of Grave Earth", "quantity": 25 }] },
+        "intricate": { "bonus": "+25% Death Damage", "addedMaterials": [{ "itemId": "demonic-skeletal-hand", "name": "Demonic Skeletal Hand", "quantity": 20 }] },
+        "powerful": { "bonus": "+50% Death Damage", "addedMaterials": [{ "itemId": "petrified-scream", "name": "Petrified Scream", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "chop", "name": "Chop", "effect": "Axe Fighting", "category": "skill", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+1 Axe Fighting", "addedMaterials": [{ "itemId": "orc-tooth", "name": "Orc Tooth", "quantity": 20 }] },
+        "intricate": { "bonus": "+2 Axe Fighting", "addedMaterials": [{ "itemId": "battle-stone", "name": "Battle Stone", "quantity": 25 }] },
+        "powerful": { "bonus": "+4 Axe Fighting", "addedMaterials": [{ "itemId": "moohtant-horn", "name": "Moohtant Horn", "quantity": 20 }] }
+      }
+    },
+    {
+      "id": "slash", "name": "Slash", "effect": "Sword Fighting", "category": "skill", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+1 Sword Fighting", "addedMaterials": [{ "itemId": "lions-mane", "name": "Lion's Mane", "quantity": 25 }] },
+        "intricate": { "bonus": "+2 Sword Fighting", "addedMaterials": [{ "itemId": "moohtah-shell", "name": "Mooh'tah Shell", "quantity": 25 }] },
+        "powerful": { "bonus": "+4 Sword Fighting", "addedMaterials": [{ "itemId": "war-crystal", "name": "War Crystal", "quantity": 5 }] }
+      }
+    },
+    {
+      "id": "bash", "name": "Bash", "effect": "Club Fighting", "category": "skill", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+1 Club Fighting", "addedMaterials": [{ "itemId": "cyclops-toe", "name": "Cyclops Toe", "quantity": 20 }] },
+        "intricate": { "bonus": "+2 Club Fighting", "addedMaterials": [{ "itemId": "ogre-nose-ring", "name": "Ogre Nose Ring", "quantity": 15 }] },
+        "powerful": { "bonus": "+4 Club Fighting", "addedMaterials": [{ "itemId": "warmasters-wristguards", "name": "Warmaster's Wristguards", "quantity": 10 }] }
+      }
+    },
+    {
+      "id": "blockade", "name": "Blockade", "effect": "Shielding", "category": "skill", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+1 Shielding", "addedMaterials": [{ "itemId": "piece-of-scarab-shell", "name": "Piece of Scarab Shell", "quantity": 20 }] },
+        "intricate": { "bonus": "+2 Shielding", "addedMaterials": [{ "itemId": "brimstone-shell", "name": "Brimstone Shell", "quantity": 25 }] },
+        "powerful": { "bonus": "+4 Shielding", "addedMaterials": [{ "itemId": "frazzle-skin", "name": "Frazzle Skin", "quantity": 25 }] }
+      }
+    },
+    {
+      "id": "punch", "name": "Punch", "effect": "Fist Fighting", "category": "skill", "supportsGoldTokenExchange": false,
+      "tiers": {
+        "basic": { "bonus": "+1 Fist Fighting", "addedMaterials": [{ "itemId": "tarantula-egg", "name": "Tarantula Egg", "quantity": 25 }] },
+        "intricate": { "bonus": "+2 Fist Fighting", "addedMaterials": [{ "itemId": "mantassin-tail", "name": "Mantassin Tail", "quantity": 20 }] },
+        "powerful": { "bonus": "+4 Fist Fighting", "addedMaterials": [{ "itemId": "gold-brocaded-cloth", "name": "Gold-Brocaded Cloth", "quantity": 15 }] }
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+[
+  { "time": "not-a-number", "is_full_data": true, "sell_offer": 5000 },
+  null,
+  { "is_full_data": true, "sell_offer": 5000 },
+  { "time": 1700000900, "is_full_data": true, "sell_offer": "not-a-number" }
+]

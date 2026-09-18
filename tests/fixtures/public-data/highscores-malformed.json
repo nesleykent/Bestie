@@ -1,0 +1,11 @@
+{
+  "highscores": {
+    "world": "Antica",
+    "highscore_list": [
+      { "rank": "not-a-number", "name": "Gnihttik", "level": 250, "value": 150000000 },
+      { "name": "Missing Rank Field", "level": 100, "value": 1000 }
+    ],
+    "highscore_page": { "current_page": "1", "total_pages": null }
+  },
+  "information": { "api_version": 4 }
+}

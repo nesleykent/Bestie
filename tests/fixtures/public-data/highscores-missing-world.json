@@ -1,0 +1,9 @@
+{
+  "highscores": {
+    "highscore_list": [
+      { "rank": 1, "name": "Gnihttik", "level": 250, "value": 150000000 }
+    ],
+    "highscore_page": { "current_page": 1, "total_pages": 1 }
+  },
+  "information": { "api_version": 4 }
+}

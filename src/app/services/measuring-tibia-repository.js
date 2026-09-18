@@ -6,18 +6,25 @@
  * so it is flattened to one item per subarea. Every subarea name is unique across
  * all 20 areas, which is what makes the name a safe key.
  *
- * `creatureCount` is a join against the Bestiary dataset: 146 of the 171 subareas
+ * `creatureCount` is a join against the Bestiary dataset: 147 of the 171 subareas
  * are also Bestiary location names, so a subarea can say how much Bestiary work
- * lives there. The other 25 are city and interior areas with no spawns listed;
- * they carry null rather than a misleading zero.
+ * lives there. The other 24 have no matching Bestiary location at this granularity;
+ * they carry null rather than a misleading zero. The join itself is trimmed and
+ * case-insensitive (the two datasets disagree on casing for one shared location),
+ * but the subarea's own name — the key player progress is recorded against — is
+ * always preserved verbatim, never rewritten to whichever file's casing matched.
  */
+
+function locationKey(value) {
+    return String(value ?? "").trim().toLowerCase();
+}
 
 function countCreaturesByLocation(bestiaryItems) {
     const counts = new Map();
 
     bestiaryItems.forEach((creature) => {
-        (creature.locationList ?? []).forEach((location) => {
-            counts.set(location, (counts.get(location) ?? 0) + 1);
+        new Set((creature.locationList ?? []).map(locationKey).filter(Boolean)).forEach((key) => {
+            counts.set(key, (counts.get(key) ?? 0) + 1);
         });
     });
 
@@ -42,6 +49,6 @@ export async function loadMeasuringTibiaData(bestiaryItems = []) {
         // what lets a completed area satisfy it.
         areaAchievement: area.achievement,
         areaSubareaCount: area.subareas.length,
-        creatureCount: creatureCounts.get(subarea) ?? null
+        creatureCount: creatureCounts.get(locationKey(subarea)) ?? null
     })));
 }

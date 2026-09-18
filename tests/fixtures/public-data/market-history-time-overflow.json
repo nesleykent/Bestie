@@ -1,0 +1,4 @@
+[
+  { "time": 9007199254740993, "is_full_data": true, "sell_offer": 9999, "buy_offer": 9000, "day_lowest_sell": 9800, "day_average_sell": 9850 },
+  { "time": 1700000200, "is_full_data": true, "sell_offer": 4000, "buy_offer": 3900, "day_lowest_sell": 3950, "day_average_sell": 3975 }
+]

@@ -1,0 +1,10 @@
+{
+  "character": {
+    "character": {
+      "name": "",
+      "level": "not-a-number"
+    },
+    "deaths": "not-an-array"
+  },
+  "information": { "api_version": 4 }
+}

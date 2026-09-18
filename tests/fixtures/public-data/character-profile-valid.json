@@ -1,0 +1,22 @@
+{
+  "character": {
+    "character": {
+      "name": "Gnihttik",
+      "world": "Antica",
+      "level": 250,
+      "vocation": "Elite Knight",
+      "sex": "male",
+      "title": "None",
+      "residence": "Thais",
+      "achievement_points": 300,
+      "last_login": "2026-09-15T10:00:00Z",
+      "account_status": "Free Account"
+    },
+    "deaths": [
+      { "time": "2026-09-10T21:00:00Z", "level": 248, "reason": "Died at Level 248 by a demon." },
+      { "time": "2026-09-10T21:00:00Z", "level": 248, "reason": "Duplicate of the entry above." },
+      { "time": "2026-09-12T18:30:00Z", "level": 249, "reason": "Died at Level 249 by a dragon lord." }
+    ]
+  },
+  "information": { "api_version": 4, "timestamp": "2026-09-17T09:00:00Z" }
+}

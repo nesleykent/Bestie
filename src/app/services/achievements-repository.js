@@ -62,7 +62,11 @@ function normalizeAchievement(achievement) {
         description: String(achievement.description ?? ""),
         spoiler: String(achievement.spoiler ?? ""),
         rarity: stats?.rarity ?? "",
-        rarityPercent: Number.isFinite(Number(stats?.percentage)) ? Number(stats.percentage) : null,
+        rarityPercent: stats?.percentage !== null && stats?.percentage !== undefined && String(stats.percentage).trim() !== "" && Number.isFinite(Number(stats.percentage)) ? Number(stats.percentage) : null,
+        // The community rarity figure is its own upstream aggregation run, often
+        // older than the file's own capturedAt — kept distinct so the rarity's
+        // real freshness is never conflated with the rest of the record's.
+        rarityObservedAt: stats?.last_aggregated_at ?? null,
         // Achievements in the Removed category cannot be earned any more, so they
         // are excluded from totals while staying visible under that filter.
         isObtainable: category !== "Removed",
