@@ -1,3 +1,6 @@
+import { parseBestiaryTotalInput } from "./state/bestiary-total-input.js";
+import { renderData, DATA_LABELS } from "./ui/render-data.js";
+import { dataScopes, clearWorkspaceScopes } from "./state/data-management.js";
 import { renderTools, TOOL_LABELS } from "./ui/render-tools.js";
 import { renderHuntAnalysis } from "./ui/render-hunt-analysis.js";
 import { summarizeAppBackup } from "./state/backup-validation.js";
@@ -258,6 +261,7 @@ const state = {
 };
 
 function getModeView() {
+    if (state.mode === "data") return state.dataView;
     if (state.mode === "tools") return state.toolView;
     if (["proficiency", "analysis"].includes(state.mode)) return "session";
     if (state.mode === "trackers") {
@@ -272,6 +276,7 @@ function getModeView() {
 }
 
 function setModeView(view) {
+    if (state.mode === "data") { state.dataView = Object.hasOwn(DATA_LABELS, view) ? view : "manage"; return; }
     if (state.mode === "tools") { state.toolView = Object.hasOwn(TOOL_LABELS, view) ? view : "experience"; return; }
     if (["proficiency", "analysis"].includes(state.mode)) {
         if (view === "library") { state.mode = "bestiary"; state.bestiaryView = "library"; }
@@ -327,6 +332,7 @@ function getComparableHunts() {
 
 function getWorkspaceSnapshot() {
     return {
+        dataView: state.dataView,
         toolInputs: state.toolInputs,
         toolView: state.toolView,
         weaponPlans: state.weaponPlans,
@@ -574,11 +580,23 @@ function importAppData(file) {
     reader.readAsText(file);
 }
 
+function clearSelectedDataFlow(scopes) {
+    captureVisibleInputs();
+    const workspace=getWorkspaceSnapshot();
+    const selected=dataScopes(workspace).filter(scope=>scopes.includes(scope.id));
+    if(!selected.length)return;
+    if(!window.confirm(`Clear selected data for this character?\n${selected.map(s=>`${s.label}: ${s.count} ${s.unit}`).join("\n")}\nA recovery backup downloads first. Other characters remain unchanged.`))return;
+    exportAppData();
+    applyWorkspace(clearWorkspaceScopes(workspace,scopes));
+    renderApp();persistState();announce("Selected data cleared. Restore the downloaded backup to recover it; tracker changes can also be undone in Recent changes.");
+}
+
 function clearAllDataFlow() {
     if (!window.confirm("Clear all data? Every character, tracker record and session stored in this browser is permanently deleted. This cannot be undone.")) {
         return;
     }
 
+    exportAppData();
     if (!clearAllStoredState()) {
         showAlert(getStorageProblem());
         return;
@@ -637,10 +655,16 @@ mobileNavigation.addEventListener("change", () => setSidebarOpen(false));
  * feature the creature update together.
  */
 function commitVisibleTotalKills() {
-    elements.output.querySelectorAll(".kills-input").forEach((input) => {
-        setEntry(state.trackerProgress, "bestiary", input.dataset.monsterName, bestiaryTracker.entryDefaults, {
-            kills: input.value
-        });
+    elements.output.querySelectorAll(".kills-input").forEach(input=>{
+        if(input.value===input.dataset.committedValue)return;
+        let changes;
+        try{changes=parseBestiaryTotalInput(input.value);input.setCustomValidity("");}
+        catch(error){input.setCustomValidity(error.message);showAlert(error.message);return;}
+        const key=input.dataset.monsterName;
+        const before=getStoredEntry(state.trackerProgress,"bestiary",key);
+        setEntry(state.trackerProgress,"bestiary",key,bestiaryTracker.entryDefaults,changes);
+        pushChange(state.changeLog,{kind:"entry",trackerId:"bestiary",label:`Update ${key} total kills`,entries:{[key]:before}});
+        input.dataset.committedValue=input.value;
     });
 }
 
@@ -649,23 +673,18 @@ function commitVisibleTotalKills() {
  * session reads the same canonical record. The arithmetic in recalculateProgress
  * is untouched — only the source of its totalKills argument.
  */
-function getBestiaryKills(creatureName) {
-    const creature = getTrackerItems(bestiaryTracker).find((item) => item.Name === creatureName);
-    const entry = getEntry(state.trackerProgress, "bestiary", creatureName, bestiaryTracker.entryDefaults);
-
-    if (!creature) {
-        return entry.kills;
-    }
-
-    // A tile the player picked implies a kill floor, and that floor is a better
-    // input than zero. deriveBestiaryRow owns the mapping, so there is one place
-    // where a stage becomes a number.
-    return bestiaryTracker.derive(creature, entry).kills;
+function getBestiaryProgressEvidence(creatureName) {
+    const creature=getTrackerItems(bestiaryTracker).find(item=>item.Name===creatureName);
+    const entry=getEntry(state.trackerProgress,"bestiary",creatureName,bestiaryTracker.entryDefaults);
+    if(!creature)return {kills:entry.kills,known:entry.kills>0||Boolean(entry.reviewed),isFloor:false,killsCeiling:null};
+    const row=bestiaryTracker.derive(creature,entry);
+    return {kills:row.kills,known:row.answered||Boolean(entry.reviewed),isFloor:row.isFloor,killsCeiling:row.killsCeiling};
 }
+function getBestiaryKills(creatureName) { return getBestiaryProgressEvidence(creatureName).kills; }
 
 function buildBestiaryTotalKills(creatureNames) {
     return creatureNames.reduce((totals, creatureName) => {
-        totals[creatureName] = getBestiaryKills(creatureName);
+        totals[creatureName] = getBestiaryProgressEvidence(creatureName);
         return totals;
     }, {});
 }
@@ -758,7 +777,8 @@ function markKillFloors(monsters) {
         const entry = getEntry(state.trackerProgress, "bestiary", monster.name, bestiaryTracker.entryDefaults);
         const creature = getTrackerItems(bestiaryTracker).find((item) => item.Name === monster.name);
 
-        monster.typedKills = entry.kills || "";
+        monster.typedKills = entry.kills || (entry.reviewed && !monster.isProgressFloor ? 0 : "");
+        monster.isKillUnknown = monster.progressKnown === false;
         monster.isKillFloor = Boolean(creature) && bestiaryTracker.derive(creature, entry).isFloor;
     });
 
@@ -800,12 +820,10 @@ function calculateAllTabsResult() {
         }))
         .filter((huntEntry) => huntEntry.monsters.length > 0);
     const analysis = buildAllTabsAnalysis(huntEntries, state.excludedAllTabsEntries);
-    const huntSummaries = analysis.participatingHunts
-        .map((participatingHunt) => summarizeBestiaryMonsters(participatingHunt.selectedMonsters));
 
     return {
         analysis,
-        summary: aggregateAllTabsSummary(huntSummaries)
+        summary: aggregateAllTabsSummary(analysis.participatingHunts)
     };
 }
 
@@ -2123,14 +2141,15 @@ function getOpportunityAnalysis() {
         .map((hunt, index) => ({
             id: hunt.id,
             label: getHuntLabel(index, hunt),
+            respawnMode: hunt.respawnMode,
             monsters: hasBestiaryAnalysis(hunt) ? calculateBestiaryResult(hunt).monsters : []
         }))
         .filter((session) => session.monsters.length);
     const killsByName = Object.fromEntries(
-        state.bestiaryData.map((creature) => [creature.Name, getBestiaryKills(creature.Name)])
+        state.bestiaryData.map((creature) => [creature.Name, getBestiaryProgressEvidence(creature.Name)])
     );
 
-    return buildOpportunityAnalysis(state.bestiaryData, killsByName, sessions);
+    return buildOpportunityAnalysis(state.bestiaryData, killsByName, sessions, {respawnMode:state.planRespawnMode});
 }
 
 function renderOpportunitiesView() {
@@ -2140,7 +2159,8 @@ function renderOpportunitiesView() {
     elements.respawnModeBlock.hidden = true;
     showSectionHeading(VIEW_CONTENT.opportunities.resultsTitle, "");
 
-    renderOpportunities(elements.output, getOpportunityAnalysis());
+    renderOpportunities(elements.output, getOpportunityAnalysis(),state.planRespawnMode);
+    elements.output.querySelector("#opportunityMode").addEventListener("change",event=>{state.planRespawnMode=event.target.value;renderApp();persistState();});
     attachOpportunityActions();
 }
 
@@ -2280,6 +2300,7 @@ function renderTaskSessionsView() {
  * renderApp(), so the sidebar can never disagree with the page it points at.
  */
 function applyPrimaryMode() {
+    elements.sidebarClearDataButton.classList.toggle("is-active",state.mode === "data");
     const toolsLink = document.getElementById("sidebarToolsLink");
     toolsLink.classList.toggle("is-active", state.mode === "tools");
     if (state.mode === "tools") toolsLink.setAttribute("aria-current", "page");
@@ -2333,6 +2354,7 @@ function renderSidebarCharacter() {
 }
 
 function getPageContent() {
+    if (state.mode === "data") return {eyebrow:"Data",title:DATA_LABELS[state.dataView],description:"Review sources, preserve your records and manage local data."};
     const view = getModeView();
     if (state.mode === "tools") return { eyebrow: "Tools", title: TOOL_LABELS[state.toolView], description: "Local calculations with explicit inputs and source-backed rules." };
     if (state.mode === "analysis") return { eyebrow: "Analysis", title: "Hunt Analysis", description: "Experience, profit, combat and drops from your shared session evidence." };
@@ -2410,7 +2432,7 @@ function applyWorkspaceChrome() {
     document.title = `${content.title} · Bestie`;
     elements.pageDescription.textContent = content.description;
     // Trackers and the Dashboard have nothing "New session" would do.
-    elements.newSessionButton.hidden = ["trackers", "dashboard", "tools"].includes(state.mode);
+    elements.newSessionButton.hidden = ["trackers", "dashboard", "tools", "data"].includes(state.mode);
     elements.workspaceMain.classList.toggle("is-trackers", state.mode === "trackers");
     elements.workspaceMain.classList.toggle("is-proficiency", state.mode === "proficiency");
     document.getElementById("proficiencyOverview").hidden = state.mode !== "proficiency";
@@ -2431,6 +2453,13 @@ function renderApp() {
     applyWorkspaceChrome();
     syncPageRoute();
 
+    if (state.mode === "data") {
+        closeDetailPanel(); elements.huntWorkspace.hidden=true; elements.inputSection.hidden=true;
+        elements.analysisSection.hidden=false; elements.comparisonSection.hidden=true; elements.sectionHeading.hidden=true;
+        renderData(elements.output,{view:state.dataView,workspace:getWorkspaceSnapshot(),characterLabel:getCharacterLabel(getActiveCharacterIndex(),state.characters[getActiveCharacterIndex()]),
+            onExport:exportAppData,onImport:()=>elements.sidebarImportInput.click(),onClear:clearSelectedDataFlow,onClearAll:clearAllDataFlow});
+        return;
+    }
     if (state.mode === "tools") {
         closeDetailPanel();
         elements.huntWorkspace.hidden = true;
@@ -2438,7 +2467,7 @@ function renderApp() {
         elements.analysisSection.hidden = false;
         elements.comparisonSection.hidden = true;
         elements.sectionHeading.hidden = true;
-        renderTools(elements.output, { view: state.toolView, inputs: state.toolInputs, creatures: state.bestiaryData, hunts: state.hunts,
+        renderTools(elements.output, { view: state.toolView, inputs: state.toolInputs, creatures: state.bestiaryData, hunts: state.hunts, charms: state.trackerItems.charms, progress: state.trackerProgress,
             onChange: values => { Object.assign(state.toolInputs, values); persistState(); } });
         return;
     }
@@ -2675,7 +2704,7 @@ function resetTotalsForCreatures(creatureNames, promptText) {
         return;
     }
 
-    withKills.forEach((name) => setEntry(state.trackerProgress, "bestiary", name, bestiaryTracker.entryDefaults, { kills: 0 }));
+    writeTrackerEntries(bestiaryTracker,withKills,()=>({kills:0,stage:0,reviewed:false}),{kind:"bulk",label:"Reset session Bestiary totals"});
     commitAllHuntProgress();
     renderApp();
     persistState();
@@ -2755,13 +2784,6 @@ function dropAllTabsEntriesOfHunt(huntId) {
         .filter((entryKey) => !isEntryKeyForHunt(entryKey, huntId));
 }
 
-function getModelTotalKills(input) {
-    const huntId = input.dataset.huntId;
-    const hunt = huntId ? state.hunts.find((candidate) => candidate.id === huntId) : getActiveHunt();
-    const monster = hunt?.matchedMonsters.find((candidate) => candidate.name === input.dataset.monsterName);
-
-    return monster ? (monster.totalKills || 0) : 0;
-}
 
 function handleKillsCommit(event) {
     const input = event.target;
@@ -2770,7 +2792,7 @@ function handleKillsCommit(event) {
         return;
     }
 
-    if ((Number.parseInt(input.value, 10) || 0) === getModelTotalKills(input)) {
+    if (input.value === input.dataset.committedValue) {
         return;
     }
 
@@ -4145,6 +4167,7 @@ function processLog() {
 }
 
 function applyWorkspace(workspace) {
+    state.dataView = workspace.dataView ?? "manage";
     state.toolInputs = workspace.toolInputs ?? {};
     state.toolView = workspace.toolView ?? "experience";
     state.weaponPlans = workspace.weaponPlans;
@@ -4656,7 +4679,7 @@ elements.sidebarRecentChangesButton.addEventListener("click", () => {
     openRecentChanges();
     setSidebarOpen(false);
 });
-elements.sidebarClearDataButton.addEventListener("click", clearAllDataFlow);
+elements.sidebarClearDataButton.addEventListener("click", () => {navigateWorkspace("data","manage");setSidebarOpen(false);});
 
 elements.sidebarCharacterButton.addEventListener("click", () => {
     state.isCharacterMenuOpen = !state.isCharacterMenuOpen;

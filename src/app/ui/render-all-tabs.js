@@ -23,6 +23,7 @@ export function renderAllTabs(container, analysis, summary) {
 
     container.className = "results-shell";
     container.innerHTML = `
+        <p class="helper-text">Each creature rewards points once, assigned to its first selected session in tab order. Time is a conservative route estimate; overlapping incidental kills may shorten it. Unrecorded progress may already be complete.</p>
         ${buildAnswer("Charm Rate", formatCharmsPerHour(summary.charmRate))}
         ${buildStatLine([
             `${formatNumber(selectedEntries.length)} of ${formatNumber(analysis.rows.length)} entries selected`,

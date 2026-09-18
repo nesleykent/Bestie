@@ -1,3 +1,4 @@
+import { renderCharmwise } from "./render-charmwise.js";
 import { renderHuntPlanner } from "./render-hunt-planner.js";
 import { renderMorningTool } from "./render-morning-tool.js";
 import { renderMarkerTool } from "./render-marker-tool.js";
@@ -5,7 +6,7 @@ import { ELEMENTS, experienceForLevel, projectExperience, parseStamina, staminaR
 import { escapeAttribute as escape } from "./render-blocks.js";
 import { formatNumber, formatTimeDetailed } from "../utils/formatters.js";
 
-export const TOOL_LABELS = { experience: "XP & Level", stamina: "Stamina", elemental: "Elemental Damage", markers: "Minimap Markers", morning: "Morning Tibia", hunts: "Hunt Planner" };
+export const TOOL_LABELS = { experience: "XP & Level", stamina: "Stamina", elemental: "Elemental Damage", markers: "Minimap Markers", morning: "Morning Tibia", hunts: "Hunt Planner", charms: "Charmwise" };
 const field = (id, label, value, options = {}) => `<label class="tool-field" for="${id}"><span class="input-label">${label}</span><input id="${id}" name="${id}" type="${options.type ?? "text"}" ${options.numeric ? 'inputmode="decimal"' : ""} value="${escape(value)}" ${options.placeholder ? `placeholder="${escape(options.placeholder)}"` : ""}></label>`;
 const metrics = rows => `<dl class="tool-results">${rows.map(([label, value]) => `<div><dt class="input-label">${label}</dt><dd>${escape(value)}</dd></div>`).join("")}</dl>`;
 const numeric = (value, label) => {
@@ -15,8 +16,13 @@ const numeric = (value, label) => {
     return result;
 };
 
-export function renderTools(container, { view, inputs, creatures, hunts, onChange }) {
+export function renderTools(container, { view, inputs, creatures, hunts, charms, progress, onChange }) {
     container.className = "results-shell";
+    if (view === "charms") {
+        container.innerHTML = toolNavigation(view);
+        renderCharmwise(container, {inputs,creatures,charms,progress,onChange});
+        return;
+    }
     if (view === "hunts") {
         container.innerHTML = toolNavigation(view);
         renderHuntPlanner(container, inputs, hunts, onChange);

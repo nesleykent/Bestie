@@ -9,7 +9,7 @@ let huntSequence = 0;
 const BESTIARY_VIEWS = ["session", "allSessions", "charmPlan", "comparison", "library", "opportunities"];
 const TASKS_VIEWS = ["session", "allSessions", "library"];
 const RESPAWN_MODES = ["regular", "rapid"];
-const MODES = ["bestiary", "trackers", "tasks", "dashboard", "proficiency", "analysis", "tools"];
+const MODES = ["bestiary", "trackers", "tasks", "dashboard", "proficiency", "analysis", "tools", "data"];
 
 function normalizeRespawnMode(value) {
     return RESPAWN_MODES.includes(value) ? value : "regular";
@@ -48,6 +48,7 @@ export function createWorkspace() {
     return {
         // The Dashboard is the app's homepage — where a brand-new character lands.
         mode: "dashboard",
+        dataView: "manage",
         toolView: "experience",
         toolInputs: {},
         weaponPlans: [createWeaponPlan()],
@@ -204,6 +205,7 @@ export function restoreWorkspace(savedState) {
 
     return {
         mode: normalizeMode(savedState?.mode),
+        dataView: ["manage", "history", "market"].includes(savedState?.dataView) ? savedState.dataView : "manage",
         toolView: TOOL_VIEWS.includes(savedState?.toolView) ? savedState.toolView : "experience",
         toolInputs: restoreToolInputs(savedState?.toolInputs),
         weaponPlans,

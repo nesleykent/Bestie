@@ -3987,7 +3987,7 @@ th.is-sorted .column-sort {
     gap: var(--u1);
     min-width: 0;
 }
-.tool-field input {
+.tool-field input:not([type="checkbox"]) {
     width: 100%;
     min-width: 0;
 }

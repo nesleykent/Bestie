@@ -1,0 +1,7 @@
+import { renderDataManagement } from './render-data-management.js';
+export const DATA_LABELS={manage:'Data Management'};
+export function renderData(container,options){
+ container.className='results-shell';
+ container.innerHTML=`<nav class="session-analysis-nav" aria-label="Data">${Object.entries(DATA_LABELS).map(([key,label])=>`<a href="#data/${key}" ${key===options.view?'aria-current="page"':''}>${label}</a>`).join('')}</nav>`;
+ renderDataManagement(container,options);
+}

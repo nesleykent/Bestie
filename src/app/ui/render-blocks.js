@@ -102,18 +102,23 @@ function buildEstimateRow(entry) {
                     data-monster-name="${escapeAttribute(monster.name)}"
                     ${entry.huntId ? `data-hunt-id="${escapeAttribute(entry.huntId)}"` : ""}
                     min="0"
-                    value="${monster.typedKills || ""}"
+                    value="${monster.typedKills ?? ""}"
+                    data-committed-value="${monster.typedKills ?? ""}"
                     placeholder="${monster.isKillFloor ? `≥ ${formatNumber(monster.totalKills)}` : "Enter kills"}"
                     title="${monster.isKillFloor ? "From the tile you picked in the Bestiary — type the exact count if you have it" : ""}"
                 >
             </td>
             <td class="is-num">${formatNumber(monster.killsToUnlock)}</td>
             <td class="is-num">${formatKillRate(monster.killRate)}</td>
-            <td class="is-num">${monster.isKillFloor
-                ? `at most ${formatNumber(monster.remainingKills)}`
+            <td class="is-num">${monster.isKillUnknown
+                ? `Unknown · 0–${formatNumber(monster.remainingKills)}`
+                : monster.isKillFloor
+                ? `${formatNumber(monster.remainingKillsAtLeast)}–${formatNumber(monster.remainingKills)}`
                 : formatNumber(monster.remainingKills)}</td>
-            <td class="is-num">${monster.isKillFloor
-                ? `at most ${formatTime(monster.timeRemainingMinutes)}`
+            <td class="is-num">${monster.isKillUnknown
+                ? `Unknown · up to ${formatTime(monster.timeRemainingMinutes)}`
+                : monster.isKillFloor
+                ? `${formatTime(monster.timeRemainingMinutesAtLeast)}–${formatTime(monster.timeRemainingMinutes)}`
                 : formatTime(monster.timeRemainingMinutes)}</td>
             <td class="is-num">${formatCharmsPerHour(monster.charmsPerHour)}</td>
         </tr>

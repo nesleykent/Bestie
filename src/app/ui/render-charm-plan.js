@@ -85,6 +85,7 @@ export function buildCharmPlanResultMarkup(planView) {
     const plan = planView.plan;
 
     return `
+        ${plan.hasBoundedEstimates ? '<p class="helper-text">This plan uses conservative bounds for unrecorded or stage-only progress. Verify the entries first: some rewards may already be claimed, and less time may remain.</p>' : ""}
         ${buildAnswer(ANSWER_LABEL, formatNumber(plan.charms), plan.entries.length
             ? ""
             : "No entry can be completed in this time. Your progress still matters, but it will not award charm points until an entry is complete.")}

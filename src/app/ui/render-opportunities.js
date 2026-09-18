@@ -42,10 +42,10 @@ function buildFinishable(analysis) {
             "Creatures you have a measured kill rate for and have not finished yet.",
             buildEmptyState(
                 analysis.totals.sessionCount
-                    ? "Nothing left to finish in your stored sessions."
+                    ? "No confirmed unfinished entry has a measured rate in this mode."
                     : "No sessions stored yet.",
                 analysis.totals.sessionCount
-                    ? "Every creature your sessions measured is already unlocked, so the opportunities below are the ones worth planning for."
+                    ? "Check unrecorded progress below, or process a session in the selected respawn mode."
                     : "Paste a Hunt Analyzer under Sessions and its kill rates will project completion times here.",
                 analysis.totals.sessionCount
                     ? ""
@@ -64,8 +64,8 @@ function buildFinishable(analysis) {
     ], "is-head");
     const rows = analysis.finishable.map((entry) => buildRow([
         `<span class="row-name is-verbatim">${buildCreatureAction(entry.name)}${buildLinkButton(entry.sessionLabel, "data-opportunity-session", entry.sessionId, "is-pill")}</span>`,
-        `<span class="row-num">${formatNumber(entry.killsLeft)}</span>`,
-        `<span class="row-num">${formatTime(entry.timeRemainingMinutes)}</span>`,
+        `<span class="row-num">${entry.isProgressFloor ? "up to " : ""}${formatNumber(entry.killsLeft)}</span>`,
+        `<span class="row-num">${entry.isProgressFloor ? "up to " : ""}${formatTime(entry.timeRemainingMinutes)}</span>`,
         `<span class="row-charm">${formatCharmsPerHour(entry.charmsPerHour)}</span>`
     ]));
 
@@ -90,7 +90,7 @@ function buildQuickWins(analysis) {
     ], "is-head");
     const rows = analysis.quickWins.map((entry) => buildRow([
         `<span class="row-name is-verbatim">${buildCreatureAction(entry.name)}</span>`,
-        `<span class="row-num">${formatNumber(entry.killsLeft)} of ${formatNumber(entry.unlockTarget)}</span>`,
+        `<span class="row-num">${entry.isProgressFloor ? "up to " : ""}${formatNumber(entry.killsLeft)} of ${formatNumber(entry.unlockTarget)}</span>`,
         `<span class="row-charm">+${formatNumber(entry.charms)}</span>`
     ]));
 
@@ -142,7 +142,7 @@ function buildBlindSpots(analysis) {
     ], "is-head");
     const rows = analysis.blindSpots.map((entry) => buildRow([
         `<span class="row-name is-verbatim">${buildCreatureAction(entry.name)}</span>`,
-        `<span class="row-num">${formatNumber(entry.killsLeft)}</span>`,
+        `<span class="row-num">${entry.isProgressFloor ? "up to " : ""}${formatNumber(entry.killsLeft)}</span>`,
         `<span class="row-charm">+${formatNumber(entry.charms)}</span>`
     ]));
 
@@ -155,18 +155,20 @@ function buildBlindSpots(analysis) {
     );
 }
 
-export function renderOpportunities(container, analysis) {
+export function renderOpportunities(container, analysis, respawnMode = "regular") {
     const { totals } = analysis;
     const percent = totals.charmsTotal > 0 ? (totals.charmsUnclaimed / totals.charmsTotal) * 100 : 0;
 
     container.className = "results-shell";
     container.innerHTML = `
+        <label class="tool-field" for="opportunityMode"><span class="input-label">Measured respawn mode</span><select id="opportunityMode"><option value="regular" ${respawnMode==="regular"?"selected":""}>Regular</option><option value="rapid" ${respawnMode==="rapid"?"selected":""}>Rapid</option></select></label>
         ${buildAnswer(
-            "Charm Points Unclaimed",
+            "Potential Charm Points Remaining",
             formatNumber(totals.charmsUnclaimed),
-            `of ${formatNumber(totals.charmsTotal)} in the game &mdash; ${percent.toFixed(0)}% still on the table.`
+            `of ${formatNumber(totals.charmsTotal)} in the game &mdash; ${percent.toFixed(0)}% potentially remaining; includes unrecorded progress.`
         )}
         ${buildStatLine([
+            `${formatNumber(totals.unknownProgress)} entries not recorded`,
             `${formatNumber(totals.charmsNeverHunted)} in ${formatNumber(totals.neverHunted)} creatures never hunted`,
             `${formatNumber(totals.charmsInProgress)} in ${formatNumber(totals.inProgress)} started`,
             `${formatNumber(totals.measuredCreatures)} creatures measured by ${formatNumber(totals.sessionCount)} session${totals.sessionCount === 1 ? "" : "s"}`
@@ -174,7 +176,7 @@ export function renderOpportunities(container, analysis) {
 
         <div class="opportunity-columns">
             <div>${buildFinishable(analysis)}${buildQuickWins(analysis)}${buildBlindSpots(analysis)}</div>
-            <div>${buildLocations(analysis)}</div>
+            <div>${buildLocations(analysis)}${buildSection("Progress Not Recorded","Verify these entries in Bestiary. Their rewards may already be claimed.",buildRowList(analysis.unknownProgress.map(entry=>buildRow([buildCreatureAction(entry.name),`<span class="row-charm">${formatNumber(entry.charms)} possible points</span>`])),2),analysis.unknownProgressCount,analysis.unknownProgress.length)}</div>
         </div>
     `;
 }

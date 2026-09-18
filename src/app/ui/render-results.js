@@ -21,6 +21,7 @@ export function renderResults(container, monsters, selectedMonsterNames, summary
 
     container.className = "results-shell";
     container.innerHTML = `
+        ${summary.hasUnknownProgress || summary.hasFloorProgress ? '<p class="helper-text">Projection uses conservative remaining-kill bounds. Unrecorded entries may already be complete; verify them before relying on the reward or time.</p>' : ""}
         ${buildAnswer("Charm Rate", formatCharmsPerHour(summary.totalCharmsPerHour))}
         ${buildStatLine([
             `${formatNumber(selectedMonsters.length)} of ${formatNumber(monsters.length)} creatures selected`,

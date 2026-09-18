@@ -75,6 +75,16 @@ function keepBestBucket(states) {
     return bestStates;
 }
 
+// A monster carries no evidence tags at all when it came from a legacy numeric
+// caller — treat that exactly as session-analysis.js's normalizeProgressEvidence
+// treats a bare number: known and exact.
+function tagEvidence(monster) {
+    return {
+        progressKnown: monster.progressKnown !== false,
+        isProgressFloor: Boolean(monster.isProgressFloor)
+    };
+}
+
 function buildRoute(picks) {
     const steps = picks
         .filter(({ option }) => option.minutes > 0)
@@ -87,7 +97,8 @@ function buildRoute(picks) {
                 .map((monster) => ({
                     name: monster.name,
                     charms: monster.charms,
-                    timeRemainingMinutes: monster.timeRemainingMinutes
+                    timeRemainingMinutes: monster.timeRemainingMinutes,
+                    ...tagEvidence(monster)
                 }))
                 .sort((left, right) => left.timeRemainingMinutes - right.timeRemainingMinutes
                     || left.name.localeCompare(right.name))
@@ -155,7 +166,8 @@ export function planCharmTime(huntGroups, availableMinutes) {
             huntLabel: group.label,
             name: monster.name,
             charms: monster.charms,
-            timeRemainingMinutes: monster.timeRemainingMinutes
+            timeRemainingMinutes: monster.timeRemainingMinutes,
+            ...tagEvidence(monster)
         })))
         .sort((left, right) => left.timeRemainingMinutes - right.timeRemainingMinutes
             || left.name.localeCompare(right.name));
@@ -166,6 +178,11 @@ export function planCharmTime(huntGroups, availableMinutes) {
         unusedMinutes: Math.max(0, availableMinutes - bestState.minutes),
         completedCount: entries.length,
         entries,
+        // At least one included creature's remaining time rests on an unrecorded
+        // or floor-only Bestiary total, not a typed count — the plan is still the
+        // conservative (never-overstated) allocation, but the UI should say so
+        // rather than presenting every estimate as equally exact.
+        hasBoundedEstimates: entries.some((entry) => !entry.progressKnown || entry.isProgressFloor),
         route: buildRoute(bestState.picks)
     };
 }
