@@ -30,7 +30,7 @@ import {
     reconcileMarketWatch, withMarketWorld, withMarketItemPrice, selectLatestMarketPrice,
 } from "../src/app/features/public-data.js";
 
-const TIBIADATA_API = "https://api.tibiadata.com/v4";
+const TIBIADATA_API = "https://api.tibiadata.com/v5";
 const TIBIAMARKET_API = "https://api.tibiamarket.top/item_history";
 const USER_AGENT = "bestie-public-data (github.com/nesleykent/Bestie)";
 const HIGHSCORE_MAX_PAGES = 20;
