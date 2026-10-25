@@ -42,7 +42,7 @@ Configuration is validated before any network call or write. Invalid shapes, uns
 
 ### TibiaData (character identity, World, deaths, exact experience)
 
-Base URL: `https://api.tibiadata.com/v4` (the documented public TibiaData v4 instance).
+Base URL: `https://api.tibiadata.com/v5` (the documented public TibiaData v5 instance, released 2026-10-23). v5 keeps v4's endpoints and response fields; a missing character returns `404 Not Found` (final, not retried) and an upstream failure `502 Bad Gateway` (retried with the other 5xx responses).
 
 - `GET /character/{name}` — resolves `character.character.{name, world, level, vocation, sex, title,
   residence, achievement_points, last_login, account_status}` and `character.deaths[]

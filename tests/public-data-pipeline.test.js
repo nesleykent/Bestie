@@ -56,7 +56,7 @@ function characterResponse({ name, world, level = 100, vocation = "Elite Knight"
             character: { name, world, level, vocation, sex: "male", title: "None", residence: "Thais", achievement_points: 0, last_login: "2026-09-15T10:00:00Z", account_status: "Free Account" },
             deaths: [],
         },
-        information: { api_version: 4 },
+        information: { api: { version: 5, release: "5.0.0" }, status: { http_code: 200 } },
     };
 }
 
@@ -67,7 +67,7 @@ function highscorePage({ world, name, level, value, rank }) {
             highscore_list: name ? [{ rank, name, level, value }] : [],
             highscore_page: { current_page: 1, total_pages: 1 },
         },
-        information: { api_version: 4 },
+        information: { api: { version: 5, release: "5.0.0" }, status: { http_code: 200 } },
     };
 }
 
@@ -114,8 +114,8 @@ test("pipeline: partial failures (highscore lookup, one Market item) keep the la
         });
 
         const fetchImpl = createMockFetch([
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica", level: 250 })) },
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/highscores/"), respond: () => jsonResponse(500, {}) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica", level: 250 })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/highscores/"), respond: () => jsonResponse(500, {}) },
             marketHandler(1, [{ time: 1758096000, is_full_data: true, sell_offer: 4500, buy_offer: 4300, day_lowest_sell: 4400, day_average_sell: 4450 }]),
             { test: (url) => url.startsWith("https://api.tibiamarket.top/") && url.includes("item_id=2"), respond: () => jsonResponse(500, {}) },
         ]);
@@ -153,7 +153,7 @@ test("pipeline: a corrupt config/history/market file aborts the run instead of s
         await writeJson(configPath, { schemaVersion: 1, character: { name: "Gnihttik" }, market: { items: [] } });
         await writeFile(historyPath, "{ not valid json");
         const fetchImpl = createMockFetch([
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica" })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica" })) },
         ]);
         await assert.rejects(() => silentRun({
             fetchImpl, sleepImpl: noSleep, configPath, historyPath, marketPath,
@@ -172,8 +172,8 @@ test("pipeline: a missing TIBIA_MARKET_TOKEN resolves identity without fetching 
             market: { items: [{ id: 1, name: "Gold Token" }] },
         });
         const fetchImpl = createMockFetch([
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica" })) },
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/highscores/"), respond: () => jsonResponse(200, highscorePage({ world: "Antica" })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica" })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/highscores/"), respond: () => jsonResponse(200, highscorePage({ world: "Antica" })) },
         ]);
         await silentRun({
             fetchImpl, sleepImpl: noSleep, configPath, historyPath, marketPath,
@@ -196,8 +196,8 @@ test("pipeline: never sends the Market token anywhere but the Authorization head
         const seenHeaders = [];
         const fetchImpl = async (url, options) => {
             seenHeaders.push({ url: String(url), headers: options?.headers || {} });
-            if (String(url).startsWith("https://api.tibiadata.com/v4/character/")) return jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica" }));
-            if (String(url).startsWith("https://api.tibiadata.com/v4/highscores/")) return jsonResponse(200, highscorePage({ world: "Antica" }));
+            if (String(url).startsWith("https://api.tibiadata.com/v5/character/")) return jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica" }));
+            if (String(url).startsWith("https://api.tibiadata.com/v5/highscores/")) return jsonResponse(200, highscorePage({ world: "Antica" }));
             if (String(url).startsWith("https://api.tibiamarket.top/")) return jsonResponse(200, [{ time: 1758096000, is_full_data: true, sell_offer: 4200, buy_offer: 4000, day_lowest_sell: 4100, day_average_sell: 4150 }]);
             throw new Error(`Unhandled fetch: ${url}`);
         };
@@ -233,8 +233,8 @@ test("pipeline: a changed configured character resets both snapshots to the new 
         });
 
         const fetchImpl = createMockFetch([
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/character/"), respond: () => jsonResponse(200, characterResponse({ name: "New Character", world: "Secura", level: 50 })) },
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/highscores/"), respond: () => jsonResponse(200, highscorePage({ world: "Secura", name: "New Character", level: 50, value: 500000, rank: 900 })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/character/"), respond: () => jsonResponse(200, characterResponse({ name: "New Character", world: "Secura", level: 50 })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/highscores/"), respond: () => jsonResponse(200, highscorePage({ world: "Secura", name: "New Character", level: 50, value: 500000, rank: 900 })) },
             marketHandler(1, [{ time: 1758096000, is_full_data: true, sell_offer: 100, buy_offer: 90, day_lowest_sell: 95, day_average_sell: 98 }]),
         ]);
 
@@ -274,8 +274,8 @@ test("pipeline: removing an item from config drops it from Market Watch without 
         });
 
         const fetchImpl = createMockFetch([
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica" })) },
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/highscores/"), respond: () => jsonResponse(200, highscorePage({ world: "Antica" })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica" })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/highscores/"), respond: () => jsonResponse(200, highscorePage({ world: "Antica" })) },
             marketHandler(1, [{ time: 1758096000, is_full_data: true, sell_offer: 4100, buy_offer: 4000, day_lowest_sell: 4050, day_average_sell: 4075 }]),
         ]);
 
@@ -304,7 +304,7 @@ test("pipeline: a failed character resolution aborts before Market Watch, never 
         });
 
         const fetchImpl = createMockFetch([
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/character/"), respond: () => jsonResponse(200, { character: {}, information: {} }) }, // no matching profile
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/character/"), respond: () => jsonResponse(200, { character: {}, information: {} }) }, // no matching profile
         ]);
 
         await assert.rejects(() => silentRun({
@@ -332,8 +332,8 @@ test("pipeline: an unchanged reading still advances checkedAt (so freshness refl
         });
 
         const fetchImpl = createMockFetch([
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica", level: 250 })) },
-            { test: (url) => url.startsWith("https://api.tibiadata.com/v4/highscores/"), respond: () => jsonResponse(200, highscorePage({ world: "Antica", name: "Gnihttik", level: 250, value: 150000000, rank: 45 })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/character/"), respond: () => jsonResponse(200, characterResponse({ name: "Gnihttik", world: "Antica", level: 250 })) },
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/highscores/"), respond: () => jsonResponse(200, highscorePage({ world: "Antica", name: "Gnihttik", level: 250, value: 150000000, rank: 45 })) },
         ]);
 
         await silentRun({
@@ -382,4 +382,25 @@ test('pipeline: restriction-compatible all-vocation scope and source age determi
   await silentRun({...paths,fetchImpl,sleepImpl:noSleep,now:()=>new Date('2026-09-18T08:15:00Z')});
   const h=await readJsonFile(paths.historyPath);assert.deepEqual(Object.keys(h.history),['2026-09-17']);assert.equal(h.history['2026-09-17'].observedAt,'2026-09-18T07:45:00.000Z');
  });
+});
+
+test("pipeline: a TibiaData v5 404 for the character fails fast and leaves stored history untouched", async () => {
+    await withTempDir(async ({ configPath, historyPath, marketPath }) => {
+        await writeJson(configPath, { schemaVersion: 1, character: { name: "Gnihttik" }, market: { items: [] } });
+        const stored = { ...createEmptyPublicHistory(), character: { name: "Gnihttik", world: "Antica" }, checkedAt: "2026-09-17T06:00:00.000Z" };
+        await writeJson(historyPath, stored);
+        const fetchImpl = createMockFetch([
+            { test: (url) => url.startsWith("https://api.tibiadata.com/v5/character/"), respond: () => jsonResponse(404, { information: { status: { http_code: 404, error: 20001, message: "could not find character" } } }) },
+        ]);
+        const sleeps = [];
+
+        await assert.rejects(() => silentRun({
+            fetchImpl, sleepImpl: async (ms) => { sleeps.push(ms); }, configPath, historyPath, marketPath,
+            now: () => new Date("2026-09-18T08:00:00.000Z"),
+        }), /404/);
+
+        assert.equal(fetchImpl.calls.length, 1); // v5 404 is final; only 429/5xx are retried
+        assert.deepEqual(sleeps, []);
+        assert.deepEqual(await readJsonFile(historyPath), stored);
+    });
 });
